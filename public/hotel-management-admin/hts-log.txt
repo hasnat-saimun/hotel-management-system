@@ -1,0 +1,17 @@
+HTTrack3.49-2+htsswf+htsjava launched on Wed, 21 Jan 2026 13:52:37 at https://keenthemes.com/metronic/tailwind/demo1/ +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://keenthemes.com/metronic/tailwind/demo1/ -O1 "C:\My Web Sites\hotel management admin" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+13:52:38	Warning: 	Note: due to https://keenthemes.com remote robots.txt rules, links beginning with these path will be forbidden: /staging/, /jango/, /test/, /downloads/, /temp/, /spams/, /*?redirect_uri=* (see in the options to disable this)
+13:59:24	Error: 	"status code 310" (310) at link https://keenthemes.com/metronic/tailwind/demo1/authentication/error-404 (from https://keenthemes.com/metronic/tailwind/demo1/)
+13:59:24	Error: 	"status code 310" (310) at link https://keenthemes.com/metronic/tailwind/demo1/authentication/error-500 (from https://keenthemes.com/metronic/tailwind/demo1/)
+14:00:30	Error: 	"Not Found" (404) at link https://keenthemes.com/media/avatars/300-2.png (from https://keenthemes.com/metronic/tailwind/demo1/account/home/user-profile)
+14:01:12	Error: 	"status code 310" (310) at link https://keenthemes.com/metronic/tailwind/demo1/authentication/error-404?dir=rtl (from https://keenthemes.com/metronic/tailwind/demo1/?dir=rtl)
+14:01:12	Error: 	"status code 310" (310) at link https://keenthemes.com/metronic/tailwind/demo1/authentication/error-500?dir=rtl (from https://keenthemes.com/metronic/tailwind/demo1/?dir=rtl)
+
+HTTrack Website Copier/3.49-2 mirror complete in 8 minutes 38 seconds : 505 links scanned, 499 files written (117814806 bytes overall) [118491236 bytes received at 228747 bytes/sec]
+(5 errors, 1 warnings, 0 messages)

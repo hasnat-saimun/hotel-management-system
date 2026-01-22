@@ -1,7 +1,6 @@
 """
 Reservation Model - Represents a room reservation
 """
-from datetime import datetime
 
 
 class Reservation:

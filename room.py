@@ -1,7 +1,6 @@
 """
 Room Model - Represents a hotel room
 """
-from datetime import datetime
 
 
 class Room:

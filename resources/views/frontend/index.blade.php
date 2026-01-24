@@ -46,7 +46,7 @@
         </div>
 
       <!-- BOOKING BAR -->
-        <div class=" inset-x-0 bottom-0">
+        <div class="  inset-x-0 bottom-0">
     <div class="mx-auto max-w-6xl px-4">
 
       <div class="bg-gradient-to-r from-[#020c1b] to-[#04132d] px-8 py-6">

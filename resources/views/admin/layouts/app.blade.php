@@ -208,6 +208,52 @@
                                     >User</span
                                 >
                             </div>
+
+                            <div class="kt-menu-item {{ request()->routeIs('admin.rooms.*') ? 'here show' : '' }}"
+                                data-kt-menu-item-toggle="accordion"
+                                data-kt-menu-item-trigger="click"
+                            >
+                                <div
+                                    class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                    tabindex="0"
+                                >
+                                    <span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="inline-block">
+                                            <rect x="3" y="7" width="18" height="10" rx="1" stroke="currentColor" stroke-width="1.2" fill="none" />
+                                            <path d="M7 7V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="1.2" fill="none" />
+                                            <path d="M8 12h.01M12 12h.01M16 12h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                        </svg>
+                                    </span>
+                                    <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">Room Management</span>
+                                    <span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]"><span class="inline-flex kt-menu-item-show:hidden"><i class="ki-filled ki-plus text-[11px]"></i></span><span class="hidden kt-menu-item-show:inline-flex"><i class="ki-filled ki-minus text-[11px]"></i></span></span>
+                                </div>
+                                <div class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.rooms.index') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.rooms.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Rooms</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.rooms.types.*') || request()->routeIs('admin.rooms.types.index') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.rooms.types.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Room Types</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.rooms.amenities.*') || request()->routeIs('admin.rooms.amenities.index') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.rooms.amenities.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Amenities</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.rooms.services.*') || request()->routeIs('admin.rooms.services.index') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.rooms.services.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Extra Services</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             <div
                                 class="kt-menu-item"
                                 data-kt-menu-item-toggle="accordion"
@@ -7872,5 +7918,6 @@
         <script src="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js"></script>
         <script src="{{ asset('/hotel-management-admin/') }}/js/general.js"></script>
         <script src="{{ asset('/hotel-management-admin/') }}/js/demo1.js"></script>
+        @stack('scripts')
     </body>
 </html>

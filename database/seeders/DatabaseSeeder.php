@@ -21,6 +21,12 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
+        // User::factory(10)->create(); // This line is kept as a comment
+        $this->call([
+            RoomTypeSeeder::class,
+            AmenitySeeder::class,
+            ExtraServiceSeeder::class,
+        ]);
         // Create admin user
         $this->call(AdminUserSeeder::class);
     }

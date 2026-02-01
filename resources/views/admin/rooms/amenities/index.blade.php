@@ -6,13 +6,18 @@
             <h3 class="kt-card-title">Amenities</h3>
             <div class="text-sm text-secondary-foreground">Master list of amenities</div>
         </div>
-        <div>
-            <a href="{{ route('admin.rooms.amenities.create') }}" class="kt-btn kt-btn-primary">Add Amenity</a>
+        <div class="flex items-center gap-2">
+            <form method="GET" action="{{ route('admin.rooms.amenities.index') }}" id="amenities-search-form" class="flex items-center gap-2">
+                <input id="amenities-search-input" type="text" name="q" class="kt-input" placeholder="Search amenities..." value="{{ request('q') }}" />
+            </form>
+            <div>
+                <a href="{{ route('admin.rooms.amenities.create') }}" class="kt-btn kt-btn-primary">Add Amenity</a>
+            </div>
         </div>
     </div>
     <div class="kt-card-content p-4">
         <ul class="space-y-2">
-            @foreach($amenities as $a)
+            @forelse($amenities as $a)
                 <li class="flex items-center justify-between border p-2">
                     <div class="flex items-center gap-3"><span class="inline-block w-6">{!! $a->icon ?? '' !!}</span> <span>{{ $a->name }}</span></div>
                     <div class="flex gap-2">
@@ -24,8 +29,26 @@
                         </form>
                     </div>
                 </li>
-            @endforeach
+            @empty
+                <li class="p-6 text-center text-secondary-foreground">No data found.</li>
+            @endforelse
         </ul>
-    </div>
+        <div class="mt-4">
+            {{ $amenities->appends(request()->except('page'))->links() }}
+        </div>
+    @push('scripts')
+    <script>
+    (function(){
+        var form = document.getElementById('amenities-search-form');
+        var input = document.getElementById('amenities-search-input');
+        if (!form || !input) return;
+        var timeout = null;
+        input.addEventListener('input', function(){
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(function(){ form.submit(); }, 500);
+        });
+    })();
+    </script>
+    @endpush
 </div>
 @endsection

@@ -6,8 +6,13 @@
             <h3 class="kt-card-title">Extra Services</h3>
             <div class="text-sm text-secondary-foreground">Manage extra services (late checkout, breakfast etc.)</div>
         </div>
-        <div>
-            <a href="{{ route('admin.rooms.services.create') }}" class="kt-btn kt-btn-primary">Add Service</a>
+        <div class="flex items-center gap-2">
+            <form method="GET" action="{{ route('admin.rooms.services.index') }}" id="services-search-form" class="flex items-center gap-2">
+                <input id="services-search-input" type="text" name="q" class="kt-input" placeholder="Search services..." value="{{ request('q') }}" />
+            </form>
+            <div>
+                <a href="{{ route('admin.rooms.services.create') }}" class="kt-btn kt-btn-primary">Add Service</a>
+            </div>
         </div>
     </div>
     <div class="kt-card-content p-4">
@@ -20,7 +25,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($services as $s)
+                @forelse($services as $s)
                 <tr class="border-t hover:bg-muted/10">
                     <td class="p-2">{{ $s->name }}</td>
                     <td class="p-2">{{ number_format($s->price,2) }}</td>
@@ -34,8 +39,30 @@
                         </form>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="4" class="p-6 text-center text-secondary-foreground">No data found.</td>
+                </tr>
+                @endforelse
             </tbody>
+        </table>
+        <div class="mt-4">
+            {{ $services->appends(request()->except('page'))->links() }}
+        </div>
+    @push('scripts')
+    <script>
+    (function(){
+        var form = document.getElementById('services-search-form');
+        var input = document.getElementById('services-search-input');
+        if (!form || !input) return;
+        var timeout = null;
+        input.addEventListener('input', function(){
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(function(){ form.submit(); }, 500);
+        });
+    })();
+    </script>
+    @endpush
         </table>
     </div>
 </div>

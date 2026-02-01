@@ -8,9 +8,16 @@ use App\Models\ExtraService;
 
 class ExtraServiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $services = ExtraService::orderBy('name')->get();
+        $query = ExtraService::orderBy('name');
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where('name', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
+        }
+
+        $services = $query->paginate(25);
         return view('admin.rooms.services.index', compact('services'));
     }
 

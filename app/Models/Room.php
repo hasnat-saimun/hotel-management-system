@@ -31,6 +31,12 @@ class Room extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    // many-to-many for reservations that may include multiple rooms
+    public function reservationMany()
+    {
+        return $this->belongsToMany(Reservation::class, 'reservation_rooms');
+    }
+
     public function amenities()
     {
         return $this->belongsToMany(Amenity::class, 'amenity_room');

@@ -19,7 +19,8 @@ class RoomController extends Controller
             $query->where(function($w) use ($q) {
                 $w->where('number', 'like', "%{$q}%")
                   ->orWhere('type', 'like', "%{$q}%")
-                  ->orWhere('floor', 'like', "%{$q}%");
+                  ->orWhere('floor', 'like', "%{$q}%")
+                  ->orWhere('description', 'like', "%{$q}%");
             });
         }
 

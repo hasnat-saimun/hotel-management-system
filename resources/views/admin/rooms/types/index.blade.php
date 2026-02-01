@@ -6,8 +6,13 @@
             <h3 class="kt-card-title">Room Types</h3>
             <div class="text-sm text-secondary-foreground">Manage room type definitions (capacity, base price, amenities)</div>
         </div>
-        <div>
-            <a href="{{ route('admin.rooms.types.create') }}" class="kt-btn kt-btn-primary">Add Type</a>
+        <div class="flex items-center gap-2">
+            <form method="GET" action="{{ route('admin.rooms.types.index') }}" id="types-search-form" class="flex items-center gap-2">
+                <input id="types-search-input" type="text" name="q" class="kt-input" placeholder="Search types..." value="{{ request('q') }}" />
+            </form>
+            <div>
+                <a href="{{ route('admin.rooms.types.create') }}" class="kt-btn kt-btn-primary">Add Type</a>
+            </div>
         </div>
     </div>
     <div class="kt-card-content p-4">
@@ -21,7 +26,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($types as $type)
+                @forelse($types as $type)
                 <tr class="border-t hover:bg-muted/10">
                     <td class="p-2">{{ $type->name }}</td>
                     <td class="p-2">{{ $type->capacity }}</td>
@@ -36,8 +41,30 @@
                         </form>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="5" class="p-6 text-center text-secondary-foreground">No data found.</td>
+                </tr>
+                @endforelse
             </tbody>
+        </table>
+        <div class="mt-4">
+            {{ $types->appends(request()->except('page'))->links() }}
+        </div>
+    @push('scripts')
+    <script>
+    (function(){
+        var form = document.getElementById('types-search-form');
+        var input = document.getElementById('types-search-input');
+        if (!form || !input) return;
+        var timeout = null;
+        input.addEventListener('input', function(){
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(function(){ form.submit(); }, 500);
+        });
+    })();
+    </script>
+    @endpush
         </table>
     </div>
 </div>

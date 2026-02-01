@@ -16,8 +16,16 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $reservations = Schema::hasTable('reservations') ? DB::table('reservations')->orderBy('check_in_date','desc')->limit(50)->get() : collect();
-            $query = Reservation::query();
+        $query = Reservation::query();
+
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where(function($w) use ($q) {
+                $w->where('guest_name', 'like', "%{$q}%")
+                  ->orWhere('guest_email', 'like', "%{$q}%")
+                  ->orWhere('room_number', 'like', "%{$q}%");
+            });
+        }
 
             if ($request->filled('status')) {
                 $query->where('status', $request->input('status'));
@@ -29,7 +37,7 @@ class ReservationController extends Controller
                 $query->whereBetween('check_in_date', [$from, $to]);
             }
 
-            $reservations = $query->with('room')->orderBy('check_in_date', 'desc')->paginate(25);
+            $reservations = $query->with('rooms')->orderBy('check_in_date', 'desc')->paginate(25);
 
             return view('admin.reservations.index', compact('reservations'));
     }
@@ -37,7 +45,7 @@ class ReservationController extends Controller
     public function show($id)
     {
         $reservation = Schema::hasTable('reservations') ? DB::table('reservations')->where('id', $id)->first() : null;
-            $reservation = Reservation::with(['room', 'payments', 'invoice'])->findOrFail($id);
+            $reservation = Reservation::with(['rooms', 'payments', 'invoice'])->findOrFail($id);
             return view('admin.reservations.show', compact('reservation'));
     }
 
@@ -59,7 +67,13 @@ class ReservationController extends Controller
         $reservation->status = 'checked_in';
         $reservation->save();
 
-        if ($reservation->room_id) {
+        // mark all associated rooms as occupied (supports many-to-many)
+        if ($reservation->rooms && $reservation->rooms->count()) {
+            foreach ($reservation->rooms as $room) {
+                $room->status = 'occupied';
+                $room->save();
+            }
+        } elseif ($reservation->room_id) {
             $reservation->room->status = 'occupied';
             $reservation->room->save();
         }
@@ -74,7 +88,13 @@ class ReservationController extends Controller
         $reservation->status = 'checked_out';
         $reservation->save();
 
-        if ($reservation->room_id) {
+        // mark all associated rooms as available
+        if ($reservation->rooms && $reservation->rooms->count()) {
+            foreach ($reservation->rooms as $room) {
+                $room->status = 'available';
+                $room->save();
+            }
+        } elseif ($reservation->room_id) {
             $reservation->room->status = 'available';
             $reservation->room->save();
         }
@@ -98,6 +118,8 @@ class ReservationController extends Controller
             'guest_email' => 'nullable|email|max:191',
             'guest_phone' => 'nullable|string|max:50',
             'room_number' => 'nullable|string|max:50',
+            'room_ids' => 'nullable|array',
+            'room_ids.*' => 'integer|exists:rooms,id',
             'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after_or_equal:check_in_date',
         ]);
@@ -110,7 +132,21 @@ class ReservationController extends Controller
         $reservation->check_out_date = $data['check_out_date'];
         $reservation->status = 'booked';
 
-        if (!empty($data['room_number'])) {
+        // attach single room by number OR multiple rooms by ids
+        if (!empty($data['room_ids']) && is_array($data['room_ids'])) {
+            $reservation->save();
+            $reservation->rooms()->sync($data['room_ids']);
+            // mark rooms occupied
+            $rooms = Room::whereIn('id', $data['room_ids'])->get();
+            foreach ($rooms as $r) { $r->status = 'occupied'; $r->save(); }
+            // for backward compatibility set first room_id/number
+            if ($rooms->count()) {
+                $first = $rooms->first();
+                $reservation->room_id = $first->id;
+                $reservation->room_number = $first->number;
+                $reservation->save();
+            }
+        } elseif (!empty($data['room_number'])) {
             $room = Room::where('number', $data['room_number'])->first();
             if ($room) {
                 $reservation->room_id = $room->id;
@@ -121,10 +157,10 @@ class ReservationController extends Controller
             } else {
                 $reservation->room_number = $data['room_number'];
             }
+            $reservation->save();
+        } else {
+            $reservation->save();
         }
-
-        $reservation->save();
-
         return redirect()->route('admin.reservations.show', $reservation->id)->with('success', 'Walk-in reservation created');
     }
 }

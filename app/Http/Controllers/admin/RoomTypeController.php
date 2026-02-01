@@ -8,9 +8,16 @@ use App\Models\RoomType;
 
 class RoomTypeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $types = RoomType::orderBy('name')->get();
+        $query = RoomType::orderBy('name');
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where('name', 'like', "%{$q}%")
+                  ->orWhere('amenities', 'like', "%{$q}%");
+        }
+
+        $types = $query->paginate(25);
         return view('admin.rooms.types.index', compact('types'));
     }
 

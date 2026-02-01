@@ -8,9 +8,15 @@ use App\Models\Amenity;
 
 class AmenityController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $amenities = Amenity::orderBy('name')->get();
+        $query = Amenity::orderBy('name');
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where('name', 'like', "%{$q}%");
+        }
+
+        $amenities = $query->paginate(25);
         return view('admin.rooms.amenities.index', compact('amenities'));
     }
 

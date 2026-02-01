@@ -5,10 +5,10 @@
         <h1 class="text-xl font-medium">Reservations</h1>
         <div class="text-sm text-secondary-foreground">List, filter and manage bookings</div>
     </div>
-    <div class="flex items-center gap-2">
-        <a class="kt-btn" href="{{ route('admin.reservations.calendar') }}">Calendar</a>
-        <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.walkin') }}">New Walk-in</a>
-    </div>
+        <div class="flex items-center gap-2">
+            <a class="kt-btn" href="{{ route('admin.reservations.calendar') }}">Calendar</a>
+            <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.walkin') }}">New Walk-in</a>
+        </div>
 </div>
 
 <div class="grid gap-5">
@@ -16,15 +16,17 @@
         <div class="kt-card-header flex items-center justify-between">
             <h3 class="kt-card-title">Reservations</h3>
             <div class="flex items-center gap-2">
-                <input type="text" class="kt-input" placeholder="Search guest or room" />
-                <select class="kt-select" name="status">
+                <form method="GET" action="{{ route('admin.reservations.index') }}" id="reservations-search-form" class="flex items-center gap-2">
+                    <input name="q" id="reservations-search-input" type="text" class="kt-input" placeholder="Search guest or room" value="{{ request('q') }}" />
+                    <select class="kt-select" name="status">
                     <option value="">All statuses</option>
                     <option>Pending</option>
                     <option>Confirmed</option>
                     <option>Checked-in</option>
                     <option>Checked-out</option>
                     <option>Cancelled</option>
-                </select>
+                    </select>
+                </form>
             </div>
         </div>
         <div class="kt-card-content p-4">
@@ -85,9 +87,31 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="mt-4">
+                    {{ $reservations->appends(request()->except('page'))->links() }}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+    (function(){
+        var form = document.getElementById('reservations-search-form');
+        var input = document.getElementById('reservations-search-input');
+        if (!form || !input) return;
+        var timeout = null;
+        input.addEventListener('input', function(){
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(function(){ form.submit(); }, 500);
+        });
+
+        // submit when status select changes
+        var selects = form.querySelectorAll('select');
+        selects.forEach(function(s){ s.addEventListener('change', function(){ form.submit(); }); });
+    })();
+    </script>
+@endpush

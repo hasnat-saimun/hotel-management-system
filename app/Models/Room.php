@@ -13,28 +13,26 @@ class Room extends Model
     use HasFactory;
 
     protected $fillable = [
-        'number',
-        'type',
+        'room_number',
+        'room_type_id',
+        'floor_id',
         'status',
-        'rate',
-        'description',
-        'floor',
-        'capacity',
+        'notes',
+        'is_active',
     ];
 
     protected $casts = [
-        'capacity' => 'integer',
+        'is_active' => 'boolean',
     ];
 
-    public function reservations()
+    public function roomType()
     {
-        return $this->hasMany(Reservation::class);
+        return $this->belongsTo(RoomType::class, 'room_type_id');
     }
 
-    // many-to-many for reservations that may include multiple rooms
-    public function reservationMany()
+    public function floor()
     {
-        return $this->belongsToMany(Reservation::class, 'reservation_rooms');
+        return $this->belongsTo(Floor::class, 'floor_id');
     }
 
     public function amenities()
@@ -42,8 +40,13 @@ class Room extends Model
         return $this->belongsToMany(Amenity::class, 'amenity_room');
     }
 
-    public function roomType()
+    public function reservationMany()
     {
-        return $this->belongsTo(RoomType::class, 'type', 'name');
+        return $this->belongsToMany(Reservation::class, 'reservation_rooms');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
     }
 }

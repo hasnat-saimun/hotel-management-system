@@ -63,4 +63,15 @@ class ExtraServiceController extends Controller
         $service->delete();
         return redirect()->route('admin.rooms.services.index')->with('success', 'Service deleted');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:extra_services,id'
+        ]);
+
+        $count = ExtraService::whereIn('id', $data['ids'])->delete();
+        return redirect()->route('admin.rooms.services.index')->with('success', "$count services deleted");
+    }
 }

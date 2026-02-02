@@ -8,17 +8,16 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('extra_services', function (Blueprint $table) {
+        Schema::create('amenity_room', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->decimal('price', 10, 2)->default(0);
-            $table->text('description')->nullable();
+            $table->foreignId('room_type_id')->constrained('room_types')->cascadeOnDelete();
+            $table->foreignId('amenity_id')->constrained('amenities')->cascadeOnDelete();
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('extra_services');
+        Schema::dropIfExists('amenity_room');
     }
 };

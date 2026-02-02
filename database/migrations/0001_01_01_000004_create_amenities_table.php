@@ -8,18 +8,16 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('room_types', function (Blueprint $table) {
+        Schema::create('amenities', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('capacity')->default(1);
-            $table->decimal('base_price', 10, 2)->default(0);
-            $table->text('amenities')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('room_types');
+        Schema::dropIfExists('amenities');
     }
 };

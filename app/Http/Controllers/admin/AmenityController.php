@@ -29,9 +29,10 @@ class AmenityController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'icon' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
         Amenity::create($data);
         return redirect()->route('admin.rooms.amenities.index')->with('success', 'Amenity created');
     }
@@ -47,9 +48,10 @@ class AmenityController extends Controller
         $amenity = Amenity::findOrFail($id);
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'icon' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : false;
         $amenity->update($data);
         return redirect()->route('admin.rooms.amenities.index')->with('success', 'Amenity updated');
     }
@@ -60,5 +62,18 @@ class AmenityController extends Controller
         $amenity->rooms()->detach();
         $amenity->delete();
         return redirect()->route('admin.rooms.amenities.index')->with('success', 'Amenity deleted');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:amenities,id'
+        ]);
+
+        $amenities = Amenity::whereIn('id', $data['ids'])->get();
+        foreach ($amenities as $a) { $a->rooms()->detach(); }
+        $count = Amenity::whereIn('id', $data['ids'])->delete();
+        return redirect()->route('admin.rooms.amenities.index')->with('success', "$count amenities deleted");
     }
 }

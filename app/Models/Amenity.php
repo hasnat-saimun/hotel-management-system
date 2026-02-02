@@ -10,7 +10,11 @@ class Amenity extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'icon'
+        'name', 'is_active'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function rooms()

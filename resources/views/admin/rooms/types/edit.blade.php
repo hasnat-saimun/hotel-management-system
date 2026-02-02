@@ -5,16 +5,32 @@
         <h3 class="kt-card-title">Edit Room Type {{ $type->name }}</h3>
     </div>
     <div class="kt-card-content p-4">
+        @if($errors->any())
+            <div class="mb-4 p-3 bg-danger/10 text-danger rounded">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <form method="POST" action="{{ route('admin.rooms.types.update', $type->id) }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             @method('PUT')
             <div>
                 <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" value="{{ old('name', $type->name) }}" />
+                <input class="kt-input w-full" name="name" id="room-type-name" value="{{ old('name', $type->name) }}" />
+            </div>
+            <div>
+                <label class="text-sm text-secondary-foreground">Slug (optional)</label>
+                <input class="kt-input w-full" name="slug" id="room-type-slug" value="{{ old('slug', $type->slug) }}" />
             </div>
             <div>
                 <label class="text-sm text-secondary-foreground">Capacity</label>
-                <input type="number" class="kt-input w-full" name="capacity" value="{{ old('capacity', $type->capacity) }}" />
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" class="kt-input w-full" name="capacity_adults" value="{{ old('capacity_adults', $type->capacity_adults) }}" placeholder="Adults" />
+                    <input type="number" class="kt-input w-full" name="capacity_children" value="{{ old('capacity_children', $type->capacity_children) }}" placeholder="Children" />
+                </div>
             </div>
             <div>
                 <label class="text-sm text-secondary-foreground">Base Price</label>
@@ -22,7 +38,13 @@
             </div>
             <div class="lg:col-span-2">
                 <label class="text-sm text-secondary-foreground">Amenities (comma separated)</label>
-                <input class="kt-input w-full" name="amenities" value="{{ old('amenities', $type->amenities) }}" />
+                <textarea class="kt-input w-full" name="description">{{ old('description', $type->description) }}</textarea>
+            </div>
+            <div class="lg:col-span-2">
+                <label class="text-sm text-secondary-foreground">Active</label>
+                <div>
+                    <label class="inline-flex items-center gap-2"><input type="checkbox" name="is_active" value="1" {{ old('is_active', $type->is_active) ? 'checked' : '' }} /> Enabled</label>
+                </div>
             </div>
             <div class="lg:col-span-2 flex gap-2">
                 <button class="kt-btn kt-btn-primary" type="submit">Save</button>

@@ -6,21 +6,26 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Room;
 use App\Models\RoomType;
+use App\Models\Floor;
 use App\Models\Amenity;
 
 class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Room::with('amenities')->orderBy('number');
+        $query = Room::with(['roomType', 'floor', 'amenities'])->orderBy('room_number');
 
         if ($request->filled('q')) {
             $q = $request->input('q');
             $query->where(function($w) use ($q) {
-                $w->where('number', 'like', "%{$q}%")
-                  ->orWhere('type', 'like', "%{$q}%")
-                  ->orWhere('floor', 'like', "%{$q}%")
-                  ->orWhere('description', 'like', "%{$q}%");
+                $w->where('room_number', 'like', "%{$q}%")
+                  ->orWhereHas('roomType', function($r) use ($q) {
+                      $r->where('name', 'like', "%{$q}%");
+                  })
+                  ->orWhereHas('floor', function($f) use ($q) {
+                      $f->where('name', 'like', "%{$q}%");
+                  })
+                  ->orWhere('notes', 'like', "%{$q}%");
             });
         }
 
@@ -34,27 +39,27 @@ class RoomController extends Controller
 
     public function create()
     {
-        $types = RoomType::orderBy('name')->get();
-        $amenities = Amenity::orderBy('name')->get();
-        return view('admin.rooms.create', compact('types', 'amenities'));
+        $types = RoomType::where('is_active', true)->orderBy('name')->get();
+        $floors = Floor::orderBy('level_number')->get();
+        $amenities = Amenity::where('is_active', true)->orderBy('name')->get();
+        return view('admin.rooms.create', compact('types', 'floors', 'amenities'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'number' => 'required|string|max:50|unique:rooms,number',
-            'type' => 'nullable|string|max:191',
-            'floor' => 'nullable|string|max:50',
-            'capacity' => 'nullable|integer|min:1',
-            'rate' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|max:50',
-            'description' => 'nullable|string',
+            'room_number' => 'required|string|max:50|unique:rooms,room_number',
+            'room_type_id' => 'required|integer|exists:room_types,id',
+            'floor_id' => 'required|integer|exists:floors,id',
+            'status' => 'required|in:available,occupied,reserved,dirty,clean,maintenance,out_of_service',
+            'notes' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
             'amenities' => 'nullable|array',
             'amenities.*' => 'integer|exists:amenities,id',
         ]);
 
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
         $room = Room::create($data);
-        // always sync amenities (will attach none if not provided)
         $room->amenities()->sync($data['amenities'] ?? []);
 
         return redirect()->route('admin.rooms.index')->with('success', 'Room created');
@@ -63,9 +68,10 @@ class RoomController extends Controller
     public function edit($id)
     {
         $room = Room::with('amenities')->findOrFail($id);
-        $types = RoomType::orderBy('name')->get();
-        $amenities = Amenity::orderBy('name')->get();
-        return view('admin.rooms.edit', compact('room','types','amenities'));
+        $types = RoomType::where('is_active', true)->orderBy('name')->get();
+        $floors = Floor::orderBy('level_number')->get();
+        $amenities = Amenity::where('is_active', true)->orderBy('name')->get();
+        return view('admin.rooms.edit', compact('room','types','floors','amenities'));
     }
 
     public function update(Request $request, $id)
@@ -73,17 +79,17 @@ class RoomController extends Controller
         $room = Room::findOrFail($id);
 
         $data = $request->validate([
-            'number' => 'required|string|max:50|unique:rooms,number,'.$room->id,
-            'type' => 'nullable|string|max:191',
-            'floor' => 'nullable|string|max:50',
-            'capacity' => 'nullable|integer|min:1',
-            'rate' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|max:50',
-            'description' => 'nullable|string',
+            'room_number' => 'required|string|max:50|unique:rooms,room_number,'.$room->id,
+            'room_type_id' => 'required|integer|exists:room_types,id',
+            'floor_id' => 'required|integer|exists:floors,id',
+            'status' => 'required|in:available,occupied,reserved,dirty,clean,maintenance,out_of_service',
+            'notes' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
             'amenities' => 'nullable|array',
             'amenities.*' => 'integer|exists:amenities,id',
         ]);
 
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : false;
         $room->update($data);
         $room->amenities()->sync($data['amenities'] ?? []);
 
@@ -96,5 +102,18 @@ class RoomController extends Controller
         $room->amenities()->detach();
         $room->delete();
         return redirect()->route('admin.rooms.index')->with('success', 'Room deleted');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:rooms,id'
+        ]);
+
+        $rooms = Room::whereIn('id', $data['ids'])->get();
+        foreach ($rooms as $r) { $r->amenities()->detach(); }
+        $count = Room::whereIn('id', $data['ids'])->delete();
+        return redirect()->route('admin.rooms.index')->with('success', "$count rooms deleted");
     }
 }

@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('amenities', function (Blueprint $table) {
+        Schema::create('extra_services', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('icon')->nullable();
+            $table->decimal('price', 10, 2)->default(0);
+            $table->enum('price_type', ['per_night','per_stay','per_person','fixed'])->default('fixed');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('amenities');
+        Schema::dropIfExists('extra_services');
     }
 };

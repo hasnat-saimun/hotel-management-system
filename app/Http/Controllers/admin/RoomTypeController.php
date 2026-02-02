@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\RoomType;
+use Illuminate\Support\Str;
 
 class RoomTypeController extends Controller
 {
@@ -14,7 +15,7 @@ class RoomTypeController extends Controller
         if ($request->filled('q')) {
             $q = $request->input('q');
             $query->where('name', 'like', "%{$q}%")
-                  ->orWhere('amenities', 'like', "%{$q}%");
+                  ->orWhere('description', 'like', "%{$q}%");
         }
 
         $types = $query->paginate(25);
@@ -30,10 +31,26 @@ class RoomTypeController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'capacity' => 'nullable|integer|min:1',
+            'capacity_adults' => 'nullable|integer|min:0',
+            'capacity_children' => 'nullable|integer|min:0',
             'base_price' => 'nullable|numeric|min:0',
-            'amenities' => 'nullable|string',
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        // ensure slug
+        $slug = $data['slug'] ?? null;
+        if (empty($slug)) {
+            $base = Str::slug($data['name']);
+            $slug = $base;
+            $counter = 1;
+            while (RoomType::where('slug', $slug)->exists()) {
+                $slug = $base . '-' . $counter;
+                $counter++;
+            }
+        }
+        $data['slug'] = $slug;
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
 
         RoomType::create($data);
         return redirect()->route('admin.rooms.types.index')->with('success', 'Room type created');
@@ -50,10 +67,24 @@ class RoomTypeController extends Controller
         $type = RoomType::findOrFail($id);
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'capacity' => 'nullable|integer|min:1',
+            'capacity_adults' => 'nullable|integer|min:0',
+            'capacity_children' => 'nullable|integer|min:0',
             'base_price' => 'nullable|numeric|min:0',
-            'amenities' => 'nullable|string',
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        if (empty($data['slug'])) {
+            $base = Str::slug($data['name']);
+            $slug = $base;
+            $counter = 1;
+            while (RoomType::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+                $slug = $base . '-' . $counter;
+                $counter++;
+            }
+            $data['slug'] = $slug;
+        }
+        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : false;
 
         $type->update($data);
         return redirect()->route('admin.rooms.types.index')->with('success', 'Room type updated');
@@ -64,5 +95,16 @@ class RoomTypeController extends Controller
         $type = RoomType::findOrFail($id);
         $type->delete();
         return redirect()->route('admin.rooms.types.index')->with('success', 'Room type deleted');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:room_types,id'
+        ]);
+
+        $count = RoomType::whereIn('id', $data['ids'])->delete();
+        return redirect()->route('admin.rooms.types.index')->with('success', "$count room types deleted");
     }
 }

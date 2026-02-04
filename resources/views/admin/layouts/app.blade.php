@@ -1,6 +1,7 @@
 <!doctype html>
 <html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
-    <meta http-equiv="content-type" content="text/html;charset=utf-8" /><head>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8" />
         <title>Metronic - Tailwind CSS Light Sidebar</title>
         <meta charset="utf-8" />
         <meta content="follow, index" name="robots" />
@@ -29,9 +30,41 @@
         <link href="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet" />
         <link href="{{ asset('/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet" />
         <link href="{{ asset('/hotel-management-admin/') }}/css/styles.css" rel="stylesheet" />
+
+        <style>
+            /* Fixed footer for admin layout (sidebar-aware) */
+            :root {
+                --kt-footer-height: 0px;
+            }
+
+            .kt-footer.kt-footer-fixed {
+                position: fixed;
+                bottom: 0;
+                inset-inline-end: 0;
+                inset-inline-start: 0;
+                z-index: 15;
+                background: var(--background);
+                border-top: 1px solid var(--border);
+            }
+
+            #headerContainer{
+                border-bottom: 1px solid var(--border);
+            }
+            /* Ensure content never hides under the fixed footer */
+            main#content {
+                   overflow-y: auto;
+                    padding: 20px 20px 95px 20px;
+            }
+
+            @media (min-width: 64rem) {
+                body.demo1.kt-sidebar-fixed .kt-footer.kt-footer-fixed {
+                    inset-inline-start: var(--sidebar-width);
+                }
+            }
+        </style>
     </head>
     <body
-        class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed"
+        class="antialiased flex h-full overflow-hidden text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed"
     >
         <script>
             const defaultThemeMode = "light"; // light|dark|system
@@ -53,7 +86,7 @@
                 document.documentElement.classList.add(themeMode);
             }
         </script>
-        <div class="flex grow">
+        <div class="flex grow min-h-0">
             <div
                 class="kt-sidebar bg-background border-e border-e-border fixed top-0 bottom-0 z-20 hidden lg:flex flex-col items-stretch shrink-0 [--kt-drawer-enable:true] lg:[--kt-drawer-enable:false]"
                 data-kt-drawer="true"
@@ -259,7 +292,7 @@
                     </div>
                 </div>
             </div>
-            <div class="kt-wrapper flex grow flex-col">
+            <div class="kt-wrapper flex grow flex-col min-h-0">
                 <header
                     class="kt-header fixed top-0 z-10 start-0 end-0 flex items-stretch shrink-0 bg-background"
                     data-kt-sticky="true"
@@ -754,10 +787,11 @@
                         </div>
                     </div>
                 </header>
-                <main class="grow pt-5" id="content" role="content">
-                    <div class="kt-container-fixed" id="contentContainer">@yield('content')</div>
+                <main class="h-full" id="content" role="content">
+                    <!-- <div class="kt-container-fixed" id="contentContainer">@yield('content')</div> -->
+                     @yield('content')
                 </main>
-                <footer class="kt-footer">
+                <footer class="kt-footer kt-footer-fixed">
                     <div class="kt-container-fixed">
                         <div
                             class="flex flex-col md:flex-row justify-center md:justify-between items-center gap-3 py-5"
@@ -1171,6 +1205,29 @@
         <script src="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js"></script>
         <script src="{{ asset('/hotel-management-admin/') }}/js/general.js"></script>
         <script src="{{ asset('/hotel-management-admin/') }}/js/demo1.js"></script>
+
+        <script>
+            (function () {
+                const footer = document.querySelector('.kt-footer.kt-footer-fixed');
+                if (!footer) return;
+
+                const root = document.documentElement;
+                const update = () => {
+                    const height = Math.ceil(footer.getBoundingClientRect().height || 0);
+                    root.style.setProperty('--kt-footer-height', `${height}px`);
+                };
+
+                update();
+                window.addEventListener('load', update);
+                window.addEventListener('resize', update);
+                window.addEventListener('orientationchange', update);
+
+                if ('ResizeObserver' in window) {
+                    const ro = new ResizeObserver(update);
+                    ro.observe(footer);
+                }
+            })();
+        </script>
         @stack('scripts')
     </body>
 </html>

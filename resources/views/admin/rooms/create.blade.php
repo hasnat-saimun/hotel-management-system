@@ -14,7 +14,7 @@
                 </ul>
             </div>
         @endif
-        <form method="POST" action="{{ route('admin.rooms.store') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
+        <form method="POST" action="{{ route('admin.rooms.store') }}" enctype="multipart/form-data" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             <div>
                 <label class="text-sm text-secondary-foreground">Room Number</label>
@@ -49,6 +49,10 @@
                     <option value="maintenance" {{ old('status')=='maintenance' ? 'selected':'' }}>Maintenance</option>
                     <option value="out_of_service" {{ old('status')=='out_of_service' ? 'selected':'' }}>Out of Service</option>
                 </select>
+            </div>
+            <div>                            
+                <label class="text-sm text-secondary-foreground">Upload</label>
+                <input class="kt-input w-full btn btn-primary"  type="file" name="images[]" multiple />
             </div>
             <div class="lg:col-span-2">
                 <label class="text-sm text-secondary-foreground">Notes</label>

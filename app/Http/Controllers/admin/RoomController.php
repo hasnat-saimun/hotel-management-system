@@ -56,10 +56,25 @@ class RoomController extends Controller
             'is_active' => 'nullable|boolean',
             'amenities' => 'nullable|array',
             'amenities.*' => 'integer|exists:amenities,id',
+            'images' => 'nullable|array'
         ]);
 
+            $images = array();
+            if ($request->hasFile('images')) {
+                $files = $request->file('images');
+                foreach ($files as $file) {
+                    $image_name = md5(rand(1000, 10000));
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    $image_full_name = $image_name . '.' . $ext;
+                    $file_path = $file->store('images/rooms', 'public');
+                    $images[] = $file_path;
+                    
+                }
+            }
+        $data['avatar'] = json_encode($images);
         $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
         $room = Room::create($data);
+
         $room->amenities()->sync($data['amenities'] ?? []);
 
         return redirect()->route('admin.rooms.index')->with('success', 'Room created');
@@ -96,12 +111,40 @@ class RoomController extends Controller
         return redirect()->route('admin.rooms.index')->with('success', 'Room updated');
     }
 
-    public function destroy($id)
+    public function deleteRoomImage(Request $request, $id)
     {
         $room = Room::findOrFail($id);
-        $room->amenities()->detach();
-        $room->delete();
-        return redirect()->route('admin.rooms.index')->with('success', 'Room deleted');
+
+        $data = $request->validate([
+            'images' => 'required|array',
+        ]);
+
+        $images = json_decode($room->avatar, true);
+        $removeImages = $data['images'];
+
+        $remainingImages = array_diff($images, $removeImages);
+        $room->avatar = json_encode(array_values($remainingImages));
+        $room->save();
+
+        return redirect()->route('admin.rooms.edit', $room->id)->with('success', 'Images removed');
+    }
+
+    public function updateRoomImage(Request $request, $id)
+    {
+        $room = Room::findOrFail($id);
+
+        $data = $request->validate([
+            'images' => 'required|array',
+        ]);
+
+        $images = json_decode($room->avatar, true);
+        $newImages = $data['images'];
+
+        $allImages = array_merge($images, $newImages);
+        $room->avatar = json_encode($allImages);
+        $room->save();
+
+        return redirect()->route('admin.rooms.edit', $room->id)->with('success', 'Images updated');
     }
 
     public function bulkDestroy(Request $request)

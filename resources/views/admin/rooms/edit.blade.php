@@ -14,6 +14,24 @@
                 </ul>
             </div>
         @endif
+        <form action="{{ route('admin.rooms.updateRoomImage', $room->id) }}" method="post">
+            @csrf
+            @method('PUT')
+            @if($room->avatar)
+            <div class="lg:col-span-2 flex gap-2">
+                @foreach(json_decode($room->avatar, true) as $image)
+               
+                <img src="{{ asset('storage/' . $image) }}" alt="Room Image" class="h-32 w-32 object-cover"/>
+                <a href="{{ route('admin.rooms.deleteRoomImage', $room->id) }}" class=" kt-btn kt-btn-danger">Remove</a>
+                @endforeach
+            </div>
+            @else
+            <div>                            
+                <label class="text-sm text-secondary-foreground">Upload</label>
+                <input class="kt-input w-full btn btn-primary"  type="file" name="images[]" multiple />
+            </div>
+            @endif
+        </form>
         <form method="POST" action="{{ route('admin.rooms.update', $room->id) }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             @method('PUT')

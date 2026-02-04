@@ -29,7 +29,7 @@ class FloorController extends Controller
     {
         $data = $request->validate([
             'name' => 'nullable|string|max:191',
-            'level_number' => 'nullable|integer',
+            'level_number' => 'nullable|string|max:191',
         ]);
 
         Floor::create($data);
@@ -47,7 +47,7 @@ class FloorController extends Controller
         $floor = Floor::findOrFail($id);
         $data = $request->validate([
             'name' => 'nullable|string|max:191',
-            'level_number' => 'nullable|integer',
+            'level_number' => 'nullable|string|max:191',
         ]);
 
         $floor->update($data);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Amenity;
 
 class RoomType extends Model
 {
@@ -43,5 +44,15 @@ class RoomType extends Model
 
             $type->slug = $slug;
         });
+    }
+
+    public function amenities()
+    {
+        return $this->belongsToMany(
+            Amenity::class,
+            'amenity_room',
+            'room_type_id',
+            'amenity_id'
+        )->withTimestamps();
     }
 }

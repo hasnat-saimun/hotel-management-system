@@ -19,6 +19,7 @@ class Room extends Model
         'status',
         'notes',
         'is_active',
+        'avatar'
     ];
 
     protected $casts = [

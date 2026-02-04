@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Rooms;
 
 class Amenity extends Model
 {
@@ -19,6 +20,16 @@ class Amenity extends Model
 
     public function rooms()
     {
-        return $this->belongsToMany(Room::class, 'amenity_room');
+        return $this->belongsToMany(
+            Rooms::class,
+            'amenity_room',
+            'amenity_id',
+            'room_id'
+        )->withTimestamps();
     }
+
+    // public function roomTypes()
+    // {
+    //     return $this->rooms();
+    // }
 }

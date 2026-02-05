@@ -14,23 +14,50 @@
                 </ul>
             </div>
         @endif
-        <form action="{{ route('admin.rooms.updateRoomImage', $room->id) }}" method="post">
+        <form action="{{ route('admin.rooms.updateRoomImage', $room->id) }}" method="post" enctype="multipart/form-data" class="mb-4">
             @csrf
             @method('PUT')
+
             @if($room->avatar)
             <div class="lg:col-span-2 flex gap-2">
-                @foreach(json_decode($room->avatar, true) as $image)
-               
-                <img src="{{ asset('storage/' . $image) }}" alt="Room Image" class="h-32 w-32 object-cover"/>
-                <a href="{{ route('admin.rooms.deleteRoomImage', $room->id) }}" class=" kt-btn kt-btn-danger">Remove</a>
+                @foreach(json_decode($room->avatar, true) as $key => $image)
+                <div class="flex flex-col items-center gap-2">
+                    <img src="{{ asset('storage/' . $image) }}" class="h-32 w-32 object-cover" />
+                     {{-- Delete single image --}}
+
+                        <a href="{{route('admin.rooms.deleteSingleRoomImage',  [$room->id,'index' => $key]) }}"
+                           class="kt-btn kt-btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to remove this image?')">
+                            Remove
+                        </a>
+                </div>
                 @endforeach
             </div>
-            @else
-            <div>                            
-                <label class="text-sm text-secondary-foreground">Upload</label>
-                <input class="kt-input w-full btn btn-primary"  type="file" name="images[]" multiple />
+            {{-- Upload more images --}}
+            <div class="mt-4">
+                <label class="text-sm text-secondary-foreground">Add more images</label>
+                <input class="kt-input w-full"
+                    type="file"
+                    name="images[]"
+                    multiple />
             </div>
+
+            @else
+                {{-- First time upload --}}
+                <div>
+                    <label class="text-sm text-secondary-foreground">Upload</label>
+                    <input class="kt-input w-full"
+                        type="file"
+                        name="images[]"
+                        multiple />
+                </div>
             @endif
+
+            <div class="mt-4">
+                <button type="submit" class="kt-btn kt-btn-primary">
+                    Update Images
+                </button>
+            </div>
         </form>
         <form method="POST" action="{{ route('admin.rooms.update', $room->id) }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf

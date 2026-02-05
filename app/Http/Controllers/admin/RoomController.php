@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\admin;
-
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Room;
@@ -111,39 +111,50 @@ class RoomController extends Controller
         return redirect()->route('admin.rooms.index')->with('success', 'Room updated');
     }
 
-    public function deleteRoomImage(Request $request, $id)
+    public function deleteSingleRoomImage(Request $request, $id,$index)
     {
+
         $room = Room::findOrFail($id);
 
-        $data = $request->validate([
-            'images' => 'required|array',
-        ]);
+        $images = json_decode($room->avatar, true) ?? [];
+        if (!isset($images[$index])) {
+            return redirect()->route('admin.rooms.edit', $room->id)->with('error', 'Image not found');
+        }
+        $imageToDelete = $images[$index];
 
-        $images = json_decode($room->avatar, true);
-        $removeImages = $data['images'];
 
-        $remainingImages = array_diff($images, $removeImages);
-        $room->avatar = json_encode(array_values($remainingImages));
+        // Remove image from array
+        $images = array_values(array_diff($images, [$imageToDelete]));
+
+        // Update database
+        $room->avatar = json_encode($images);
         $room->save();
+        // Remove from storage
+    if (Storage::disk('public')->exists($imageToDelete)) {
 
-        return redirect()->route('admin.rooms.edit', $room->id)->with('success', 'Images removed');
+        Storage::disk('public')->delete($imageToDelete);
     }
+
+            return redirect()->route('admin.rooms.edit', $room->id)->with('success', 'Image removed');
+        }
 
     public function updateRoomImage(Request $request, $id)
     {
         $room = Room::findOrFail($id);
 
         $data = $request->validate([
-            'images' => 'required|array',
+            'images' => 'nullable|array',
         ]);
-
-        $images = json_decode($room->avatar, true);
-        $newImages = $data['images'];
-
-        $allImages = array_merge($images, $newImages);
-        $room->avatar = json_encode($allImages);
+            $existing = json_decode($room->avatar, true) ?? [];
+            $new = [];
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file ) {
+                    $new[] = $file->store('images/rooms', 'public');  
+                }
+            }
+            $merged = array_values(array_unique(array_merge($existing, $new)));
+        $room->avatar = json_encode($merged);
         $room->save();
-
         return redirect()->route('admin.rooms.edit', $room->id)->with('success', 'Images updated');
     }
 

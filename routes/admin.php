@@ -26,7 +26,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/', [App\Http\Controllers\admin\RoomController::class, 'store'])->name('store');
             Route::get('{id}/edit', [App\Http\Controllers\admin\RoomController::class, 'edit'])->name('edit');
             Route::put('{id}', [App\Http\Controllers\admin\RoomController::class, 'update'])->name('update');
-            Route::get('{id}', [App\Http\Controllers\admin\RoomController::class, 'deleteRoomImage'])->name('deleteRoomImage');
+            Route::get('/deleteSingleRoomImage/{id}/{index}', [App\Http\Controllers\admin\RoomController::class, 'deleteSingleRoomImage'])->name('deleteSingleRoomImage');
             Route::put('updateRoomImage/{id}', [App\Http\Controllers\admin\RoomController::class, 'updateRoomImage'])->name('updateRoomImage');
             Route::delete('{id}', [App\Http\Controllers\admin\RoomController::class, 'destroy'])->name('destroy');
             Route::post('bulk-delete', [App\Http\Controllers\admin\RoomController::class, 'bulkDestroy'])->name('bulkDestroy');

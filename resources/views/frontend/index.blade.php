@@ -149,6 +149,7 @@
       <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
         <!-- Card 1 -->
+         
         <div class="text-center group">
           <div class="relative overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
             <img
@@ -172,77 +173,6 @@
           </div>
         </div>
 
-        <!-- Card 2 -->
-        <div class="text-center group">
-          <div class="relative overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
-            <img
-              src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80"
-              alt="Single Deluxe Room"
-              class="h-56 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-            <div class="absolute inset-x-0 bottom-4 flex justify-center">
-              <a
-                href="#"
-                class="inline-flex h-11 items-center justify-center px-10 bg-amber-500 text-white font-extrabold text-sm shadow hover:bg-amber-400 transition"
-              >
-                BOOK NOW
-              </a>
-            </div>
-          </div>
-          <h3 class="mt-6 text-base font-extrabold">Single Deluxe Room</h3>
-          <div class="mt-2">
-            <span class="text-sky-500 text-2xl font-extrabold">$200</span>
-            <span class="text-sky-300 text-sm font-semibold">/night</span>
-          </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="text-center group">
-          <div class="relative overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
-            <img
-              src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80"
-              alt="Honeymoon Suit"
-              class="h-56 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-            <div class="absolute inset-x-0 bottom-4 flex justify-center">
-              <a
-                href="#"
-                class="inline-flex h-11 items-center justify-center px-10 bg-amber-500 text-white font-extrabold text-sm shadow hover:bg-amber-400 transition"
-              >
-                BOOK NOW
-              </a>
-            </div>
-          </div>
-          <h3 class="mt-6 text-base font-extrabold">Honeymoon Suit</h3>
-          <div class="mt-2">
-            <span class="text-sky-500 text-2xl font-extrabold">$750</span>
-            <span class="text-sky-300 text-sm font-semibold">/night</span>
-          </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="text-center group">
-          <div class="relative overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
-            <img
-              src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80"
-              alt="Economy Double"
-              class="h-56 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-            />
-            <div class="absolute inset-x-0 bottom-4 flex justify-center">
-              <a
-                href="#"
-                class="inline-flex h-11 items-center justify-center px-10 bg-amber-500 text-white font-extrabold text-sm shadow hover:bg-amber-400 transition"
-              >
-                BOOK NOW
-              </a>
-            </div>
-          </div>
-          <h3 class="mt-6 text-base font-extrabold">Economy Double</h3>
-          <div class="mt-2">
-            <span class="text-sky-500 text-2xl font-extrabold">$200</span>
-            <span class="text-sky-300 text-sm font-semibold">/night</span>
-          </div>
-        </div>
 
       </div>
     </div>

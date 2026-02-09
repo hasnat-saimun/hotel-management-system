@@ -1,22 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('frontend.index');
-});
-
-
-Route::get('/about', function () {
-    return view('frontend.about');
-});
-
-
-Route::get('/accomodation', function () {
-    return view('frontend.accomodation');
-});
-
-
+// Load frontend routes
+require __DIR__ . '/frontend.php';
 
 // Load admin routes
 require __DIR__ . '/admin.php';

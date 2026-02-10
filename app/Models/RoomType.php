@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Amenity;
+use App\Models\Room;
 
 class RoomType extends Model
 {
@@ -54,5 +55,10 @@ class RoomType extends Model
             'room_type_id',
             'amenity_id'
         )->withTimestamps();
+    }
+
+    public function room()
+    {
+        return $this->hasMany(Room::class, 'room_type_id')->where('is_active', true);
     }
 }

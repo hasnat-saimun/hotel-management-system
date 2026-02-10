@@ -14,9 +14,9 @@
             <a class="{{ url()->current() == url('/') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/') }}">HOME</a>
             <a class="{{ request()->is('about') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/about') }}">ABOUT US</a>
             <a class="{{ request()->is('accomodation*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/accomodation') }}">ACCOMODATION</a>
-            <a class="{{ request()->is('gallery*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">GALLERY</a>
+            <a class="{{ request()->is('gallery*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/gallery') }}">GALLERY</a>
             <a class="{{ request()->is('blog*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">BLOG</a>
-            <a class="{{ request()->is('elements*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">ELEMENTS</a>
+            <a class="{{ request()->is('elements*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/elements') }}">ELEMENTS</a>
             <a class="{{ request()->is('contact*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">CONTACT</a>
           </nav>
 

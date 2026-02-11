@@ -17,7 +17,7 @@
             <a class="{{ request()->is('gallery*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/gallery') }}">GALLERY</a>
             <a class="{{ request()->is('blog*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">BLOG</a>
             <a class="{{ request()->is('elements*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/elements') }}">ELEMENTS</a>
-            <a class="{{ request()->is('contact*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="#">CONTACT</a>
+            <a class="{{ request()->is('contract*') ? 'text-sky-500' : 'hover:text-sky-600' }}" href="{{ url('/contract') }}">CONTACT</a>
           </nav>
 
           <button class="md:hidden inline-flex items-center justify-center rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold hover:bg-slate-50" type="button">

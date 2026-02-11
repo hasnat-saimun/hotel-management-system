@@ -21,4 +21,11 @@ class DashboardController extends Controller
     // dd( $rooms->toArray());
         return view('frontend.index',['rooms'=>$rooms]); 
     }
+
+    //room details
+    public function roomDetails()
+    {
+        
+        return view('frontend.roomDetails');
+    }
 }

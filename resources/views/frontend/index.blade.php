@@ -35,7 +35,7 @@
 
               <div class="mt-8">
                 <a
-                  href="#"
+                  href="{{route('frontend.room_details')}}"
                   class="inline-flex items-center justify-center rounded bg-amber-500 px-8 py-3 text-sm font-bold text-slate-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   GET STARTED

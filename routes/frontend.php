@@ -2,6 +2,7 @@
 use App\Http\Controllers\frontend\DashboardController;
 use App\Http\Controllers\frontend\GalleryController;
 use App\Http\Controllers\frontend\ElemestsController;
+use App\Http\Controllers\frontend\ContractController;
 use Illuminate\Support\Facades\Route;
 
     
@@ -15,6 +16,10 @@ Route::get('/about', function () {
 Route::get('/gallery', [GalleryController::class, 'index'])->name('frontend.gallery');
 
 Route::get('/elements', [ElemestsController::class, 'index'])->name('frontend.elemests');
+
+Route::get('/contract', [ContractController::class, 'contract'])->name('frontend.contract');
+
+Route::get('/room-details', [DashboardController::class, 'roomDetails'])->name('frontend.room_details');
 
 Route::get('/accomodation', function () {
     return view('frontend.accomodation');

@@ -179,7 +179,7 @@
                   </p>
 
                   <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm">
-                    <a href="#" class="underline text-slate-500 hover:text-slate-700">
+                    <a href="#" id="openBtn" class="underline text-slate-500 hover:text-slate-700">
                       Features, floor plan &amp; gallery
                     </a>
 
@@ -190,108 +190,141 @@
 
                     <div class="flex items-center gap-4">
                       <span class="text-[#b3564a] font-semibold">Hurry, only 1 left!</span>
-                      <button class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition">
-                        ▾ Show available rates
+                      <button
+                        type="button"
+                        class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                        data-rates-toggle
+                        aria-expanded="false"
+                      >
+                        <span data-rates-icon>▾</span>
+                        <span class="ml-2" data-rates-label>Show available rates</span>
                       </button>
                     </div>
                   </div>
 
                 </div>
+
+                <div class="md:col-span-12">
+                  <!-- Rates dropdown (smooth open/close) -->
+                  <div
+                    class="mt-5 overflow-hidden h-0 opacity-0 pointer-events-none transition-[height,opacity] duration-300 ease-out"
+                    data-rates-panel
+                    data-open="false"
+                  >
+                    <div class="border border-[#cfc6b7] bg-white">
+
+                      <!-- top right link -->
+                      <div class="flex justify-end px-5 py-3 text-sm text-slate-600">
+                        <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-900">
+                          <span class="text-slate-500">📅</span>
+                          <span>View availability and rates</span>
+                        </a>
+                      </div>
+
+                      <!-- ITEM 1 -->
+                      <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
+
+                          <!-- left -->
+                          <div class="md:col-span-7">
+                            <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                              <h3 class="text-lg font-semibold text-slate-700">Classic Rate</h3>
+
+                              <div class="text-sm text-slate-500 flex gap-4">
+                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
+                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
+                              </div>
+                            </div>
+
+                            <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
+                              Includes a la carte breakfast daily, all non-alcoholic beverages at qualia,
+                              use of a golf buggy for the duration of your stay and more.
+                            </p>
+
+                            <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
+                              FREE cancellation until 1 March 2026
+                            </p>
+                          </div>
+
+                          <!-- right -->
+                          <div class="md:col-span-5 md:text-right">
+                            <div class="text-sm text-slate-600">
+                              Total <span class="font-semibold">AUD $6,840.00</span>
+                              <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                            >
+                              <span>Book now</span>
+                              <span class="text-lg leading-none">›</span>
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      <!-- ITEM 2 -->
+                      <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
+
+                          <!-- left -->
+                          <div class="md:col-span-7">
+                            <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                              <h3 class="text-lg font-semibold text-slate-700">Gourmet Rate</h3>
+
+                              <div class="text-sm text-slate-500 flex gap-4">
+                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
+                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
+                              </div>
+                            </div>
+
+                            <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
+                              Includes complimentary a la carte breakfast and dinner daily, all non-alcoholic beverages at qualia,
+                              use of a golf buggy for the duration of your stay and more.
+                            </p>
+
+                            <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
+                              FREE cancellation until 1 March 2026
+                            </p>
+                          </div>
+
+                          <!-- right -->
+                          <div class="md:col-span-5 md:text-right">
+                            <div class="text-sm text-slate-600">
+                              Total <span class="font-semibold">AUD $8,640.00</span>
+                              <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                            >
+                              <span>Book now</span>
+                              <span class="text-lg leading-none">›</span>
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      <!-- bottom right link -->
+                      <div class="flex justify-end px-6 py-3 bg-white border-t border-[#e3dbcf] text-sm text-slate-500">
+                        <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-800">
+                          <span class="text-slate-500">▾</span>
+                          <span>Show all packages</span>
+                        </a>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </article>
 
-            <!-- Card 2 -->
-            <article class="bg-white border border-slate-200 p-5">
-              <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-                <div class="md:col-span-3">
-                  <img
-                    class="w-full h-28 md:h-32 object-cover"
-                    src="https://images.unsplash.com/photo-1505693314120-0d443867891c?auto=format&fit=crop&w=800&q=80"
-                    alt="Room"
-                  />
-                </div>
 
-                <div class="md:col-span-9">
-                  <div class="flex items-start justify-between gap-6">
-                    <h3 class="text-xl font-semibold text-slate-700">
-                      Leeward Garden View Accessible Pavilion
-                    </h3>
-                    <div class="text-sm text-slate-500">
-                      Total from <span class="font-semibold text-slate-700">AUD $6,840.00</span>
-                    </div>
-                  </div>
-
-                  <p class="mt-3 text-sm leading-6 text-slate-500">
-                    qualia offers a Leeward Garden View Accessible Pavilion, which has been configured for easy wheelchair access,
-                    as well as providing all the classic Leeward Pavilion facilities.
-                  </p>
-
-                  <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm">
-                    <a href="#" class="underline text-slate-500 hover:text-slate-700">
-                      Features, floor plan &amp; gallery
-                    </a>
-
-                    <div class="flex items-center gap-2 text-slate-500">
-                      <span>Max guests</span>
-                      <span>👥👥</span>
-                    </div>
-
-                    <div class="flex items-center gap-4">
-                      <span class="text-[#b3564a] font-semibold">Hurry, only 1 left!</span>
-                      <button class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition">
-                        ▾ Show available rates
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </article>
-
-            <!-- Card 3 -->
-            <article class="bg-white border border-slate-200 p-5">
-              <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-                <div class="md:col-span-3">
-                  <img
-                    class="w-full h-28 md:h-32 object-cover"
-                    src="https://images.unsplash.com/photo-1501117716987-c8e1ecb2106c?auto=format&fit=crop&w=800&q=80"
-                    alt="Room"
-                  />
-                </div>
-
-                <div class="md:col-span-9">
-                  <div class="flex items-start justify-between gap-6">
-                    <h3 class="text-xl font-semibold text-slate-700">Windward Pavilion</h3>
-                    <div class="text-sm text-slate-500">
-                      Total from <span class="font-semibold text-slate-700">AUD $9,870.00</span>
-                    </div>
-                  </div>
-
-                  <p class="mt-3 text-sm leading-6 text-slate-500">
-                    The Windward Pavilions boast a truly spectacular location, and private, infinity-edge plunge pools.
-                  </p>
-
-                  <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm">
-                    <a href="#" class="underline text-slate-500 hover:text-slate-700">
-                      Features, floor plan &amp; gallery
-                    </a>
-
-                    <div class="flex items-center gap-2 text-slate-500">
-                      <span>Max guests</span>
-                      <span>👥👥</span>
-                    </div>
-
-                    <div class="flex items-center gap-4">
-                      <span class="text-[#b3564a] font-semibold">Hurry, only 3 left!</span>
-                      <button class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition">
-                        ▾ Show available rates
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </article>
 
           </div>
 
@@ -677,7 +710,7 @@
 
 
   <!-- RATES BOX -->
-  <section class="py-10">
+  <section class="py-10 hidden">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
       <div class="border border-[#cfc6b7]">
@@ -844,14 +877,10 @@
 
 <!-- Room Details Modal str -->
    <!-- PAGE (dummy background) -->
-  <div class="min-h-screen flex items-center justify-center p-6">
-    <button id="openBtn" class="px-6 py-3 bg-[#6d7a64] text-white font-semibold">
-      Open Modal
-    </button>
-  </div>
+  
 
   <!-- OVERLAY -->
-  <div id="overlay" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4">
+  <div id="overlay" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
     <!-- MODAL -->
     <div class="w-full max-w-3xl bg-white shadow-lg border border-slate-200 relative">
 
@@ -931,13 +960,77 @@
     const openModal = () => overlay.classList.remove('hidden');
     const closeModal = () => overlay.classList.add('hidden');
 
-    openBtn.addEventListener('click', openModal);
+    openBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
     closeBtn.addEventListener('click', closeModal);
     closeX.addEventListener('click', closeModal);
 
     // close when clicking outside modal
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeModal();
+    });
+
+    // Rates dropdown toggle (smooth)
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-rates-toggle]');
+      if (!btn) return;
+
+      const card = btn.closest('article');
+      if (!card) return;
+
+      const panel = card.querySelector('[data-rates-panel]');
+      if (!panel) return;
+
+      const icon = btn.querySelector('[data-rates-icon]');
+      const label = btn.querySelector('[data-rates-label]');
+
+      const isOpen = panel.getAttribute('data-open') === 'true';
+
+      const openPanel = () => {
+        panel.setAttribute('data-open', 'true');
+        panel.classList.remove('pointer-events-none');
+
+        // start from 0 -> scrollHeight
+        panel.style.height = '0px';
+        panel.classList.remove('opacity-0');
+        panel.classList.add('opacity-100');
+
+        // force reflow
+        panel.offsetHeight;
+
+        panel.style.height = panel.scrollHeight + 'px';
+
+        const onEnd = (ev) => {
+          if (ev.propertyName !== 'height') return;
+          panel.removeEventListener('transitionend', onEnd);
+          if (panel.getAttribute('data-open') === 'true') {
+            panel.style.height = 'auto';
+          }
+        };
+        panel.addEventListener('transitionend', onEnd);
+      };
+
+      const closePanel = () => {
+        panel.setAttribute('data-open', 'false');
+
+        // from current (auto) -> fixed px -> 0
+        panel.style.height = panel.scrollHeight + 'px';
+        panel.offsetHeight;
+        panel.style.height = '0px';
+
+        panel.classList.remove('opacity-100');
+        panel.classList.add('opacity-0');
+        panel.classList.add('pointer-events-none');
+      };
+
+      if (isOpen) closePanel();
+      else openPanel();
+
+      btn.setAttribute('aria-expanded', String(!isOpen));
+      if (icon) icon.textContent = isOpen ? '▾' : '▴';
+      if (label) label.textContent = isOpen ? 'Show available rates' : 'Hide available rates';
     });
   </script>
 

@@ -14,11 +14,11 @@
         "
       >
         <!-- Overlay (like screenshot) -->
-        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
 
         <!-- Center content -->
-        <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="flex min-h-[78vh] md:min-h-[82vh] items-center justify-center">
+        <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex min-h-[78vh] md:min-h-[82vh] items-center justify-center pb-32 md:pb-36">
             <div class="text-center text-white max-w-3xl">
               <p class="text-xs md:text-sm tracking-[0.25em] uppercase opacity-90">
                 AWAY FROM MONOTONOUS LIFE
@@ -32,22 +32,13 @@
                 If you are looking at blank cassettes on the web, you may be very confused at the
                 difference in price. You may see some for as low as $17 each.
               </p>
-
-              <div class="mt-8">
-                <a
-                  href="{{route('frontend.room_details')}}"
-                  class="inline-flex items-center justify-center rounded bg-amber-500 px-8 py-3 text-sm font-bold text-slate-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
-                >
-                  GET STARTED
-                </a>
-              </div>
             </div>
           </div>
         </div>
 
       <!-- BOOKING BAR -->
-        <div class="  inset-x-0 bottom-0">
-    <div class="mx-auto max-w-6xl px-4">
+        <div class="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
+    <div class="mx-auto max-w-6xl px-4 pointer-events-auto">
 
       <div class="bg-gradient-to-r from-[#020c1b] to-[#04132d] px-8 py-6">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
@@ -73,26 +64,7 @@
                 />
               </div>
 
-              <div class="col-span-6 md:col-span-4">
-                <select class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none">
-                  <option class="bg-[#04132d]">Adult</option>
-                  <option class="bg-[#04132d]">1</option>
-                  <option class="bg-[#04132d]">2</option>
-                  <option class="bg-[#04132d]">3</option>
-                </select>
-              </div>
-
-              <div class="col-span-6 md:col-span-4">
-                <select class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none">
-                  <option class="bg-[#04132d]">Child</option>
-                  <option class="bg-[#04132d]">0</option>
-                  <option class="bg-[#04132d]">1</option>
-                  <option class="bg-[#04132d]">2</option>
-                </select>
-              </div>
-
-              <!-- Row 2 -->
-              <div class="col-span-12 md:col-span-4">
+              <div class="col-span-6 md:col-span-4"> 
                 <input
                   type="date"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
@@ -100,22 +72,22 @@
                 />
               </div>
 
-              <div class="col-span-6 md:col-span-4">
+              <!-- Row 2 -->
+              <div class="col-span-12 md:col-span-4">
                 <select class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none">
-                  <option class="bg-[#04132d]">Child</option>
-                  <option class="bg-[#04132d]">0</option>
+                  <option class="bg-[#04132d]">Adult</option>
                   <option class="bg-[#04132d]">1</option>
                   <option class="bg-[#04132d]">2</option>
+                  <option class="bg-[#04132d]">3</option>
                 </select>
               </div>
-
-              <div class="col-span-6 md:col-span-4">
-                <button
-                  type="submit"
-                  class="w-full h-11 bg-yellow-500 text-black font-extrabold text-sm hover:bg-yellow-400 transition"
+              <div class="col-span-12 md:col-span-4">
+                <a
+                  href="{{route('frontend.room_details')}}"
+                  class="inline-flex items-center justify-center rounded bg-amber-500 px-8 py-3 text-xl font-extrabold font-bold text-slate-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
-                  BOOK NOW
-                </button>
+                  Book Now
+                </a>
               </div>
 
             </form>

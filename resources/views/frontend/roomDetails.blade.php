@@ -25,6 +25,7 @@
 }
 
     </style>
+@endpush
 @section('content')
   <!-- STEPS BAR -->
   <section class=" bg-[#f9fbff] text-slate-700 py-10">
@@ -69,84 +70,89 @@
     </div>
   </section>
 
+  <!-- Option 1 -->
   <section class=" bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab1">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
         <!-- LEFT SIDEBAR -->
         <aside class="lg:col-span-3 space-y-6">
 
           <!-- Your Stay box -->
-          <div class="bg-[#efe7dc] p-6">
-            <h3 class="text-center text-2xl font-semibold text-slate-600">Your Stay</h3>
+            <form action="" method="POST">
+                @csrf   
+                <div class="bg-[#efe7dc] p-6">
+                    <h3 class="text-center text-2xl font-semibold text-slate-600">Your Stay</h3>
 
-            <div class="mt-6 space-y-5 text-sm">
-              <!-- Arrival -->
-              <div>
-                <label class="block text-slate-500 mb-2">Arrival Date</label>
-                <div class="relative">
-                  <input
-                    type="text"
-                    value="Sun, 15 Mar 2026"
-                    class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
-                    readonly
-                  />
-                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
-                    📅
-                  </span>
+                    <div class="mt-6 space-y-5 text-sm">
+                    <!-- Arrival -->
+                    <div>
+                        <label class="block text-slate-500 mb-2">Arrival Date</label>
+                        <div class="relative">
+                        <input
+                            type="date"
+                            value="{{ $data['from_date']}}"
+                            name="from_date"
+                            class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
+                            
+                        />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                            📅
+                        </span>
+                        </div>
+                    </div>
+
+                    <!-- Departure -->
+                    <div>
+                        <label class="block text-slate-500 mb-2">Departure Date</label>
+                        <div class="relative">
+                        <input
+                            type="date"
+                            value="{{$data['to_date']}}"
+                            name="to_date"
+                            class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
+                            
+                        />
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                            📅
+                        </span>
+                        </div>
+                    </div>
+
+                    <!-- Nights -->
+                    <div>
+                        <label class="block text-slate-500 mb-2">Nights</label>
+                        <input
+                        type="number"
+                        name="nights"
+                        value="{{ \Carbon\Carbon::parse($data['from_date'])->diffInDays(\Carbon\Carbon::parse($data['to_date'])) }}"
+                        class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none"
+                            readonly
+                        />
+                        </select>
+                    </div>
+
+                    <!-- Adults -->
+                    <div>
+                        <label class="block text-slate-500 mb-2">
+                        Adults <span class="text-xs text-slate-400">16+ years</span>
+                        </label>
+                        <input
+                        type="number"
+                        value="{{ $data['adult'] }}"
+                        class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none"
+                        name="adults">
+                    </div>
+
+                    <button
+                        class="w-full h-11 bg-[#8d8a84] text-white font-semibold hover:bg-[#7c7973] transition"
+                        type="submit"
+                    >
+                        Check availability
+                    </button>
+                    </div>
                 </div>
-              </div>
-
-              <!-- Departure -->
-              <div>
-                <label class="block text-slate-500 mb-2">Departure Date</label>
-                <div class="relative">
-                  <input
-                    type="text"
-                    value="Wed, 18 Mar 2026"
-                    class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
-                    readonly
-                  />
-                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
-                    📅
-                  </span>
-                </div>
-              </div>
-
-              <!-- Nights -->
-              <div>
-                <label class="block text-slate-500 mb-2">Nights</label>
-                <select class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none">
-                  <option selected>3</option>
-                  <option>1</option>
-                  <option>2</option>
-                  <option>4</option>
-                  <option>5</option>
-                </select>
-              </div>
-
-              <!-- Adults -->
-              <div>
-                <label class="block text-slate-500 mb-2">
-                  Adults <span class="text-xs text-slate-400">16+ years</span>
-                </label>
-                <select class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none">
-                  <option>1</option>
-                  <option selected>2</option>
-                  <option>3</option>
-                  <option>4</option>
-                </select>
-              </div>
-
-              <button
-                class="w-full h-11 bg-[#8d8a84] text-white font-semibold hover:bg-[#7c7973] transition"
-                type="button"
-              >
-                Check availability
-              </button>
-            </div>
-          </div>
+            </form>
 
           <!-- Gift Cards box -->
           <div class="bg-[#efe7dc] p-6 text-sm text-slate-600">
@@ -164,194 +170,278 @@
         <main class="lg:col-span-9">
 
           <!-- Top right link -->
-          <div class="flex justify-end text-sm text-slate-400 mb-3">
-            <a href="#" class="hover:text-slate-600">Cancel an existing booking</a>
-          </div>
-
-          <!-- Available notice -->
-          <div class="bg-[#7f7d73] text-white px-5 py-3 text-sm flex items-center gap-3">
-            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✓</span>
-            <span>3 available rooms match your dates and search criteria</span>
-          </div>
-
-          <!-- Room cards -->
-          <div class="mt-6 space-y-6">
-
-            <!-- Card 1 -->
-            <article class="bg-white border border-slate-200 p-5">
-              <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-                <div class="md:col-span-3">
-                  <img
-                    class="w-full h-28 md:h-32 object-cover"
-                    src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
-                    alt="Room"
-                  />
+                @if(!$rooms->isEmpty())
+                <!-- Available notice -->
+                <div class="bg-[#7f7d73] text-white px-5 py-3 text-sm flex items-center gap-3">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✓</span>
+                    <span>@php echo count($rooms); @endphp available rooms match your dates and search criteria</span>
                 </div>
 
-                <div class="md:col-span-9">
-                  <div class="flex items-start justify-between gap-6">
-                    <h3 class="text-xl font-semibold text-slate-700">Leeward Pavilion</h3>
-                    <div class="text-sm text-slate-500">
-                      Total from <span class="font-semibold text-slate-700">AUD $6,840.00</span>
-                    </div>
-                  </div>
+                <div class="mt-6 space-y-6">
+                <!-- Room cards -->
+                    @foreach($rooms as $room)
+                        @php
+                                $image = null;
 
-                  <p class="mt-3 text-sm leading-6 text-slate-500">
-                    Elegantly designed and beautifully furnished, these one-bedroom pavilions have a private sundeck
-                    with eucalypts framing stunning tropical garden or water views.
-                  </p>
+                            if (!empty($room->avatar)) {
+                            $images = json_decode($room->avatar, true);
+                            $image = is_array($images) ? ($images[0] ?? null) : null;
+                                }
 
-                  <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm">
-                    <a href="#" id="openBtn" class="underline text-slate-500 hover:text-slate-700">
-                      Features, floor plan &amp; gallery
-                    </a>
-
-                    <div class="flex items-center gap-2 text-slate-500">
-                      <span>Max guests</span>
-                      <span>👥👥</span>
-                    </div>
-
-                    <div class="flex items-center gap-4">
-                      <span class="text-[#b3564a] font-semibold">Hurry, only 1 left!</span>
-                      <button
-                        type="button"
-                        class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
-                        data-rates-toggle
-                        aria-expanded="false"
-                      >
-                        <span data-rates-icon>▾</span>
-                        <span class="ml-2" data-rates-label>Show available rates</span>
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div class="md:col-span-12">
-                  <!-- Rates dropdown (smooth open/close) -->
-                  <div
-                    class="mt-5 overflow-hidden h-0 opacity-0 pointer-events-none transition-[height,opacity] duration-300 ease-out"
-                    data-rates-panel
-                    data-open="false"
-                  >
-                    <div class="border border-[#cfc6b7] bg-white">
-
-                      <!-- top right link -->
-                      <div class="flex justify-end px-5 py-3 text-sm text-slate-600">
-                        <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-900">
-                          <span class="text-slate-500">📅</span>
-                          <span>View availability and rates</span>
-                        </a>
-                      </div>
-
-                      <!-- ITEM 1 -->
-                      <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
-
-                          <!-- left -->
-                          <div class="md:col-span-7">
-                            <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                              <h3 class="text-lg font-semibold text-slate-700">Classic Rate</h3>
-
-                              <div class="text-sm text-slate-500 flex gap-4">
-                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
-                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
-                              </div>
+                            
+                        @endphp
+                        
+                        <!-- Card 1 -->
+                        <article class="bg-white border border-slate-200 p-5">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+                            <div class="md:col-span-3">
+                            @if($image)
+                                <img
+                                    class="w-full h-28 md:h-32 object-cover"
+                                    src="{{ asset('storage/' . $image)}}"
+                                alt="{{ optional($room->roomType)->name }}"
+                            />
+                            @endif
                             </div>
 
-                            <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
-                              Includes a la carte breakfast daily, all non-alcoholic beverages at qualia,
-                              use of a golf buggy for the duration of your stay and more.
-                            </p>
-
-                            <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
-                              FREE cancellation until 1 March 2026
-                            </p>
-                          </div>
-
-                          <!-- right -->
-                          <div class="md:col-span-5 md:text-right">
-                            <div class="text-sm text-slate-600">
-                              Total <span class="font-semibold">AUD $6,840.00</span>
-                              <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
+                            <div class="md:col-span-9">
+                            <div class="flex items-start justify-between gap-6">
+                            <h3 class="text-xl font-semibold text-slate-700">{{ optional($room->roomType)->name }}</h3>
+                                <div class="text-sm text-slate-500">
+                                Total from <span class="font-semibold text-slate-700">AUD $6,840.00</span>
+                                </div>
                             </div>
 
-                            <button
-                            onclick="openTab('tab2', 'tab2')"
-                              type="button"
-                              class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                            <p class="mt-3 text-sm leading-6 text-slate-500">
+                                {{ optional($room->roomType)->description }}
+                            </p>
+
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm">
+                                <a href="#" id="openBtn" class="underline text-slate-500 hover:text-slate-700">
+                                Features, floor plan &amp; gallery
+                                </a>
+
+                                <div class="flex items-center gap-2 text-slate-500">
+                                <span>Max guests</span>
+                                <span>👥👥</span>
+                                </div>
+
+                                <div class="flex items-center gap-4">
+                                <span class="text-[#b3564a] font-semibold">Hurry, only 1 left!</span>
+                                <button
+                                    type="button"
+                                    class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                                    data-rates-toggle
+                                    aria-expanded="false"
+                                >
+                                    <span data-rates-icon>▾</span>
+                                    <span class="ml-2" data-rates-label>Show available rates</span>
+                                </button>
+                                </div>
+                            </div>
+
+                            </div>
+
+                            <div class="md:col-span-12">
+                            <!-- Rates dropdown (smooth open/close) -->
+                            <div
+                                class="mt-5 overflow-hidden h-0 opacity-0 pointer-events-none transition-[height,opacity] duration-300 ease-out"
+                                data-rates-panel
+                                data-open="false"
                             >
-                              <span>Book now</span>
-                              <span class="text-lg leading-none">›</span>
-                            </button>
-                          </div>
+                                <div class="border border-[#cfc6b7] bg-white">
+
+                                <!-- top right link -->
+                                <div class="flex justify-end px-5 py-3 text-sm text-slate-600">
+                                    <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-900">
+                                    <span class="text-slate-500">📅</span>
+                                    <span>View availability and rates</span>
+                                    </a>
+                                </div>
+
+                                <!-- ITEM 1 -->
+                                <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
+
+                                    <!-- left -->
+                                    <div class="md:col-span-7">
+                                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                        <h3 class="text-lg font-semibold text-slate-700">Classic Rate</h3>
+
+                                        <div class="text-sm text-slate-500 flex gap-4">
+                                            <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
+                                            <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
+                                        </div>
+                                        </div>
+
+                                        <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
+                                        Includes a la carte breakfast daily, all non-alcoholic beverages at qualia,
+                                        use of a golf buggy for the duration of your stay and more.
+                                        </p>
+
+                                        <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
+                                        FREE cancellation until 1 March 2026
+                                        </p>
+                                    </div>
+
+                                    <!-- right -->
+                                    <div class="md:col-span-5 md:text-right">
+                                        <div class="text-sm text-slate-600">
+                                        Total <span class="font-semibold">AUD $6,840.00</span>
+                                        <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
+                                        </div>
+
+                                        <button
+                                        onclick="openTab('tab2', 'tab2')"
+                                        type="button"
+                                        class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                                        >
+                                        <span>Book now</span>
+                                        <span class="text-lg leading-none">›</span>
+                                        </button>
+                                    </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- ITEM 2 -->
+                                <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
+
+                                    <!-- left -->
+                                    <div class="md:col-span-7">
+                                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                        <h3 class="text-lg font-semibold text-slate-700">Gourmet Rate</h3>
+
+                                        <div class="text-sm text-slate-500 flex gap-4">
+                                            <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
+                                            <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
+                                        </div>
+                                        </div>
+
+                                        <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
+                                        Includes complimentary a la carte breakfast and dinner daily, all non-alcoholic beverages at qualia,
+                                        use of a golf buggy for the duration of your stay and more.
+                                        </p>
+
+                                        <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
+                                        FREE cancellation until 1 March 2026
+                                        </p>
+                                    </div>
+
+                                    <!-- right -->
+                                    <div class="md:col-span-5 md:text-right">
+                                        <div class="text-sm text-slate-600">
+                                        Total <span class="font-semibold">AUD $8,640.00</span>
+                                        <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
+                                        </div>
+
+                                        <button
+                                        type="button"
+                                        class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                                        >
+                                        <span>Book now</span>
+                                        <span class="text-lg leading-none">›</span>
+                                        </button>
+                                    </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- bottom right link -->
+                                <div class="flex justify-end px-6 py-3 bg-white border-t border-[#e3dbcf] text-sm text-slate-500">
+                                    <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-800">
+                                    <span class="text-slate-500">▾</span>
+                                    <span>Show all packages</span>
+                                    </a>
+                                </div>
+                                <!-- Booking Benefits Box (TailwindCSS) -->
+                                <section class="py-8">
+                                    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+
+                                    <div class="border border-[#cfc6b7] bg-white px-6 py-5">
+
+                                        <ul class="space-y-3 text-sm text-slate-600">
+
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 text-[#6d7a64]">✓</span>
+                                            <span>
+                                            Book direct now, and you'll earn a minimum of
+                                            <strong>6,840 Velocity Frequent Flyer Points</strong>
+                                            </span>
+                                        </li>
+
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 text-[#6d7a64]">✓</span>
+                                            <span>
+                                            No booking or credit card fees, when booking direct
+                                            </span>
+                                        </li>
+
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 text-[#6d7a64]">✓</span>
+                                            <span>
+                                            Flexible Cancellation: Secure your booking with a fully refundable deposit*
+                                            </span>
+                                        </li>
+
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 text-[#6d7a64]">✓</span>
+                                            <span>
+                                            Complimentary a la carte breakfast at the Long Pavilion included daily per person
+                                            </span>
+                                        </li>
+
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 text-[#6d7a64]">✓</span>
+                                            <span>
+                                            You will always receive the best rate when booking direct with qualia.
+                                            <strong>It's our guarantee</strong>
+                                            </span>
+                                        </li>
+
+                                        </ul>
+
+                                    </div>
+
+                                    </div>
+                                </section>
+
+                            </div>
+                            </div>
+                            </div>
 
                         </div>
-                      </div>
+                        </article>
+                    @endforeach
+                
+                </div>
+                @else
+                <!-- not available card -->
+                    <section class="bg-[#fbf3e8] py-4">
+                        <div class="mx-auto max-w-6xl px-6">
 
-                      <!-- ITEM 2 -->
-                      <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
-
-                          <!-- left -->
-                          <div class="md:col-span-7">
-                            <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                              <h3 class="text-lg font-semibold text-slate-700">Gourmet Rate</h3>
-
-                              <div class="text-sm text-slate-500 flex gap-4">
-                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
-                                <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
-                              </div>
-                            </div>
-
-                            <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
-                              Includes complimentary a la carte breakfast and dinner daily, all non-alcoholic beverages at qualia,
-                              use of a golf buggy for the duration of your stay and more.
+                            <p class="text-sm md:text-base leading-7 text-[#6f675d]">
+                            Unfortunately, <span class="font-medium">qualia</span> is fully booked for your selected dates.
+                            Please use the
+                            <span class="font-medium">“Change dates”</span> buttons below to view availability.
                             </p>
 
-                            <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
-                              FREE cancellation until 1 March 2026
+                            <p class="mt-2 text-sm md:text-base leading-7 text-[#6f675d]">
+                            Alternatively,
+                            <a href="#" class="font-medium underline hover:text-[#4f463b] transition">
+                                Beach Club
+                            </a>
+                            is available for your selected dates.
+                            <a href="#" class="font-medium underline hover:text-[#4f463b] transition">
+                                Click here
+                            </a>
+                            to find out more.
                             </p>
-                          </div>
-
-                          <!-- right -->
-                          <div class="md:col-span-5 md:text-right">
-                            <div class="text-sm text-slate-600">
-                              Total <span class="font-semibold">AUD $8,640.00</span>
-                              <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
-                            </div>
-
-                            <button
-                              type="button"
-                              class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
-                            >
-                              <span>Book now</span>
-                              <span class="text-lg leading-none">›</span>
-                            </button>
-                          </div>
 
                         </div>
-                      </div>
-
-                      <!-- bottom right link -->
-                      <div class="flex justify-end px-6 py-3 bg-white border-t border-[#e3dbcf] text-sm text-slate-500">
-                        <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-800">
-                          <span class="text-slate-500">▾</span>
-                          <span>Show all packages</span>
-                        </a>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </article>
-
-
-
-          </div>
-
+                    </section>
+                    @endif
           <!-- Not available notice -->
           <div class="mt-10 bg-[#a45a4e] text-white px-5 py-3 text-sm flex items-center gap-3">
             <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✕</span>
@@ -406,8 +496,10 @@
       </div>
     </div>
   </section>
+
+
   <!-- OPTION 2  -->
-    <section class="bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab2">
+<section class="bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab2">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -728,61 +820,11 @@
 
       </div>
     </div>
-  </section>
+</section>
 
  
 
-  <!-- Booking Benefits Box (TailwindCSS) -->
-  <section class="py-8">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-
-      <div class="border border-[#cfc6b7] bg-white px-6 py-5">
-
-        <ul class="space-y-3 text-sm text-slate-600">
-
-          <li class="flex items-start gap-3">
-            <span class="mt-0.5 text-[#6d7a64]">✓</span>
-            <span>
-              Book direct now, and you'll earn a minimum of
-              <strong>6,840 Velocity Frequent Flyer Points</strong>
-            </span>
-          </li>
-
-          <li class="flex items-start gap-3">
-            <span class="mt-0.5 text-[#6d7a64]">✓</span>
-            <span>
-              No booking or credit card fees, when booking direct
-            </span>
-          </li>
-
-          <li class="flex items-start gap-3">
-            <span class="mt-0.5 text-[#6d7a64]">✓</span>
-            <span>
-              Flexible Cancellation: Secure your booking with a fully refundable deposit*
-            </span>
-          </li>
-
-          <li class="flex items-start gap-3">
-            <span class="mt-0.5 text-[#6d7a64]">✓</span>
-            <span>
-              Complimentary a la carte breakfast at the Long Pavilion included daily per person
-            </span>
-          </li>
-
-          <li class="flex items-start gap-3">
-            <span class="mt-0.5 text-[#6d7a64]">✓</span>
-            <span>
-              You will always receive the best rate when booking direct with qualia.
-              <strong>It's our guarantee</strong>
-            </span>
-          </li>
-
-        </ul>
-
-      </div>
-
-    </div>
-  </section>
+  
 
 
 <!-- Room Details Modal str -->
@@ -862,6 +904,38 @@
   </div>
 <!-- Room Details Modal end -->
   <script>
+    window.onbeforeunload = function() {
+        localStorage.removeItem('activeTab');
+    };
+    //tabs bar
+function openTab(evt, tabName) {
+    localStorage.setItem('activeTab', tabName);
+  // 1. Hide all tab contents
+  const tabcontent = document.getElementsByClassName("tabcontent");
+  for (let i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].classList.add("hidden");
+  }
+
+  // 2. Remove active state from all tab links
+  const tablinks = document.getElementsByClassName("step-link");
+  for (let i = 0; i < tablinks.length; i++) {
+    tablinks[i].classList.remove("step-active");
+  }
+
+  // 3. Show selected tab
+  document.getElementById(tabName).classList.remove("hidden");
+  
+
+  // 4. Activate clicked tab
+//   evt.currentTarget.classList.add("step-active");
+   document.querySelector(`.${evt}`).classList.add("step-active");
+}
+if(localStorage.getItem('activeTab')) {
+    console.log('if')
+    openTab(localStorage.getItem('activeTab'), localStorage.getItem('activeTab'))
+} else {
+    openTab('tab1', 'tab1') // default open
+}
 
     const overlay = document.getElementById('overlay');
     const openBtn = document.getElementById('openBtn');
@@ -871,17 +945,25 @@
     const openModal = () => overlay.classList.remove('hidden');
     const closeModal = () => overlay.classList.add('hidden');
 
-    openBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      openModal();
-    });
-    closeBtn.addEventListener('click', closeModal);
-    closeX.addEventListener('click', closeModal);
+    if(openBtn) {
+        openBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal();
+        });
+    }
+    if(closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    if(closeX) {
+        closeX.addEventListener('click', closeModal);
+    }
 
     // close when clicking outside modal
-    overlay.addEventListener('click', (e) => {
+   if(overlay) {
+     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeModal();
     });
+   }
 
     // Rates dropdown toggle (smooth)
     document.addEventListener('click', (e) => {
@@ -943,33 +1025,7 @@
       if (icon) icon.textContent = isOpen ? '▾' : '▴';
       if (label) label.textContent = isOpen ? 'Show available rates' : 'Hide available rates';
     });
-
-
-    //tabs bar
-function openTab(evt, tabName) {
-console.log(evt);
-  // 1. Hide all tab contents
-  const tabcontent = document.getElementsByClassName("tabcontent");
-  for (let i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].classList.add("hidden");
-  }
-
-  // 2. Remove active state from all tab links
-  const tablinks = document.getElementsByClassName("step-link");
-  for (let i = 0; i < tablinks.length; i++) {
-    tablinks[i].classList.remove("step-active");
-  }
-
-  // 3. Show selected tab
-  document.getElementById(tabName).classList.remove("hidden");
-  
-
-  // 4. Activate clicked tab
-//   evt.currentTarget.classList.add("step-active");
-   document.querySelector(`.${evt}`).classList.add("step-active");
-}
-openTab('tab1', 'tab1')
 </script>
 
   
-  @endsection
+@endsection

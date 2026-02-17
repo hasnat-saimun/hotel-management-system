@@ -20,10 +20,12 @@ class ReservationController extends Controller
 
         if ($request->filled('q')) {
             $q = $request->input('q');
-            $query->where(function($w) use ($q) {
+            $query->where(function ($w) use ($q) {
                 $w->where('guest_name', 'like', "%{$q}%")
-                  ->orWhere('guest_email', 'like', "%{$q}%")
-                  ->orWhere('room_number', 'like', "%{$q}%");
+                    ->orWhere('guest_email', 'like', "%{$q}%")
+                    ->orWhereHas('rooms', function ($roomQuery) use ($q) {
+                        $roomQuery->where('room_number', 'like', "%{$q}%");
+                    });
             });
         }
 
@@ -57,7 +59,7 @@ class ReservationController extends Controller
 
     public function walkin(Request $request)
     {
-        $availableRooms = Room::where('status', 'available')->orderBy('number')->get();
+        $availableRooms = Room::where('status', 'available')->orderBy('room_number')->get();
         return view('admin.reservations.walkin', compact('availableRooms'));
     }
 
@@ -67,15 +69,10 @@ class ReservationController extends Controller
         $reservation->status = 'checked_in';
         $reservation->save();
 
-        // mark all associated rooms as occupied (supports many-to-many)
-        if ($reservation->rooms && $reservation->rooms->count()) {
-            foreach ($reservation->rooms as $room) {
-                $room->status = 'occupied';
-                $room->save();
-            }
-        } elseif ($reservation->room_id) {
-            $reservation->room->status = 'occupied';
-            $reservation->room->save();
+        $reservation->loadMissing('rooms');
+        foreach ($reservation->rooms as $room) {
+            $room->status = 'occupied';
+            $room->save();
         }
 
         return redirect()->route('admin.reservations.show', $reservation->id)->with('success', 'Guest checked in');
@@ -88,15 +85,10 @@ class ReservationController extends Controller
         $reservation->status = 'checked_out';
         $reservation->save();
 
-        // mark all associated rooms as available
-        if ($reservation->rooms && $reservation->rooms->count()) {
-            foreach ($reservation->rooms as $room) {
-                $room->status = 'available';
-                $room->save();
-            }
-        } elseif ($reservation->room_id) {
-            $reservation->room->status = 'available';
-            $reservation->room->save();
+        $reservation->loadMissing('rooms');
+        foreach ($reservation->rooms as $room) {
+            $room->status = 'available';
+            $room->save();
         }
 
         // create invoice if none exists
@@ -132,32 +124,28 @@ class ReservationController extends Controller
         $reservation->check_out_date = $data['check_out_date'];
         $reservation->status = 'booked';
 
-        // attach single room by number OR multiple rooms by ids
+        // single-room reservation: accept room_ids[] (pick first) OR room_number
         if (!empty($data['room_ids']) && is_array($data['room_ids'])) {
             $reservation->save();
             $reservation->rooms()->sync($data['room_ids']);
-            // mark rooms occupied
             $rooms = Room::whereIn('id', $data['room_ids'])->get();
-            foreach ($rooms as $r) { $r->status = 'occupied'; $r->save(); }
-            // for backward compatibility set first room_id/number
-            if ($rooms->count()) {
-                $first = $rooms->first();
-                $reservation->room_id = $first->id;
-                $reservation->room_number = $first->number;
-                $reservation->save();
+            foreach ($rooms as $r) {
+                $r->status = 'occupied';
+                $r->save();
             }
         } elseif (!empty($data['room_number'])) {
-            $room = Room::where('number', $data['room_number'])->first();
+            $room = Room::where('room_number', $data['room_number'])->first();
             if ($room) {
-                $reservation->room_id = $room->id;
-                $reservation->room_number = $room->number;
                 // mark occupied for walk-in
                 $room->status = 'occupied';
                 $room->save();
             } else {
-                $reservation->room_number = $data['room_number'];
+                $reservation->note = trim(($reservation->note ?? '') . "\nRoom number: " . $data['room_number']);
             }
             $reservation->save();
+            if ($room) {
+                $reservation->rooms()->sync([$room->id]);
+            }
         } else {
             $reservation->save();
         }

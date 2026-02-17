@@ -10,9 +10,13 @@ return new class extends Migration
     {
         Schema::create('amenity_room', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
             $table->foreignId('amenity_id')->constrained('amenities')->cascadeOnDelete();
+            // rooms table is created in a later migration (000006), so we add the FK in a follow-up migration
+            $table->unsignedBigInteger('room_id');
             $table->timestamps();
+
+            $table->unique(['amenity_id', 'room_id']);
+            $table->index('room_id');
         });
     }
 

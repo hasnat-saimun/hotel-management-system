@@ -23,9 +23,47 @@ class DashboardController extends Controller
     }
 
     //room details
-    public function roomDetails()
+    public function roomDetails(Request $request)
     {
-        
-        return view('frontend.roomDetails');
+        $data = request()->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after:from_date',
+            'adult' => 'required|integer|min:1',
+            'child' => 'required|integer|min:0',
+        ]);
+
+        $fromDate = $data['from_date'];
+        $toDate = $data['to_date'];
+
+        // Flat list of rooms, each with its roomType data
+        $rooms = Room::query()
+            ->with('roomType')
+            ->whereHas('roomType', function ($q) use ($data) {
+                $q->where('capacity_adults', '>=', $data['adult'])
+                    ->where('capacity_children', '>=', $data['child']);
+            })
+            ->where(fn ($q) => $this->onlyAvailableRooms($q, $fromDate, $toDate))
+            ->get();
+
+        return view('frontend.roomDetails', compact('data', 'rooms'));
+    }
+
+    private function onlyAvailableRooms($roomQuery, string $fromDate, string $toDate): void
+    {
+        $roomQuery
+            ->where('is_active', true)
+            ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps($q, $fromDate, $toDate));
+    }
+
+    private function reservationOverlaps($reservationQuery, string $fromDate, string $toDate): void
+    {
+        $reservationQuery->where(function ($q) use ($fromDate, $toDate) {
+            $q->whereBetween('check_in_date', [$fromDate, $toDate])
+                ->orWhereBetween('check_out_date', [$fromDate, $toDate])
+                ->orWhere(function ($q2) use ($fromDate, $toDate) {
+                    $q2->where('check_in_date', '<=', $fromDate)
+                        ->where('check_out_date', '>=', $toDate);
+                });
+        });
     }
 }

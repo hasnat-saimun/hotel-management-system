@@ -10,23 +10,29 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->string('reservation_code')->unique();
-            $table->foreignId('guest_id')->constrained('guests')->cascadeOnDelete();
-            $table->enum('source', ['walkin', 'phone', 'website', 'agent', 'ota'])->nullable();
-            $table->enum('status', ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled', 'no_show','booked'])->default('booked');
+            // Guest details (kept directly on reservation for simplicity)
+            $table->string('guest_name');
+            $table->string('guest_email')->nullable();
+            $table->string('guest_phone')->nullable();
+
+            $table->string('reservation_code')->nullable()->unique();
+            $table->string('channel')->nullable();
+            $table->enum('status', ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled', 'no_show', 'booked'])->default('booked');
+            $table->enum('payment_status', ['unpaid', 'partial', 'paid', 'refunded'])->default('unpaid');
+
             $table->date('check_in_date');
             $table->date('check_out_date');
-            $table->integer('adults')->default();
-            $table->integer('children')->default(0);
-            $table->text('special_requests')->nullable();
-            $table->foreignId('cancelled_by')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('user_cancelled_at')->constrained('users')->cascadeOnDelete();
-            $table->datetime('cancelled_at')->nullable();
-            $table->text('cancel_reason')->nullable();
+            $table->unsignedInteger('adults')->default(1);
+            $table->unsignedInteger('children')->default(0);
+
+            $table->decimal('rate', 10, 2)->default(0);
+            $table->json('extras')->nullable();
+
             $table->text('note')->nullable();
             $table->timestamps();
-            $table->index('check_in_date')->lock('shared');
-            $table->index('check_out_date')->lock('shared');
+
+            $table->index('check_in_date');
+            $table->index('check_out_date');
         });
     }
 

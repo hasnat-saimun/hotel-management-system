@@ -40,6 +40,7 @@
         <div class="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
     <div class="mx-auto max-w-6xl px-4 pointer-events-auto">
 
+<!-- book from -->
       <div class="bg-gradient-to-r from-[#020c1b] to-[#04132d] px-8 py-6">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
 
@@ -53,14 +54,16 @@
 
           <!-- RIGHT FORM -->
           <div class="md:col-span-9">
-            <form class="grid grid-cols-12 gap-4">
-
+            <form class="grid grid-cols-12 gap-4" action="{{route('frontend.room_details')}}" method="GET">
+                @csrf
               <!-- Row 1 -->
               <div class="col-span-12 md:col-span-4">
                 <input
                   type="date"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
+                  name="from_date"
                   placeholder="Arrival Date"
+                  required
                 />
               </div>
 
@@ -68,26 +71,37 @@
                 <input
                   type="date"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                  placeholder="Departure Date"
+                  name="to_date"
+                  placeholder="Departure Date"required
                 />
               </div>
 
               <!-- Row 2 -->
               <div class="col-span-12 md:col-span-4">
-                <select class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none">
-                  <option class="bg-[#04132d]">Adult</option>
-                  <option class="bg-[#04132d]">1</option>
-                  <option class="bg-[#04132d]">2</option>
-                  <option class="bg-[#04132d]">3</option>
-                </select>
+                <input
+                  type="number"
+                  class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
+                    name="adult"
+                  placeholder="Number of adult"required
+                />
               </div>
+              
               <div class="col-span-12 md:col-span-4">
-                <a
-                  href="{{route('frontend.room_details')}}"
-                  class="inline-flex items-center justify-center rounded bg-amber-500 px-8 py-3 text-xl font-extrabold font-bold text-slate-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                 <input
+                  type="number"
+                  class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
+                    name="child"
+                  placeholder="Number of child"required
+                />
+                </div>
+              <div class="col-span-12 md:col-span-4">
+                <Button
+                   type="submit"
+                  
+                  class="inline-flex items-center justify-center rounded bg-amber-500 px-8 py-2 text-xl font-extrabold font-bold text-white hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   Book Now
-                </a>
+                </Button>
               </div>
 
             </form>

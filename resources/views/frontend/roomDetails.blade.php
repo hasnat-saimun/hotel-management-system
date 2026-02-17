@@ -1,8 +1,31 @@
 @extends('frontend.layout')
+@push('styles')
+<style>
+.step-link{
+  cursor:pointer;
+  padding:8px 12px;
+  border-radius:10px;
+  color:#fffafa;
+  transition:.2s ease;
 
+}
+/* //  background-color: #9c968c; */
+
+.step-active{
+  
+  color: rgba(255, 250, 250, 0.6);
+}
+.tab-circle{
+    background-color: #fff;
+    color:#000
+}
+.step-active .tab-circle{
+    background-color: #9c968c;
+    color:#fff
+}
+
+    </style>
 @section('content')
-
-
   <!-- STEPS BAR -->
   <section class=" bg-[#f9fbff] text-slate-700 py-10">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -11,8 +34,8 @@
         <div class="flex items-center justify-between text-sm font-semibold text-white">
 
           <!-- Step 1 -->
-          <div class="flex items-center gap-3 text-white/60">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#9c968c] text-xs font-bold">
+          <div class="step-link flex items-center gap-3 tab1" id="firstTab">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full tab-circle text-xs font-bold">
               1
             </span>
             <span>Rooms and Rates</span>
@@ -22,8 +45,8 @@
           <div class="flex-1 mx-4 h-px bg-white/40"></div>
 
           <!-- Step 2 (Active) -->
-          <div class="flex items-center gap-3 text-white">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#bfb6aa] text-xs font-bold">
+          <div class="step-link flex items-center gap-3 rounded-tr-lg tab2">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full  tab-circle text-xs font-bold">
               2
             </span>
             <span>Guest Details</span>
@@ -33,8 +56,8 @@
           <div class="flex-1 mx-4 h-px bg-white/40"></div>
 
           <!-- Step 3 -->
-          <div class="flex items-center gap-3 text-white/60">
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#9c968c] text-xs font-bold">
+          <div class="step-link flex items-center gap-3 tab3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full tab-circle text-xs font-bold">
               3
             </span>
             <span>Confirmation</span>
@@ -46,7 +69,7 @@
     </div>
   </section>
 
-  <section class=" bg-[#f9fbff] text-slate-700 py-10">
+  <section class=" bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab1">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -254,6 +277,7 @@
                             </div>
 
                             <button
+                            onclick="openTab('tab2', 'tab2')"
                               type="button"
                               class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
                             >
@@ -382,10 +406,8 @@
       </div>
     </div>
   </section>
-
-
   <!-- OPTION 2  -->
-     <section class="bg-[#f9fbff] text-slate-700 py-10 ">
+    <section class="bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab2">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -708,119 +730,7 @@
     </div>
   </section>
 
-
-  <!-- RATES BOX -->
-  <section class="py-10 hidden">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-
-      <div class="border border-[#cfc6b7]">
-
-        <!-- top right link -->
-        <div class="flex justify-end px-5 py-3 text-sm text-slate-600">
-          <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-900">
-            <span class="text-slate-500">📅</span>
-            <span>View availability and rates</span>
-          </a>
-        </div>
-
-        <!-- ITEM 1 -->
-        <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
-
-            <!-- left -->
-            <div class="md:col-span-7">
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <h3 class="text-lg font-semibold text-slate-700">Classic Rate</h3>
-
-                <div class="text-sm text-slate-500 flex gap-4">
-                  <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
-                  <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
-                </div>
-              </div>
-
-              <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
-                Includes a la carte breakfast daily, all non-alcoholic beverages at qualia,
-                use of a golf buggy for the duration of your stay and more.
-              </p>
-
-              <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
-                FREE cancellation until 1 March 2026
-              </p>
-            </div>
-
-            <!-- right -->
-            <div class="md:col-span-5 md:text-right">
-              <div class="text-sm text-slate-600">
-                Total <span class="font-semibold">AUD $6,840.00</span>
-                <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
-              </div>
-
-              <button
-                class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
-              >
-                <span>Book now</span>
-                <span class="text-lg leading-none">›</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- ITEM 2 -->
-        <div class="bg-[#fbf7ef] px-6 py-5 border-t border-[#e3dbcf]">
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:items-start">
-
-            <!-- left -->
-            <div class="md:col-span-7">
-              <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <h3 class="text-lg font-semibold text-slate-700">Gourmet Rate</h3>
-
-                <div class="text-sm text-slate-500 flex gap-4">
-                  <a href="#" class="underline underline-offset-2 hover:text-slate-800">Inclusions</a>
-                  <a href="#" class="underline underline-offset-2 hover:text-slate-800">Terms and Conditions</a>
-                </div>
-              </div>
-
-              <p class="mt-4 text-sm leading-6 text-slate-500 max-w-xl">
-                Includes complimentary a la carte breakfast and dinner daily, all non-alcoholic beverages at qualia,
-                use of a golf buggy for the duration of your stay and more.
-              </p>
-
-              <p class="mt-4 text-sm font-semibold text-[#6d7a64]">
-                FREE cancellation until 1 March 2026
-              </p>
-            </div>
-
-            <!-- right -->
-            <div class="md:col-span-5 md:text-right">
-              <div class="text-sm text-slate-600">
-                Total <span class="font-semibold">AUD $8,640.00</span>
-                <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
-              </div>
-
-              <button
-                class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
-              >
-                <span>Book now</span>
-                <span class="text-lg leading-none">›</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- bottom right link -->
-        <div class="flex justify-end px-6 py-3 bg-white border-t border-[#e3dbcf] text-sm text-slate-500">
-          <a href="#" class="flex items-center gap-2 underline underline-offset-2 hover:text-slate-800">
-            <span class="text-slate-500">▾</span>
-            <span>Show all packages</span>
-          </a>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
+ 
 
   <!-- Booking Benefits Box (TailwindCSS) -->
   <section class="py-8">
@@ -952,6 +862,7 @@
   </div>
 <!-- Room Details Modal end -->
   <script>
+
     const overlay = document.getElementById('overlay');
     const openBtn = document.getElementById('openBtn');
     const closeBtn = document.getElementById('closeBtn');
@@ -1032,7 +943,33 @@
       if (icon) icon.textContent = isOpen ? '▾' : '▴';
       if (label) label.textContent = isOpen ? 'Show available rates' : 'Hide available rates';
     });
-  </script>
+
+
+    //tabs bar
+function openTab(evt, tabName) {
+console.log(evt);
+  // 1. Hide all tab contents
+  const tabcontent = document.getElementsByClassName("tabcontent");
+  for (let i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].classList.add("hidden");
+  }
+
+  // 2. Remove active state from all tab links
+  const tablinks = document.getElementsByClassName("step-link");
+  for (let i = 0; i < tablinks.length; i++) {
+    tablinks[i].classList.remove("step-active");
+  }
+
+  // 3. Show selected tab
+  document.getElementById(tabName).classList.remove("hidden");
+  
+
+  // 4. Activate clicked tab
+//   evt.currentTarget.classList.add("step-active");
+   document.querySelector(`.${evt}`).classList.add("step-active");
+}
+openTab('tab1', 'tab1')
+</script>
 
   
   @endsection

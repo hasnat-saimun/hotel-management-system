@@ -32,13 +32,14 @@ class DashboardController extends Controller
             'child' => 'required|integer|min:0',
         ]);
 
+ 
+
         $fromDate = $data['from_date'];
         $toDate = $data['to_date'];
 
         // Flat list of rooms, each with its roomType data
-        $rooms = Room::query()
-            ->with('roomType')
-            ->whereHas('roomType', function ($q) use ($data) {
+        $rooms = Room::query()->with('roomType')
+        ->whereHas('roomType', function ($q) use ($data) {
                 $q->where('capacity_adults', '>=', $data['adult'])
                     ->where('capacity_children', '>=', $data['child']);
             })

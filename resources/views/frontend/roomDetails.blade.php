@@ -910,7 +910,7 @@
 
 navigation.addEventListener("navigate", e => {
    const url = new URL(e.destination.url);
-    console.log(url.pathname);
+    console.log(url.pathname); 
     if(url.pathnam !== '/room-details') {   
             localStorage.removeItem('activeTab');
         }  

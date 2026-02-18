@@ -904,9 +904,19 @@
   </div>
 <!-- Room Details Modal end -->
   <script>
-    window.onbeforeunload = function() {
-        localStorage.removeItem('activeTab');
-    };
+    // Source - https://stackoverflow.com/a/35038669
+// Posted by resu, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-02-18, License - CC BY-SA 4.0
+
+navigation.addEventListener("navigate", e => {
+   const url = new URL(e.destination.url);
+    console.log(url.pathname);
+    if(url.pathnam !== '/room-details') {   
+            localStorage.removeItem('activeTab');
+        }  
+});
+
+
     //tabs bar
 function openTab(evt, tabName) {
     localStorage.setItem('activeTab', tabName);

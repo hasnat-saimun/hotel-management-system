@@ -45,7 +45,7 @@ class DashboardController extends Controller
             })
             ->where(fn ($q) => $this->onlyAvailableRooms($q, $fromDate, $toDate))
             ->get();
-
+$this->reservationOverlaps($q, $fromDate, $toDate)
         return view('frontend.roomDetails', compact('data', 'rooms'));
     }
 
@@ -68,3 +68,4 @@ class DashboardController extends Controller
         });
     }
 }
+

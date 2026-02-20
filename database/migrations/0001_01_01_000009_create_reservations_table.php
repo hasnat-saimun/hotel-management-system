@@ -11,9 +11,7 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             // Guest details (kept directly on reservation for simplicity)
-            $table->string('guest_name');
-            $table->string('guest_email')->nullable();
-            $table->string('guest_phone')->nullable();
+            $table->foreignId('guest_id')->nullable()->constrained('guests')->nullOnDelete();
 
             $table->string('reservation_code')->nullable()->unique();
             $table->string('channel')->nullable();

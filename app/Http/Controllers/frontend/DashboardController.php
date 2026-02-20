@@ -5,6 +5,9 @@ namespace App\Http\Controllers\frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomType;
+use App\Models\Stay;
+use App\Models\Reservation;
+
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -45,7 +48,6 @@ class DashboardController extends Controller
             })
             ->where(fn ($q) => $this->onlyAvailableRooms($q, $fromDate, $toDate))
             ->get();
-$this->reservationOverlaps($q, $fromDate, $toDate)
         return view('frontend.roomDetails', compact('data', 'rooms'));
     }
 
@@ -66,6 +68,12 @@ $this->reservationOverlaps($q, $fromDate, $toDate)
                         ->where('check_out_date', '>=', $toDate);
                 });
         });
+    }
+
+    public function store(Request $request)
+    {
+        
+       
     }
 }
 

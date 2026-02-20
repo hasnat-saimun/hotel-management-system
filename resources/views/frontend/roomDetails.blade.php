@@ -287,7 +287,7 @@
                                     <!-- right -->
                                     <div class="md:col-span-5 md:text-right">
                                         <div class="text-sm text-slate-600">
-                                        Total <span class="font-semibold">AUD $6,840.00</span>
+                                        Total <span class="font-semibold">BDT {{ optional($room->roomType)->base_price }}</span>
                                         <span class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[10px] text-slate-600 ml-1">i</span>
                                         </div>
 
@@ -509,59 +509,54 @@
           <div class="bg-[#eee6db] border border-slate-200">
             <div class="p-4 border-b border-slate-200 flex items-center justify-between">
               <div class="font-semibold text-slate-700">Your stay</div>
-              <a href="#" class="text-xs underline text-slate-500 hover:text-slate-700">Modify</a>
+              <a href="#" class="text-xs underline text-slate-500 hover:text-slate-700" id="tab1">Modify</a>
             </div>
 
             <div class="p-4 text-xs space-y-4">
               <div>
                 <div class="font-semibold text-slate-500">ARRIVAL</div>
-                <div class="text-slate-600">Sunday, 15 Mar 2026</div>
+                <div class="text-slate-600">{{ $data['from_date'] }}</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">DEPARTURE</div>
-                <div class="text-slate-600">Wednesday, 18 Mar 2026</div>
+                <div class="text-slate-600">{{ $data['to_date'] }}</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">NIGHTS</div>
-                <div class="text-slate-600">3 nights</div>
+                <div class="text-slate-600">{{ \Carbon\Carbon::parse($data['from_date'])->diffInDays(\Carbon\Carbon::parse($data['to_date'])) }} nights</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">GUESTS</div>
-                <div class="text-slate-600">2 adults</div>
-              </div>
-
-              <div>
-                <div class="font-semibold text-slate-500">HOTEL</div>
-                <div class="text-slate-600">qualia</div>
+                <div class="text-slate-600">{{ $data['adult'] }} adults, {{ $data['child'] }} children</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">ROOM</div>
-                <div class="text-slate-600">Leeward Pavilion</div>
+                <div class="text-slate-600">{{ optional($rooms->first())->roomType->name }}</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">RATE</div>
-                <div class="text-slate-600">Classic Rate</div>
+                <div class="text-slate-600">BDT {{ optional($rooms->first())->roomType->base_price }}</div>
               </div>
 
               <div class="pt-4 border-t border-slate-200 space-y-3">
                 <div>
                   <div class="font-semibold text-slate-500">TOTAL COST</div>
-                  <div class="text-slate-700">AUD $6,840.00</div>
+                  <div class="text-slate-700">Working</div>
                 </div>
                 <div>
                   <div class="font-semibold text-slate-500">BALANCE DUE 7 DAYS PRIOR</div>
-                  <div class="text-slate-700">AUD $5,472.00</div>
+                  <div class="text-slate-700">Working</div>
                 </div>
               </div>
 
               <div class="bg-[#d9d0c3] px-3 py-4 -mx-4">
                 <div class="font-semibold text-slate-600">DEPOSIT PAYABLE TODAY</div>
-                <div class="text-lg font-semibold text-slate-700">AUD $1,368.00</div>
+                <div class="text-lg font-semibold text-slate-700">BDT Working</div>
               </div>
 
               <ul class="space-y-2 text-[11px] text-slate-500 pt-2">

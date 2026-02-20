@@ -572,244 +572,228 @@
 
         <!-- MAIN FORM CONTENT -->
         <main class="lg:col-span-9">
+            <form action="" method="POST">
+                @csrf
 
-          <!-- Header -->
-          <div class="flex items-start justify-between gap-6">
-            <h1 class="text-2xl font-semibold text-slate-700">Reservation Information</h1>
-            <div class="text-xs text-slate-400 mt-1">* Denotes a required field</div>
-          </div>
-
-          <!-- Guest Details -->
-          <div class="mt-6">
-            <h3 class="text-sm font-semibold text-slate-600 mb-3">Guest Details</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <select class="md:col-span-3 h-11 border bg-white  border-slate-300 px-3 text-sm">
-                <option>Title *</option>
-                <option>Mr</option>
-                <option>Mrs</option>
-                <option>Ms</option>
-              </select>
-
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" />
-              <input class="md:col-span-5 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" />
-
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Email Address *" />
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Confirm Email Address *" />
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Contact Number" />
-            </div>
-          </div>
-
-          <!-- Address -->
-          <div class="mt-8">
-            <h3 class="text-sm font-semibold text-slate-600 mb-3">Address</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <select class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm">
-                <option>Australia</option>
-                <option>Bangladesh</option>
-                <option>United States</option>
-              </select>
-
-              <div class="hidden md:block md:col-span-8"></div>
-
-              <input class="md:col-span-6 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Street Address Line 1 *" />
-              <input class="md:col-span-6 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Street Address Line 2" />
-
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Suburb *" />
-
-              <select class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm">
-                <option>State *</option>
-                <option>NSW</option>
-                <option>VIC</option>
-                <option>QLD</option>
-              </select>
-
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Postcode *" />
-            </div>
-
-            <div class="mt-4 text-xs text-slate-500 font-semibold">
-              Virgin Australia Velocity Frequent Flyer Number (optional)
-            </div>
-
-            <div class="mt-2 flex flex-col md:flex-row md:items-center gap-3">
-              <input class="h-11 w-full md:w-64 border bg-white border-slate-300 px-3 text-sm" placeholder="10 Digit Membership Number" />
-              <div class="text-xs text-slate-500 flex items-center gap-2">
-                <span class="text-emerald-600">✓</span>
-                <span>Earn 6,840 Velocity Frequent Flyer Points</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Additional Guest Details -->
-          <div class="mt-10">
-            <h3 class="text-sm font-semibold text-slate-600 mb-3">Additional Guest Details</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <select class="md:col-span-3 h-11 border bg-white border-slate-300 px-3 text-sm">
-                <option>Title *</option>
-                <option>Mr</option>
-                <option>Mrs</option>
-                <option>Ms</option>
-              </select>
-
-              <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" />
-              <input class="md:col-span-5 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" />
-            </div>
-          </div>
-
-          <!-- Dietary Requirements -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-slate-600">Dietary Requirements</h2>
-            <p class="mt-2 text-xs text-slate-400">
-              Do you have any dietary requirements we should be aware of?
-            </p>
-
-            <textarea
-              rows="3"
-              class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"
-              placeholder="Enter your dietary requirements here. 1000 characters maximum."
-            ></textarea>
-          </div>
-
-          <!-- Special Requests -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-slate-600">Special Requests</h2>
-            <p class="mt-2 text-xs text-slate-400">
-              Please let us know if you have any special requests for your pavilion, or if you are travelling for a special occasion.
-            </p>
-
-            <textarea
-              rows="3"
-              class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"
-              placeholder="Enter your comments here. 1000 characters maximum."
-            ></textarea>
-          </div>
-
-          <!-- Arrival and Departure Information -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-slate-600">Arrival and Departure Information</h2>
-            <p class="mt-2 text-xs text-slate-400">
-              Providing your arrival and departure details will help ensure your VIP transfer service is confirmed for your arrival and departure.
-            </p>
-
-            <div class="mt-4 flex items-center gap-3">
-              <select class="h-11 w-full md:w-80 border bg-white border-slate-300 px-3 text-sm">
-                <option>Travel Method *</option>
-                <option>Flight</option>
-                <option>Car</option>
-                <option>Ferry</option>
-              </select>
-              <span class="text-slate-400 text-sm">ⓘ</span>
-            </div>
-          </div>
-
-          <!-- Secure Payment Method -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-slate-600">Secure Payment Method</h2>
-
-            <div class="mt-4 border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-slate-600">
-              <div class="font-semibold flex items-center gap-2">
-                <span class="text-amber-600">🔒</span>
-                <span>Secure Payment Form - encrypted by a 256-bit secure SSL connection</span>
-              </div>
-              <p class="mt-2 text-slate-500">
-                Your credit card information will be securely kept by Westpac Institutional Bank. When processing payment on this credit card, the Hamilton Island Reservations team will only have access to your Westpac customer number and not the credit card information.
-              </p>
-            </div>
-
-            <div class="mt-6 bg-[#fbf6ee] border border-slate-200 p-6">
-              <div class="grid grid-cols-1 md:grid-cols-12 gap-6 text-sm">
-
-                <div class="md:col-span-8">
-                  <label class="block text-xs text-slate-500 mb-2">Card Number</label>
-                  <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="•••• •••• •••• ••••" />
+                <!-- Header -->
+                <div class="flex items-start justify-between gap-6">
+                    <h1 class="text-2xl font-semibold text-slate-700">Reservation Information</h1>
+                    <div class="text-xs text-slate-400 mt-1">* Denotes a required field</div>
                 </div>
 
-                <div class="md:col-span-4">
-                  <label class="block text-xs text-slate-500 mb-2">Security Code</label>
-                  <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="•••" />
+                <!-- Guest Details -->
+                <div class="mt-6">
+                    <h3 class="text-sm font-semibold text-slate-600 mb-3">Guest Details</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    
+
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" required />
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" required />
+
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Email Address *" required/>
+                    <input type="number" class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Contact Number" required/>
+                    </div>
                 </div>
 
-                <div class="md:col-span-6">
-                  <label class="block text-xs text-slate-500 mb-2">Name on Card</label>
-                  <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="Name on Card" />
-                </div>
+                <!-- Address -->
+                <div class="mt-8">
+                    <h3 class="text-sm font-semibold text-slate-600 mb-3">Address</h3>
 
-                <div class="md:col-span-6">
-                  <label class="block text-xs text-slate-500 mb-2">Expiration</label>
-                  <div class="flex gap-3">
-                    <select class="h-11 w-24 border bg-white border-slate-300 px-3">
-                      <option>MM</option>
-                      <option>01</option><option>02</option><option>03</option><option>04</option>
-                      <option>05</option><option>06</option><option>07</option><option>08</option>
-                      <option>09</option><option>10</option><option>11</option><option>12</option>
+                    <div class="">
+                    
+                    <textarea  rows="3"
+                    class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"placeholder=" Full In Your Address Line 1 *" required></textarea>
+
+                    </div>
+
+                    <div class="mt-4 text-xs text-slate-500 font-semibold">
+                    Virgin Australia Velocity Frequent Flyer Number (optional)
+                    </div>
+
+                    <div class="mt-2 flex flex-col md:flex-row md:items-center gap-3">
+                    <select class="md:col-span-2 h-11 border bg-white border-slate-300 px-3 text-sm" required>
+                        <option>ID </option>
+                        <option>NID</option>
+                        <option>Passport</option>
                     </select>
-                    <select class="h-11 w-24 border bg-white border-slate-300 px-3">
-                      <option>YY</option>
-                      <option>2026</option><option>2027</option><option>2028</option><option>2029</option>
-                      <option>2030</option>
-                    </select>
-                  </div>
+                    <input class="h-11 w-full md:w-64 border bg-white border-slate-300 px-3 text-sm" placeholder="10 Digit Membership Number" required />
+                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                        <span class="text-emerald-600">✓</span>
+                        <span>Earn 6,840 Velocity Frequent Flyer Points</span>
+                    </div>
+                    </div>
                 </div>
 
-              </div>
+                <!-- Additional Guest Details -->
+                <!-- <div class="mt-10">
+                    <h3 class="text-sm font-semibold text-slate-600 mb-3">Additional Guest Details</h3>
 
-              <div class="mt-5 text-xs text-slate-500 flex flex-wrap items-center gap-3">
-                <span class="text-slate-400">Accepted Methods of Payment</span>
-                <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">VISA</span>
-                <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">Mastercard</span>
-                <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">AMEX</span>
-                <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">Diners</span>
-              </div>
-            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <select class="md:col-span-3 h-11 border bg-white border-slate-300 px-3 text-sm" required>
+                        <option>Title *</option>
+                        <option>Mr</option>
+                        <option>Mrs</option>
+                        <option>Ms</option>
+                    </select>
 
-            <div class="mt-4 bg-[#d6cec3] px-4 py-3 text-sm text-slate-700">
-              Deposit payable today <span class="font-semibold">$1,368.00</span>
-              <span class="text-xs text-slate-500">(refundable, including taxes)</span>
-            </div>
-          </div>
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" required />
+                    <input class="md:col-span-5 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" required />
+                    </div>
+                </div> -->
+                <!-- Dietary Requirements -->
+                <!-- <div class="mt-12">
+                    <h2 class="text-2xl font-semibold text-slate-600">Dietary Requirements</h2>
+                    <p class="mt-2 text-xs text-slate-400">
+                    Do you have any dietary requirements we should be aware of?
+                    </p>
 
-          <!-- Booking Conditions -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-slate-600">Booking Conditions</h2>
+                    <textarea
+                    rows="3"
+                    class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"
+                    placeholder="Enter your dietary requirements here. 1000 characters maximum."
+                    ></textarea>
+                </div> -->
+                <!-- Special Requests -->
+                <div class="mt-12">
+                    <h2 class="text-2xl font-semibold text-slate-600">Special Requests</h2>
+                    <p class="mt-2 text-xs text-slate-400">
+                    Please let us know if you have any special requests for your pavilion, or if you are travelling for a special occasion.
+                    </p>
 
-            <div class="mt-4 space-y-4 text-sm text-slate-500">
-              <label class="flex items-start gap-3">
-                <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
-                <span>
-                  I have read and agree to the
-                  <a href="#" class="underline">Deposit, Final Payment and Cancellation Policy</a>,
-                  <a href="#" class="underline">General Booking Terms</a> and
-                  <a href="#" class="underline">Privacy Policy</a> for this itinerary.*
-                </span>
-              </label>
+                    <textarea
+                    rows="3"
+                    class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"
+                    placeholder="Enter your comments here. 1000 characters maximum."
+                    required
+                    ></textarea>
+                </div>
 
-              <label class="flex items-start gap-3">
-                <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
-                <span>
-                  I understand that qualia only caters to guests over the age of 16 years and all travelling guests on this booking are 16 or over.*
-                </span>
-              </label>
+                <!-- Arrival and Departure Information -->
+                <!-- <div class="mt-12">
+                    <h2 class="text-2xl font-semibold text-slate-600">Arrival and Departure Information</h2>
+                    <p class="mt-2 text-xs text-slate-400">
+                    Providing your arrival and departure details will help ensure your VIP transfer service is confirmed for your arrival and departure.
+                    </p>
 
-              <label class="flex items-start gap-3">
-                <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
-                <span>
-                  I am at least 18 years of age and at least one guest in my party will meet the minimum check-in age requirement (check-in age: 18) for the hotel upon arrival.
-                </span>
-              </label>
-            </div>
+                    <div class="mt-4 flex items-center gap-3">
+                    <select class="h-11 w-full md:w-80 border bg-white border-slate-300 px-3 text-sm">
+                        <option>Travel Method *</option>
+                        <option>Flight</option>
+                        <option>Car</option>
+                        <option>Ferry</option>
+                    </select>
+                    <span class="text-slate-400 text-sm">ⓘ</span>
+                    </div>
+                </div> -->
 
-            <div class="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
-              <button class="h-11 px-6 bg-[#6d7a64] text-white font-semibold hover:bg-[#5f6b57] transition">
-                Submit Booking
-              </button>
-              <div class="text-sm text-slate-500 flex items-center gap-2">
-                <span class="text-emerald-600">✓</span>
-                <span>You won't find a better price, it’s our guarantee</span>
-              </div>
-            </div>
-          </div>
+                <!-- Secure Payment Method -->
+                <!-- <div class="mt-12">
+                    <h2 class="text-2xl font-semibold text-slate-600">Secure Payment Method</h2>
+
+                    <div class="mt-4 border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-slate-600">
+                    <div class="font-semibold flex items-center gap-2">
+                        <span class="text-amber-600">🔒</span>
+                        <span>Secure Payment Form - encrypted by a 256-bit secure SSL connection</span>
+                    </div>
+                    <p class="mt-2 text-slate-500">
+                        Your credit card information will be securely kept by Westpac Institutional Bank. When processing payment on this credit card, the Hamilton Island Reservations team will only have access to your Westpac customer number and not the credit card information.
+                    </p>
+                    </div>
+
+                    <div class="mt-6 bg-[#fbf6ee] border border-slate-200 p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 text-sm">
+
+                        <div class="md:col-span-8">
+                        <label class="block text-xs text-slate-500 mb-2">Card Number</label>
+                        <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="•••• •••• •••• ••••" />
+                        </div>
+
+                        <div class="md:col-span-4">
+                        <label class="block text-xs text-slate-500 mb-2">Security Code</label>
+                        <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="•••" />
+                        </div>
+
+                        <div class="md:col-span-6">
+                        <label class="block text-xs text-slate-500 mb-2">Name on Card</label>
+                        <input class="w-full h-11 border bg-white border-slate-300 px-3" placeholder="Name on Card" />
+                        </div>
+
+                        <div class="md:col-span-6">
+                        <label class="block text-xs text-slate-500 mb-2">Expiration</label>
+                        <div class="flex gap-3">
+                            <select class="h-11 w-24 border bg-white border-slate-300 px-3">
+                            <option>MM</option>
+                            <option>01</option><option>02</option><option>03</option><option>04</option>
+                            <option>05</option><option>06</option><option>07</option><option>08</option>
+                            <option>09</option><option>10</option><option>11</option><option>12</option>
+                            </select>
+                            <select class="h-11 w-24 border bg-white border-slate-300 px-3">
+                            <option>YY</option>
+                            <option>2026</option><option>2027</option><option>2028</option><option>2029</option>
+                            <option>2030</option>
+                            </select>
+                        </div>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-5 text-xs text-slate-500 flex flex-wrap items-center gap-3">
+                        <span class="text-slate-400">Accepted Methods of Payment</span>
+                        <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">VISA</span>
+                        <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">Mastercard</span>
+                        <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">AMEX</span>
+                        <span class="px-2 py-1 bg-white border border-slate-200 text-[10px]">Diners</span>
+                    </div>
+                    </div>
+
+                    <div class="mt-4 bg-[#d6cec3] px-4 py-3 text-sm text-slate-700">
+                    Deposit payable today <span class="font-semibold">$1,368.00</span>
+                    <span class="text-xs text-slate-500">(refundable, including taxes)</span>
+                    </div>
+                </div> -->
+
+                <!-- Booking Conditions -->
+                <div class="mt-12">
+                    <h2 class="text-2xl font-semibold text-slate-600">Booking Conditions</h2>
+
+                    <div class="mt-4 space-y-4 text-sm text-slate-500">
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
+                        <span>
+                        I have read and agree to the
+                        <a href="#" class="underline">Deposit, Final Payment and Cancellation Policy</a>,
+                        <a href="#" class="underline">General Booking Terms</a> and
+                        <a href="#" class="underline">Privacy Policy</a> for this itinerary.*
+                        </span>
+                    </label>
+
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
+                        <span>
+                        I understand that qualia only caters to guests over the age of 16 years and all travelling guests on this booking are 16 or over.*
+                        </span>
+                    </label>
+
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 h-4 w-4 border-slate-300" />
+                        <span>
+                        I am at least 18 years of age and at least one guest in my party will meet the minimum check-in age requirement (check-in age: 18) for the hotel upon arrival.
+                        </span>
+                    </label>
+                    </div>
+
+                    <div  class="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <button type="submit" class="h-11 px-6 bg-[#6d7a64] text-white font-semibold hover:bg-[#5f6b57] transition">
+                        Submit Booking
+                    </button>
+                    <div class="text-sm text-slate-500 flex items-center gap-2">
+                        <span class="text-emerald-600">✓</span>
+                        <span>You won't find a better price, it’s our guarantee</span>
+                    </div>
+                    </div>
+                </div>
+            </form>
 
         </main>
 

@@ -72,8 +72,52 @@ class DashboardController extends Controller
 
     public function store(Request $request)
     {
+        $data = $request->validate([
+            'check_in_date' => 'required|date',
+            'check_out_date' => 'required|date|after:check_in_date',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'note' => 'nullable|string|max:1000',
+        ]);
         
-       
+        $guestData = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+        ];
+        $guest = Guests::create($guestData); 
+
+        $reservationData = [
+            'guest_id' => $guest->id,
+            'check_in_date' => $data['check_in_date'],
+            'check_out_date' => $data['check_out_date'],
+            'status' => 'pending',
+            'payment_status' => 'unpaid',
+            'note' => $data['note'] ?? null,
+            'adults' => $request->input('adults') ?? 1,
+            'children' => $request->input('children') ?? 0,
+            'channel' => 'website',
+        ];
+
+      $reservation=  Reservation::create($reservationData);
+
+      $reservationRoomsData = [
+        'room_id' => $request->input('room_id'),
+        'room_type_id' => $request->input('room_type_id'),
+        'rate_plan_named' => 'Standard Rate',
+        'nightly_rate' => 100.00,
+        'discount_amount' => 0.00,
+        'tax_amount' => 10.00,
+        'total_amount' => 110.00,
+        'status' => 'booked',
+      ];
+
+      ReservationRoom::create($reservationRoomsData);
+      
+        return redirect()->route('frontend.index')->with('success', 'Booking successful! Your reservation code is: ' . $reservation->reservation_code);
     }
 }
 

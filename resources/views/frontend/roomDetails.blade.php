@@ -572,7 +572,7 @@
 
         <!-- MAIN FORM CONTENT -->
         <main class="lg:col-span-9">
-            <form action="" method="POST">
+            <form action="{{ route('booking.store') }}" method="POST">
                 @csrf
 
                 <!-- Header -->

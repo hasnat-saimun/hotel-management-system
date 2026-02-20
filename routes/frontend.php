@@ -22,6 +22,8 @@ Route::get('/contract', [ContractController::class, 'contract'])->name('frontend
 
 Route::get('/room-details', [DashboardController::class, 'roomDetails'])->name('frontend.room_details');
 
+Route::post('/booking', [DashboardController::class, 'store'])->name('booking.store');
+
 Route::get('/honeymoon-package', [PackageController::class, 'index'])->name('frontend.package.honeymoon_package');
 
 Route::get('/accomodation', function () {

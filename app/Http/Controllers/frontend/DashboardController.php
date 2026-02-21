@@ -7,6 +7,8 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Stay;
 use App\Models\Reservation;
+use App\Models\Guests;
+use App\Models\ReservationRoom;
 
 use Illuminate\Http\Request;
 
@@ -29,22 +31,22 @@ class DashboardController extends Controller
     public function roomDetails(Request $request)
     {
         $data = request()->validate([
-            'from_date' => 'required|date',
-            'to_date' => 'required|date|after:from_date',
-            'adult' => 'required|integer|min:1',
-            'child' => 'required|integer|min:0',
+            'check_in_date' => 'required|date',
+            'check_out_date' => 'required|date|after:check_in_date',
+            'adults' => 'required|integer|min:1',
+            'children' => 'required|integer|min:0',
         ]);
 
  
 
-        $fromDate = $data['from_date'];
-        $toDate = $data['to_date'];
+        $fromDate = $data['check_in_date'];
+        $toDate = $data['check_out_date'];
 
         // Flat list of rooms, each with its roomType data
         $rooms = Room::query()->with('roomType')
         ->whereHas('roomType', function ($q) use ($data) {
-                $q->where('capacity_adults', '>=', $data['adult'])
-                    ->where('capacity_children', '>=', $data['child']);
+                $q->where('capacity_adults', '>=', $data['adults'])
+                    ->where('capacity_children', '>=', $data['children']);
             })
             ->where(fn ($q) => $this->onlyAvailableRooms($q, $fromDate, $toDate))
             ->get();
@@ -80,6 +82,9 @@ class DashboardController extends Controller
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'note' => 'nullable|string|max:1000',
+            'address' => 'nullable|string|max:1000',
+            'adults' => 'required|integer|min:1',
+            'children' => 'required|integer|min:0',
         ]);
         
         $guestData = [
@@ -87,6 +92,7 @@ class DashboardController extends Controller
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
+            'address' => $data['address'] ?? null,
         ];
         $guest = Guests::create($guestData); 
 
@@ -97,8 +103,8 @@ class DashboardController extends Controller
             'status' => 'pending',
             'payment_status' => 'unpaid',
             'note' => $data['note'] ?? null,
-            'adults' => $request->input('adults') ?? 1,
-            'children' => $request->input('children') ?? 0,
+            'adults' => $data['adults'] ?? 1,
+            'children' => $data['children'] ?? 0,
             'channel' => 'website',
         ];
 
@@ -115,9 +121,10 @@ class DashboardController extends Controller
         'status' => 'booked',
       ];
 
-      ReservationRoom::create($reservationRoomsData);
+      $reservationRoomsData = ReservationRoom::create($reservationRoomsData);
       
-        return redirect()->route('frontend.index')->with('success', 'Booking successful! Your reservation code is: ' . $reservation->reservation_code);
+        return redirect()->route('frontend.index')->with('success', 'Your booking has been successfully made!');
+
     }
 }
 

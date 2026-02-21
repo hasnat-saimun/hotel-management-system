@@ -91,8 +91,8 @@
                         <div class="relative">
                         <input
                             type="date"
-                            value="{{ $data['from_date']}}"
-                            name="from_date"
+                            value="{{ $data['check_in_date']}}"
+                            name="check_in_date"
                             class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
                             
                         />
@@ -108,8 +108,8 @@
                         <div class="relative">
                         <input
                             type="date"
-                            value="{{$data['to_date']}}"
-                            name="to_date"
+                            value="{{$data['check_out_date']}}"
+                            name="check_out_date"
                             class="w-full h-11 bg-white border border-slate-300 px-3 pr-10 text-slate-600 outline-none"
                             
                         />
@@ -125,7 +125,7 @@
                         <input
                         type="number"
                         name="nights"
-                        value="{{ \Carbon\Carbon::parse($data['from_date'])->diffInDays(\Carbon\Carbon::parse($data['to_date'])) }}"
+                        value="{{ \Carbon\Carbon::parse($data['check_in_date'])->diffInDays(\Carbon\Carbon::parse($data['check_out_date'])) }}"
                         class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none"
                             readonly
                         />
@@ -139,9 +139,19 @@
                         </label>
                         <input
                         type="number"
-                        value="{{ $data['adult'] }}"
+                        value="{{ $data['adults'] }}"
                         class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none"
                         name="adults">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-2">
+                        Children <span class="text-xs text-slate-400">0-15 years</span>
+                        </label>
+                        <input
+                        type="number"
+                        value="{{ $data['children'] }}"
+                        class="w-full h-11 bg-white border border-slate-300 px-3 text-slate-600 outline-none"
+                        name="children">
                     </div>
 
                     <button
@@ -515,22 +525,22 @@
             <div class="p-4 text-xs space-y-4">
               <div>
                 <div class="font-semibold text-slate-500">ARRIVAL</div>
-                <div class="text-slate-600">{{ $data['from_date'] }}</div>
+                <div class="text-slate-600">{{ $data['check_in_date'] }}</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">DEPARTURE</div>
-                <div class="text-slate-600">{{ $data['to_date'] }}</div>
+                <div class="text-slate-600">{{ $data['check_out_date'] }}</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">NIGHTS</div>
-                <div class="text-slate-600">{{ \Carbon\Carbon::parse($data['from_date'])->diffInDays(\Carbon\Carbon::parse($data['to_date'])) }} nights</div>
+                <div class="text-slate-600">{{ \Carbon\Carbon::parse($data['check_in_date'])->diffInDays(\Carbon\Carbon::parse($data['check_out_date'])) }} nights</div>
               </div>
 
               <div>
                 <div class="font-semibold text-slate-500">GUESTS</div>
-                <div class="text-slate-600">{{ $data['adult'] }} adults, {{ $data['child'] }} children</div>
+                <div class="text-slate-600">{{ $data['adults'] }} adults, {{ $data['children'] }} children</div>
               </div>
 
               <div>
@@ -588,11 +598,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                     
 
-                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" required />
-                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" required />
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="First Name *" name="first_name" required />
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Last Name *" name="last_name" required />
 
-                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Email Address *" required/>
-                    <input type="number" class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Contact Number" required/>
+                    <input class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Email Address *" name="email" required/>
+                    <input type="number" class="md:col-span-4 h-11 border bg-white border-slate-300 px-3 text-sm" placeholder="Contact Number" name="phone" required/>
                     </div>
                 </div>
 
@@ -603,7 +613,7 @@
                     <div class="">
                     
                     <textarea  rows="3"
-                    class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"placeholder=" Full In Your Address Line 1 *" required></textarea>
+                    class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"placeholder=" Full In Your Address Line 1 *" name="address" required></textarea>
 
                     </div>
 
@@ -612,12 +622,13 @@
                     </div>
 
                     <div class="mt-2 flex flex-col md:flex-row md:items-center gap-3">
-                    <select class="md:col-span-2 h-11 border bg-white border-slate-300 px-3 text-sm" required>
-                        <option>ID </option>
-                        <option>NID</option>
-                        <option>Passport</option>
+                    <select class="md:col-span-2 h-11 border bg-white border-slate-300 px-3 text-sm" name="id_type" required>
+                        <option value="">ID Type *</option>
+                        <option value="ID">ID</option>
+                        <option value="NID">NID</option>
+                        <option value="Passport">Passport</option>
                     </select>
-                    <input class="h-11 w-full md:w-64 border bg-white border-slate-300 px-3 text-sm" placeholder="10 Digit Membership Number" required />
+                    <input class="h-11 w-full md:w-64 border bg-white border-slate-300 px-3 text-sm" placeholder="10 Digit Id Number" name="id_number" required />
                     <div class="text-xs text-slate-500 flex items-center gap-2">
                         <span class="text-emerald-600">✓</span>
                         <span>Earn 6,840 Velocity Frequent Flyer Points</span>
@@ -664,7 +675,7 @@
                     <textarea
                     rows="3"
                     class="mt-4 w-full border bg-white border-slate-300 px-3 py-3 text-sm"
-                    placeholder="Enter your comments here. 1000 characters maximum."
+                    placeholder="Enter your comments here. 1000 characters maximum." name="note"
                     required
                     ></textarea>
                 </div>

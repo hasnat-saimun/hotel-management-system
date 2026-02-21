@@ -61,7 +61,7 @@
                 <input
                   type="date"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                  name="from_date"
+                  name="check_in_date"
                   placeholder="Arrival Date"
                   required
                 />
@@ -71,7 +71,7 @@
                 <input
                   type="date"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                  name="to_date"
+                  name="check_out_date"
                   placeholder="Departure Date"required
                 />
               </div>
@@ -81,7 +81,7 @@
                 <input
                   type="number"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                    name="adult"
+                    name="adults"
                   placeholder="Number of adult"required
                 />
               </div>
@@ -90,7 +90,7 @@
                  <input
                   type="number"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                    name="child"
+                    name="children"
                   placeholder="Number of child"required
                 />
                 </div>

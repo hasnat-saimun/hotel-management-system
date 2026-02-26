@@ -22,7 +22,7 @@
             <div class="lg:col-span-2 flex gap-2">
                 @foreach(json_decode($room->avatar, true) as $key => $image)
                 <div class="flex flex-col items-center gap-2">
-                    <img src="{{ asset('storage/' . $image) }}" class="h-32 w-32 object-cover" />
+                    <img src="{{ asset('public/storage/' . $image) }}" class="h-32 w-32 object-cover" />
                      {{-- Delete single image --}}
 
                         <a href="{{route('admin.rooms.deleteSingleRoomImage',  [$room->id,'index' => $key]) }}"

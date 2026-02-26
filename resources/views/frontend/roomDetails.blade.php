@@ -451,7 +451,7 @@
 
                         </div>
                     </section>
-                    @endif
+                @endif
           <!-- Not available notice -->
           <div class="mt-10 bg-[#a45a4e] text-white px-5 py-3 text-sm flex items-center gap-3">
             <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">✕</span>

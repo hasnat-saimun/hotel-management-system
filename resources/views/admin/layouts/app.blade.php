@@ -19,7 +19,7 @@
             content="Tailwind CSS based HTML and JavaScript toolkit for building modern and scalable web applications"
             name="twitter:description"
         />
-        <meta content="{{ asset('/hotel-management-admin/') }}/media/app/og-image.png" name="twitter:image" />
+        <meta content="{{ asset('/public/hotel-management-admin/') }}/media/app/og-image.png" name="twitter:image" />
         <meta content="en_US" property="og:locale" />
         <meta content="website" property="og:type" />
         <meta content="Metronic - Tailwind CSS Light Sidebar" property="og:title" />
@@ -27,9 +27,9 @@
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
             rel="stylesheet"
         />
-        <link href="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet" />
-        <link href="{{ asset('/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet" />
-        <link href="{{ asset('/hotel-management-admin/') }}/css/styles.css" rel="stylesheet" />
+        <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet" />
+        <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet" />
+        <link href="{{ asset('/public/hotel-management-admin/') }}/css/styles.css" rel="stylesheet" />
 
         <style>
             /* Fixed footer for admin layout (sidebar-aware) */
@@ -100,17 +100,17 @@
                     <a class="dark:hidden" href="index.html"
                         ><img
                             class="default-logo min-h-[22px] max-w-none"
-                            src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/app/default-logo.svg" />
+                            src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/app/default-logo.svg" />
                         <img
                             class="small-logo min-h-[22px] max-w-none"
-                            src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/app/mini-logo.svg" /></a
+                            src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/app/mini-logo.svg" /></a
                     ><a class="hidden dark:block" href="index.html"
                         ><img
                             class="default-logo min-h-[22px] max-w-none"
-                            src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/app/default-logo-dark.svg" />
+                            src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/app/default-logo-dark.svg" />
                         <img
                             class="small-logo min-h-[22px] max-w-none"
-                            src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/app/mini-logo.svg" /></a
+                            src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/app/mini-logo.svg" /></a
                     ><button
                         class="kt-btn kt-btn-outline kt-btn-icon size-[30px] absolute start-full top-2/4 -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
                         data-kt-toggle="body"
@@ -305,7 +305,7 @@
                             <a class="shrink-0" href="index.html"
                                 ><img
                                     class="max-h-[25px] w-full"
-                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/app/mini-logo.svg"
+                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/app/mini-logo.svg"
                             /></a>
                             <div class="flex items-center">
                                 <button class="kt-btn kt-btn-icon kt-btn-ghost" data-kt-drawer-toggle="#sidebar">
@@ -695,7 +695,7 @@
                                                     <img
                                                         alt=""
                                                         class="inline-block size-3.5 rounded-full"
-                                                        src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/united-states.svg"
+                                                        src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/united-states.svg"
                                                 /></span>
                                             </button>
                                             <div class="kt-dropdown-menu w-[180px]" data-kt-dropdown-menu="true">
@@ -706,7 +706,7 @@
                                                                 ><img
                                                                     alt=""
                                                                     class="inline-block size-4 rounded-full"
-                                                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/united-states.svg"
+                                                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/united-states.svg"
                                                                 /><span class="kt-menu-title">English</span></span
                                                             ><i
                                                                 class="ki-solid ki-check-circle ms-auto text-green-500 text-base"
@@ -719,7 +719,7 @@
                                                                 ><img
                                                                     alt=""
                                                                     class="inline-block size-4 rounded-full"
-                                                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/saudi-arabia.svg"
+                                                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/saudi-arabia.svg"
                                                                 /><span class="kt-menu-title">Arabic(Saudi)</span></span
                                                             ></a
                                                         >
@@ -730,7 +730,7 @@
                                                                 ><img
                                                                     alt=""
                                                                     class="inline-block size-4 rounded-full"
-                                                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/spain.svg"
+                                                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/spain.svg"
                                                                 /><span class="kt-menu-title">Spanish</span></span
                                                             ></a
                                                         >
@@ -741,7 +741,7 @@
                                                                 ><img
                                                                     alt=""
                                                                     class="inline-block size-4 rounded-full"
-                                                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/germany.svg"
+                                                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/germany.svg"
                                                                 /><span class="kt-menu-title">German</span></span
                                                             ></a
                                                         >
@@ -752,7 +752,7 @@
                                                                 ><img
                                                                     alt=""
                                                                     class="inline-block size-4 rounded-full"
-                                                                    src="https://keenthemes.com{{ asset('/hotel-management-admin/') }}/media/flags/japan.svg"
+                                                                    src="https://keenthemes.com{{ asset('/public/hotel-management-admin/') }}/media/flags/japan.svg"
                                                                 /><span class="kt-menu-title">Japanese</span></span
                                                             ></a
                                                         >
@@ -877,7 +877,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-3.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-3.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -898,7 +898,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-1.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-1.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -919,7 +919,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-11.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-11.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -1002,7 +1002,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-3.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-3.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -1023,7 +1023,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-1.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-1.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -1044,7 +1044,7 @@
                                     <img
                                         alt=""
                                         class="rounded-full size-9 shrink-0"
-                                        src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-11.png"
+                                        src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-11.png"
                                     />
                                     <div class="flex flex-col">
                                         <a class="text-sm font-semibold text-mono hover:text-primary mb-px" href="#"
@@ -1102,7 +1102,7 @@
                             <div class="flex justify-center items-center rounded-full">
                                 <img
                                     class="rounded-full max-h-[55px] max-w-full"
-                                    src="{{ asset('/hotel-management-admin/') }}/media/avatars/300-1.png"
+                                    src="{{ asset('/public/hotel-management-admin/') }}/media/avatars/300-1.png"
                                 />
                             </div>
                             <div class="flex items-center justify-center gap-1">
@@ -1200,11 +1200,11 @@
                 </div>
             </div>
         </div>
-        <script src="{{ asset('/hotel-management-admin/') }}/js/core.bundle.js"></script>
-        <script src="{{ asset('/hotel-management-admin/') }}/vendors/ktui/ktui.min.js"></script>
-        <script src="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js"></script>
-        <script src="{{ asset('/hotel-management-admin/') }}/js/general.js"></script>
-        <script src="{{ asset('/hotel-management-admin/') }}/js/demo1.js"></script>
+        <script src="{{ asset('/public/hotel-management-admin/') }}/js/core.bundle.js"></script>
+        <script src="{{ asset('/public/hotel-management-admin/') }}/vendors/ktui/ktui.min.js"></script>
+        <script src="{{ asset('/public/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js"></script>
+        <script src="{{ asset('/public/hotel-management-admin/') }}/js/general.js"></script>
+        <script src="{{ asset('/public/hotel-management-admin/') }}/js/demo1.js"></script>
 
         <script>
             (function () {

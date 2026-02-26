@@ -218,7 +218,7 @@
                             <div class="flex items-start justify-between gap-6">
                             <h3 class="text-xl font-semibold text-slate-700">{{ optional($room->roomType)->name }}</h3>
                                 <div class="text-sm text-slate-500">
-                                Total from <span class="font-semibold text-slate-700">AUD $6,840.00</span>
+                                Total from <span class="font-semibold text-slate-700">{{ optional($room->roomType)->base_price }}</span>
                                 </div>
                             </div>
 

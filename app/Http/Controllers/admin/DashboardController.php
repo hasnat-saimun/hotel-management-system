@@ -30,9 +30,10 @@ class DashboardController extends Controller
 
         $occupancyRate = $totalRooms ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
-        $todayRevenueRooms = Schema::hasTable('payments') ? DB::table('payments')->whereDate('created_at', $today)->where('type','room')->sum('amount') : 0;
-        $otherRevenue = Schema::hasTable('payments') ? DB::table('payments')->whereDate('created_at', $today)->where('type','<>','room')->sum('amount') : 0;
-        $dueAmount = Schema::hasTable('invoices') ? DB::table('invoices')->where('status','due')->sum('amount') : 0;
+        $todayRevenueRooms = Schema::hasTable('payments') ? DB::table('payments')->whereDate('created_at', $today)->sum('amount') : 0;
+        $otherRevenue = Schema::hasTable('payments') ? DB::table('payments')->whereDate('created_at', $today)->sum('amount') : 0;
+        // $dueAmount = Schema::hasTable('invoices') ? DB::table('invoices')->where('status','due')->sum('amount') : 0;
+        $dueAmount=0;
 
         return view('admin.index', compact(
             'totalRooms',

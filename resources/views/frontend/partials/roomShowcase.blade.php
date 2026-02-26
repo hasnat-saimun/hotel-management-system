@@ -39,7 +39,7 @@
         @if($image)
         <div class="relative overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
             <img
-                src="{{ asset('storage/' . $image)}}"
+                src="{{ asset('public/storage/' . $image)}}"
                 alt="{{ $room->name }}"
                 class="h-56 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
             />

@@ -306,7 +306,7 @@
                                         type="button"
                                         class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
                                         >
-                                        <span>Book now</span>
+                                        <span>Book now </span>
                                         <span class="text-lg leading-none">›</span>
                                         </button>
                                     </div>
@@ -585,6 +585,15 @@
             <form action="{{ route('booking.store') }}" method="POST">
                 @csrf
 
+                <!-- //you stay data -->
+                 @if(!$rooms->isEmpty())
+                    <input type="text" name="check_in_date" value="{{ $data['check_in_date'] }}">
+                    <input type="text" name="check_out_date" value="{{ $data['check_out_date'] }}">
+                    <input type="text" name="adults" value="{{ $data['adults'] }}">
+                    <input type="text" name="children" value="{{ $data['children'] }}">
+                    <input type="text" name="room_id" value="{{ optional($rooms->first())->id }}">
+                    <input type="text" name="room_type_id" value="{{ optional($rooms->first())->room_type_id }}">
+                @endif
                 <!-- Header -->
                 <div class="flex items-start justify-between gap-6">
                     <h1 class="text-2xl font-semibold text-slate-700">Reservation Information</h1>
@@ -930,6 +939,7 @@ function openTab(evt, tabName) {
 //   evt.currentTarget.classList.add("step-active");
    document.querySelector(`.${evt}`).classList.add("step-active");
 }
+
 if(localStorage.getItem('activeTab')) {
     console.log('if')
     openTab(localStorage.getItem('activeTab'), localStorage.getItem('activeTab'))

@@ -17,7 +17,6 @@ class DashboardController extends Controller
     //index
     public function index()
     {
-
         $rooms = RoomType::whereIn('id',[6,7,8,9])
         ->with('room', function ($query) {
             $query->where('is_active', true)->limit(1);
@@ -71,7 +70,7 @@ class DashboardController extends Controller
                 });
         });
     }
-
+    
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -85,6 +84,9 @@ class DashboardController extends Controller
             'address' => 'nullable|string|max:1000',
             'adults' => 'required|integer|min:1',
             'children' => 'required|integer|min:0',
+            'room_id' => 'required|exists:rooms,id',
+            'room_type_id' => 'required|exists:room_types,id',
+
         ]);
         
         $guestData = [
@@ -111,8 +113,8 @@ class DashboardController extends Controller
       $reservation=  Reservation::create($reservationData);
 
       $reservationRoomsData = [
-        'room_id' => $request->input('room_id'),
-        'room_type_id' => $request->input('room_type_id'),
+        'room_id' => $data['room_id'],
+        'room_type_id' => $data['room_type_id'],
         'rate_plan_named' => 'Standard Rate',
         'nightly_rate' => 100.00,
         'discount_amount' => 0.00,

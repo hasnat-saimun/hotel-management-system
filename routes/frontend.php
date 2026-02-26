@@ -28,9 +28,15 @@ Route::get('/honeymoon-package', [PackageController::class, 'index'])->name('fro
 
 Route::get('/accomodation', function () {
     return view('frontend.accomodation');
-
 });
+
 Route::get('/cancle-booking', function () {
     return view('frontend.exitBooking');
+    
+});
+
+Route::get('/tab', function () {
+    return view('frontend.tabBar');
+
 
 });

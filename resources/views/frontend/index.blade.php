@@ -55,7 +55,6 @@
           <!-- RIGHT FORM -->
           <div class="md:col-span-9">
             <form class="grid grid-cols-12 gap-4" action="{{route('frontend.room_details')}}" method="GET">
-                @csrf
               <!-- Row 1 -->
               <div class="col-span-12 md:col-span-4">
                 <input

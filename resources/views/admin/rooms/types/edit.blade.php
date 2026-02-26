@@ -18,22 +18,25 @@
             @csrf
             @method('PUT')
             <div>
-                <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" id="room-type-name" value="{{ old('name', $type->name) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Name</label>
+                <input class="kt-input w-full" name="name" required id="room-type-name" value="{{ old('name', $type->name) }}" />
             </div>
             <div>
                 <label class="text-sm text-secondary-foreground">Slug (optional)</label>
-                <input class="kt-input w-full" name="slug" id="room-type-slug" value="{{ old('slug', $type->slug) }}" />
+                <input class="kt-input w-full" name="slug" id="room-type-slug" value="{{ old('slug', $type->slug) }}" readonly />
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Capacity</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" class="kt-input w-full" name="capacity_adults" value="{{ old('capacity_adults', $type->capacity_adults) }}" placeholder="Adults" />
+                <label class="text-sm text-secondary-foreground required-label">Capacity Audlts</label>
+                <label class="text-sm text-secondary-foreground ">Capacity Children</label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" class="kt-input w-full" required name="capacity_adults" value="{{ old('capacity_adults', $type->capacity_adults) }}" placeholder="Adults" />
                     <input type="number" class="kt-input w-full" name="capacity_children" value="{{ old('capacity_children', $type->capacity_children) }}" placeholder="Children" />
                 </div>
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Base Price</label>
+                <label class="text-sm text-secondary-foreground required-label">Base Price</label>
                 <input class="kt-input w-full" name="base_price" value="{{ old('base_price', $type->base_price) }}" />
             </div>
             <div class="lg:col-span-2">

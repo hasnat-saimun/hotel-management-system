@@ -61,6 +61,14 @@
                     inset-inline-start: var(--sidebar-width);
                 }
             }
+
+            /* requare */
+            /* In your CSS file (e.g., app.css) */
+            .required-label:after {
+            content: " *";
+            color: red; /* Tailwind color classes will not work here */
+            }
+
         </style>
     </head>
     <body

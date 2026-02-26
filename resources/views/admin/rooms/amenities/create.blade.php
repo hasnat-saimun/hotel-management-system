@@ -17,8 +17,8 @@
         <form method="POST" action="{{ route('admin.rooms.amenities.store') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             <div class="lg:col-span-2">
-                <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" value="{{ old('name') }}" />
+                <label class="text-sm text-secondary-foreground required-label">Name</label>
+                <input class="kt-input w-full" name="name" required value="{{ old('name') }}" />
             </div>
             <div class="lg:col-span-2">
                 <label class="text-sm text-secondary-foreground">Active</label>

@@ -17,21 +17,21 @@
         <form method="POST" action="{{ route('admin.rooms.store') }}" enctype="multipart/form-data" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             <div>
-                <label class="text-sm text-secondary-foreground">Room Number</label>
-                <input class="kt-input w-full" name="room_number" value="{{ old('room_number') }}" />
+                <label class="text-sm text-secondary-foreground required-label">Room Number</label>
+                <input class="kt-input w-full" name="room_number" required value="{{ old('room_number') }}" />
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Room Type</label>
-                <select name="room_type_id" class="kt-input w-full">
+                <label class="text-sm text-secondary-foreground required-label">Room Type</label>
+                <select name="room_type_id" required class="kt-input w-full">
                     <option value="">-- Select --</option>
                     @foreach($types as $t)
-                        <option value="{{ $t->id }}" {{ old('room_type_id')==$t->id ? 'selected':'' }}>{{ $t->name }}</option>
+                        <option value="{{ $t->id }}" {{ old('room_type_id')==$t->id ? 'selected':'' }}>{{ $t->name }} ------  A: {{ $t->capacity_adults }} - C: {{ $t->capacity_children }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Floor</label>
-                <select name="floor_id" class="kt-input w-full">
+                <label class="text-sm text-secondary-foreground required-label">Floor</label>
+                <select name="floor_id" required class="kt-input w-full">
                     <option value="">-- Select --</option>
                     @foreach($floors as $f)
                         <option value="{{ $f->id }}" {{ old('floor_id')==$f->id ? 'selected':'' }}>{{ $f->name }}</option>
@@ -39,7 +39,7 @@
                 </select>
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Status</label>
+                <label class="text-sm text-secondary-foreground ">Status</label>
                 <select name="status" class="kt-input w-full">
                     <option value="available" {{ old('status')=='available' ? 'selected':'' }}>Available</option>
                     <option value="occupied" {{ old('status')=='occupied' ? 'selected':'' }}>Occupied</option>
@@ -51,7 +51,7 @@
                 </select>
             </div>
             <div>                            
-                <label class="text-sm text-secondary-foreground">Upload</label>
+                <label class="text-sm text-secondary-foreground ">Upload</label>
                 <input class="kt-input w-full btn btn-primary"  type="file" name="images[]" multiple />
             </div>
             <div class="lg:col-span-2">

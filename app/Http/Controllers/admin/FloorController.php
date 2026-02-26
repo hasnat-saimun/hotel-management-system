@@ -28,8 +28,8 @@ class FloorController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'nullable|string|max:191',
-            'level_number' => 'nullable|string|max:191',
+            'name' => 'required|string|max:191',
+            'level_number' => 'required|string|max:191',
         ]);
 
         Floor::create($data);

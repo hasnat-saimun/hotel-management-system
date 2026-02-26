@@ -89,8 +89,8 @@
                  <input
                   type="number"
                   class="w-full h-11 bg-transparent border border-white/20 px-3 text-sm text-white outline-none [color-scheme:dark]"
-                    name="children"
-                  placeholder="Number of child"required
+                  name="children"
+                  placeholder="Number of child"
                 />
                 </div>
               <div class="col-span-12 md:col-span-4">

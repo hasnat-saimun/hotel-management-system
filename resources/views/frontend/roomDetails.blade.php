@@ -208,7 +208,7 @@
                             @if($image)
                                 <img
                                     class="w-full h-28 md:h-32 object-cover"
-                                    src="{{ asset('storage/' . $image)}}"
+                                    src="{{ asset('public/storage/' . $image)}}"
                                 alt="{{ optional($room->roomType)->name }}"
                             />
                             @endif
@@ -232,8 +232,7 @@
                                 </a>
 
                                 <div class="flex items-center gap-2 text-slate-500">
-                                <span>Max guests</span>
-                                <span>👥👥</span>
+                                <span>Max guests 👥A- {{ optional($room->roomType)->capacity_adults }} : 👥C- {{ optional($room->roomType)->capacity_children }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-4">
@@ -302,11 +301,11 @@
                                         </div>
 
                                         <button
-                                        onclick="openTab('tab2', 'tab2')"
+                                        onclick="openTab('tab2', 'tab2',{{ $room->id }})"
                                         type="button"
                                         class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
                                         >
-                                        <span>Book now </span>
+                                        <span>Book now {{$room->id}} </span>
                                         <span class="text-lg leading-none">›</span>
                                         </button>
                                     </div>
@@ -918,7 +917,7 @@ navigation.addEventListener("navigate", e => {
 
 
     //tabs bar
-function openTab(evt, tabName) {
+function openTab(evt, tabName, roomId = null) {
     localStorage.setItem('activeTab', tabName);
   // 1. Hide all tab contents
   const tabcontent = document.getElementsByClassName("tabcontent");
@@ -934,11 +933,22 @@ function openTab(evt, tabName) {
 
   // 3. Show selected tab
   document.getElementById(tabName).classList.remove("hidden");
+
+
   
 
   // 4. Activate clicked tab
 //   evt.currentTarget.classList.add("step-active");
    document.querySelector(`.${evt}`).classList.add("step-active");
+
+   // 5. If second tab, update URL
+  if (tabName === "tab2" && roomId) {
+
+      let baseUrl = window.location.origin + window.location.pathname;
+      let newUrl = `${baseUrl}?room_id=${roomId}&tab=2`;
+
+      window.history.pushState({}, '', newUrl);
+  }
 }
 
 if(localStorage.getItem('activeTab')) {

@@ -31,13 +31,14 @@ class RoomTypeController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'capacity_adults' => 'nullable|integer|min:0',
+            'capacity_adults' => 'required|integer|min:1',
             'capacity_children' => 'nullable|integer|min:0',
-            'base_price' => 'nullable|numeric|min:0',
+            'base_price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 
+        $data['capacity_children'] = $data['capacity_children'] ?? 0;
         // ensure slug
         $slug = $data['slug'] ?? null;
         if (empty($slug)) {
@@ -67,13 +68,14 @@ class RoomTypeController extends Controller
         $type = RoomType::findOrFail($id);
         $data = $request->validate([
             'name' => 'required|string|max:191',
-            'capacity_adults' => 'nullable|integer|min:0',
+            'capacity_adults' => 'required|integer|min:1',
             'capacity_children' => 'nullable|integer|min:0',
-            'base_price' => 'nullable|numeric|min:0',
+            'base_price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 
+        $data['capacity_children'] = $data['capacity_children'] ?? 0;
         if (empty($data['slug'])) {
             $base = Str::slug($data['name']);
             $slug = $base;

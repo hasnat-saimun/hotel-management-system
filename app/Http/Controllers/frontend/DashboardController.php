@@ -33,10 +33,9 @@ class DashboardController extends Controller
             'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after:check_in_date',
             'adults' => 'required|integer|min:1',
-            'children' => 'required|integer|min:0',
+            'children' => 'nullable|integer|min:0',
         ]);
 
- 
 
         $fromDate = $data['check_in_date'];
         $toDate = $data['check_out_date'];
@@ -45,7 +44,7 @@ class DashboardController extends Controller
         $rooms = Room::query()->with('roomType')
         ->whereHas('roomType', function ($q) use ($data) {
                 $q->where('capacity_adults', '>=', $data['adults'])
-                    ->where('capacity_children', '>=', $data['children']);
+                    ->where('capacity_children', '>=', $data['children'] ?? 0);
             })
             ->where(fn ($q) => $this->onlyAvailableRooms($q, $fromDate, $toDate))
             ->get();

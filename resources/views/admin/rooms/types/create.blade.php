@@ -17,19 +17,19 @@
         <form method="POST" action="{{ route('admin.rooms.types.store') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
             <div>
-                <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" id="room-type-name" value="{{ old('name') }}" />
+                <label class="text-sm text-secondary-foreground required-label">Name</label>
+                <input class="kt-input w-full" name="name" required id="room-type-name" value="{{ old('name') }}" />
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Capacity</label>
+                <label class="text-sm text-secondary-foreground required-label">Capacity</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" class="kt-input w-full" name="capacity_adults" value="{{ old('capacity_adults',1) }}" placeholder="Adults" />
-                    <input type="number" class="kt-input w-full" name="capacity_children" value="{{ old('capacity_children',0) }}" placeholder="Children" />
+                    <input type="number" class="kt-input w-full" name="capacity_adults" value="{{ old('capacity_adults') }}" required placeholder="Adults" />
+                    <input type="number" class="kt-input w-full" name="capacity_children" value="{{ old('capacity_children') }}" placeholder="Children" />
                 </div>
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Base Price</label>
-                <input class="kt-input w-full" name="base_price" value="{{ old('base_price',0) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Base Price</label>
+                <input class="kt-input w-full" name="base_price" value="{{ old('base_price',0) }}" required />
             </div>
             <div class="lg:col-span-2">
                 <label class="text-sm text-secondary-foreground">Description (comma separated)</label>

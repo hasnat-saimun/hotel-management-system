@@ -63,12 +63,12 @@
             @csrf
             @method('PUT')
             <div>
-                <label class="text-sm text-secondary-foreground">Room Number</label>
-                <input class="kt-input w-full" name="room_number" value="{{ old('room_number', $room->room_number) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Room Number</label>
+                <input class="kt-input w-full" name="room_number" required value="{{ old('room_number', $room->room_number) }}" />
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Room Type</label>
-                <select name="room_type_id" class="kt-input w-full">
+                <label class="text-sm text-secondary-foreground required-label">Room Type</label>
+                <select name="room_type_id" required class="kt-input w-full">
                     <option value="">-- Select --</option>
                     @foreach($types as $t)
                         <option value="{{ $t->id }}" {{ old('room_type_id', $room->room_type_id)==$t->id ? 'selected':'' }}>{{ $t->name }}</option>
@@ -76,8 +76,8 @@
                 </select>
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Floor</label>
-                <select name="floor_id" class="kt-input w-full">
+                <label class="text-sm text-secondary-foreground required-label">Floor</label>
+                <select name="floor_id" required class="kt-input w-full">
                     <option value="">-- Select --</option>
                     @foreach($floors as $f)
                         <option value="{{ $f->id }}" {{ old('floor_id', $room->floor_id)==$f->id ? 'selected':'' }}>{{ $f->name }}</option>

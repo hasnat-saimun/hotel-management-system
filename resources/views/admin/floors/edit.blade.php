@@ -19,15 +19,15 @@
             @csrf
             @method('PUT')
             <div>
-                <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" value="{{ old('name', $floor->name) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Name</label>
+                <input class="kt-input w-full" name="name" required value="{{ old('name', $floor->name) }}" />
             </div>
             <div>
-                <label class="text-sm text-secondary-foreground">Level Number</label>
-                <input class="kt-input w-full" name="level_number" value="{{ old('level_number', $floor->level_number) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Level Number</label>
+                <input class="kt-input w-full" name="level_number" required value="{{ old('level_number', $floor->level_number) }}" />
             </div>
             <div class="lg:col-span-2 flex gap-2">
-                <button type="submit" class="kt-btn kt-btn-primary">Save</button>
+                <button type="submit" class="kt-btn kt-btn-primary">Update</button>
                 <a class="kt-btn" href="{{ route('admin.rooms.floors.index') }}">Cancel</a>
             </div>
         </form>

@@ -18,8 +18,8 @@
             @csrf
             @method('PUT')
             <div class="lg:col-span-2">
-                <label class="text-sm text-secondary-foreground">Name</label>
-                <input class="kt-input w-full" name="name" value="{{ old('name', $amenity->name) }}" />
+                <label class="text-sm text-secondary-foreground required-label">Name</label>
+                <input class="kt-input w-full" name="name" required value="{{ old('name', $amenity->name) }}" />
             </div>
             <div class="lg:col-span-2">
                 <label class="text-sm text-secondary-foreground">Active</label>

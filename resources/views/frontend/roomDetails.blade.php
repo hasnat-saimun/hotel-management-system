@@ -910,15 +910,15 @@
 navigation.addEventListener("navigate", e => {
    const url = new URL(e.destination.url);
     console.log(url.pathname); 
-    if(url.pathnam !== '/room-details') {   
+    if(url.pathname !== '/hotel-management-project/room-details') {   
             localStorage.removeItem('activeTab');
-        }  
+    }  
 });
 
 
     //tabs bar
-function openTab(evt, tabName, roomId = null) {
-    localStorage.setItem('activeTab', tabName);
+function openTab(tabName, tabContentId, roomId = null) {
+    
   // 1. Hide all tab contents
   const tabcontent = document.getElementsByClassName("tabcontent");
   for (let i = 0; i < tabcontent.length; i++) {
@@ -934,21 +934,20 @@ function openTab(evt, tabName, roomId = null) {
   // 3. Show selected tab
   document.getElementById(tabName).classList.remove("hidden");
 
-
-  
-
   // 4. Activate clicked tab
 //   evt.currentTarget.classList.add("step-active");
-   document.querySelector(`.${evt}`).classList.add("step-active");
+   document.querySelector(`.${tabName}`).classList.add("step-active");
 
    // 5. If second tab, update URL
   if (tabName === "tab2" && roomId) {
 
-      let baseUrl = window.location.origin + window.location.pathname;
-      let newUrl = `${baseUrl}?room_id=${roomId}&tab=2`;
+      let baseUrl = window.location.href;
+      let newUrl = `${baseUrl}&room_id=${roomId}`;
 
       window.history.pushState({}, '', newUrl);
   }
+  
+  localStorage.setItem('activeTab', tabName);
 }
 
 if(localStorage.getItem('activeTab')) {

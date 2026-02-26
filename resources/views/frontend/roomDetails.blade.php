@@ -542,7 +542,7 @@
                 <div class="font-semibold text-slate-500">GUESTS</div>
                 <div class="text-slate-600">{{ $data['adults'] }} adults, {{ $data['children'] }} children</div>
               </div>
-
+            @if(!$rooms->isEmpty())
               <div>
                 <div class="font-semibold text-slate-500">ROOM</div>
                 <div class="text-slate-600">{{ optional($rooms->first())->roomType->name }}</div>
@@ -562,6 +562,7 @@
                   <div class="font-semibold text-slate-500">BALANCE DUE 7 DAYS PRIOR</div>
                   <div class="text-slate-700">Working</div>
                 </div>
+                @endif
               </div>
 
               <div class="bg-[#d9d0c3] px-3 py-4 -mx-4">

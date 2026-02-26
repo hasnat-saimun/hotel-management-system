@@ -25,9 +25,9 @@ License: https://keenthemes.com/metronic/tailwind/docs/getting-started/license
   
   <link href="https://keenthemes.com/metronic/tailwind/dist/assets/media/app/favicon.ico" rel="shortcut icon"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-  <link href="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet"/>
-  <link href="{{ asset('/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet"/>
-  <link href="{{ asset('/hotel-management-admin/') }}/css/styles.css" rel="stylesheet"/>
+  <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet"/>
+  <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet"/>
+  <link href="{{ asset('/public/hotel-management-admin/') }}/css/styles.css" rel="stylesheet"/>
   <!-- Google tag (gtag.js) -->
   <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-52YZ3XGZJ6">
   </script>
@@ -70,10 +70,10 @@ License: https://keenthemes.com/metronic/tailwind/docs/getting-started/license
   <!-- Page -->
   <style>
    .page-bg {
-			background-image: url('{{ asset('/hotel-management-admin/') }}/media/images/2600x1200/bg-10.png');
+			background-image: url('{{ asset('/public/hotel-management-admin/') }}/media/images/2600x1200/bg-10.png');
 		}
 		.dark .page-bg {
-			background-image: url('{{ asset('/hotel-management-admin/') }}/media/images/2600x1200/bg-10-dark.png');
+			background-image: url('{{ asset('/public/hotel-management-admin/') }}/media/images/2600x1200/bg-10-dark.png');
 		}
   </style>
   <div class="flex items-center justify-center grow bg-center bg-no-repeat page-bg">
@@ -142,11 +142,11 @@ License: https://keenthemes.com/metronic/tailwind/docs/getting-started/license
   </div>
   <!-- End of Page -->
   <!-- Scripts -->
-  <script src="{{ asset('/hotel-management-admin/') }}/js/core.bundle.js">
+  <script src="{{ asset('/public/hotel-management-admin/') }}/js/core.bundle.js">
   </script>
-  <script src="{{ asset('/hotel-management-admin/') }}/vendors/ktui/ktui.min.js">
+  <script src="{{ asset('/public/hotel-management-admin/') }}/vendors/ktui/ktui.min.js">
   </script>
-  <script src="{{ asset('/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js">
+  <script src="{{ asset('/public/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.min.js">
   </script>
   <!-- End of Scripts -->
  </body>

@@ -17,7 +17,7 @@ class DashboardController extends Controller
     //index
     public function index()
     {
-        $rooms = RoomType::whereIn('id',[6,7,8,9])
+        $rooms = RoomType::whereIn('id',[1,3,4,5])
         ->with('room', function ($query) {
             $query->where('is_active', true)->limit(1);
         })
@@ -128,5 +128,7 @@ class DashboardController extends Controller
         return redirect()->route('frontend.index')->with('success', 'Your booking has been successfully made!');
 
     }
+
+    
 }
 

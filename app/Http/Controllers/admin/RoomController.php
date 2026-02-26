@@ -170,4 +170,12 @@ class RoomController extends Controller
         $count = Room::whereIn('id', $data['ids'])->delete();
         return redirect()->route('admin.rooms.index')->with('success', "$count rooms deleted");
     }
+
+    public function destroy($id)
+    {
+        $room = Room::findOrFail($id);
+        $room->amenities()->detach();
+        $room->delete();
+        return redirect()->route('admin.rooms.index')->with('success', 'Room deleted');
+    }
 }

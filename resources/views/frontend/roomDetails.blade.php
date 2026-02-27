@@ -207,7 +207,7 @@
                             <div class="md:col-span-3">
                             @if($image)
                                 <img
-                                    class="w-full h-28 md:h-32 object-cover"
+                                    class="w-full h-28 md:h-40 object-cover"
                                     src="{{ asset('public/storage/' . $image)}}"
                                 alt="{{ optional($room->roomType)->name }}"
                             />
@@ -235,11 +235,11 @@
                                 <span>Max guests 👥A- {{ optional($room->roomType)->capacity_adults }} : 👥C- {{ optional($room->roomType)->capacity_children }}</span>
                                 </div>
 
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-65 mt-2 text-sm">
                                 <span class="text-[#b3564a] font-semibold">Hurry, only 1 left!</span>
                                 <button
                                     type="button"
-                                    class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
+                                    class="h-10 px-5 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition "
                                     data-rates-toggle
                                     aria-expanded="false"
                                 >
@@ -305,7 +305,7 @@
                                         type="button"
                                         class="mt-4 inline-flex items-center justify-center gap-2 h-10 px-6 bg-[#6d7a64] text-white text-sm font-semibold hover:bg-[#5f6b57] transition"
                                         >
-                                        <span>Book now {{$room->id}} </span>
+                                        <span>Book now {{ $room->id }}</span>
                                         <span class="text-lg leading-none">›</span>
                                         </button>
                                     </div>
@@ -524,7 +524,7 @@
             <div class="p-4 text-xs space-y-4">
               <div>
                 <div class="font-semibold text-slate-500">ARRIVAL</div>
-                <div class="text-slate-600">{{ $data['check_in_date'] }}</div>
+                <div class="text-slate-600" >{{ $data['check_in_date'] }}</div>
               </div>
 
               <div>
@@ -587,12 +587,11 @@
 
                 <!-- //you stay data -->
                  @if(!$rooms->isEmpty())
-                    <input type="text" name="check_in_date" value="{{ $data['check_in_date'] }}">
-                    <input type="text" name="check_out_date" value="{{ $data['check_out_date'] }}">
-                    <input type="text" name="adults" value="{{ $data['adults'] }}">
-                    <input type="text" name="children" value="{{ $data['children'] }}">
-                    <input type="text" name="room_id" value="{{ optional($rooms->first())->id }}">
-                    <input type="text" name="room_type_id" value="{{ optional($rooms->first())->room_type_id }}">
+                    <input type="hidden" name="check_in_date" value="{{ $data['check_in_date'] }}">
+                    <input type="hidden" name="check_out_date" value="{{ $data['check_out_date'] }}">
+                    <input type="hidden" name="adults" value="{{ $data['adults'] }}">
+                    <input type="hidden" name="children" value="{{ $data['children'] }}">
+                    <input type="hidden" name="room_id" value="{{ request()->query('room_id') }}">
                 @endif
                 <!-- Header -->
                 <div class="flex items-start justify-between gap-6">
@@ -633,9 +632,9 @@
                     <div class="mt-2 flex flex-col md:flex-row md:items-center gap-3">
                     <select class="md:col-span-2 h-11 border bg-white border-slate-300 px-3 text-sm" name="id_type" required>
                         <option value="">ID Type *</option>
-                        <option value="ID">ID</option>
-                        <option value="NID">NID</option>
-                        <option value="Passport">Passport</option>
+                        <option value="national_id">National ID</option>
+                        <option value="driver_license">Driver License</option>
+                        <option value="passport">Passport</option>
                     </select>
                     <input class="h-11 w-full md:w-64 border bg-white border-slate-300 px-3 text-sm" placeholder="10 Digit Id Number" name="id_number" required />
                     <div class="text-xs text-slate-500 flex items-center gap-2">
@@ -821,6 +820,36 @@
     </div>
 </section>
 
+
+<!-- OPTION 3  -->
+<section class="bg-[#f9fbff] text-slate-700 py-10 tabcontent hidden" id="tab3">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-slate-200 p-8">
+      <h1 class="text-2xl font-semibold text-slate-700">Confirmation</h1>
+
+      @if (session('booking_success'))
+        <div class="mt-6 border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 text-sm">
+          {{ session('booking_success') }}
+        </div>
+
+        @if (session('reservation_id'))
+          <div class="mt-3 text-sm text-slate-600">
+            Reservation ID: <span class="font-semibold text-slate-800">{{ session('reservation_id') }}</span>
+          </div>
+        @endif
+      @elseif (session('booking_error'))
+        <div class="mt-6 border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 text-sm">
+          {{ session('booking_error') }}
+        </div>
+      @else
+        <div class="mt-6 text-sm text-slate-500">
+          No booking confirmation to show.
+        </div>
+      @endif
+    </div>
+  </div>
+</section>
+
  
 
   
@@ -932,22 +961,37 @@ function openTab(tabName, tabContentId, roomId = null) {
   }
 
   // 3. Show selected tab
-  document.getElementById(tabName).classList.remove("hidden");
+  const selectedTab = document.getElementById(tabName);
+  if (!selectedTab) return;
+  selectedTab.classList.remove("hidden");
 
   // 4. Activate clicked tab
 //   evt.currentTarget.classList.add("step-active");
-   document.querySelector(`.${tabName}`).classList.add("step-active");
+  const activeLink = document.querySelector(`.${tabName}`);
+  if (activeLink) activeLink.classList.add("step-active");
 
    // 5. If second tab, update URL
   if (tabName === "tab2" && roomId) {
+      const url = new URL(window.location.href);
+      url.hash = '';
+      url.searchParams.set('room_id', roomId);
+      window.history.pushState({}, '', url.toString());
 
-      let baseUrl = window.location.href;
-      let newUrl = `${baseUrl}&room_id=${roomId}`;
-
-      window.history.pushState({}, '', newUrl);
+      const roomIdInput = document.getElementById('room_id');
+      if (roomIdInput) roomIdInput.value = roomId;
   }
   
   localStorage.setItem('activeTab', tabName);
+}
+let baseUrl = window.location.href;
+console.log('baseUrl', baseUrl)
+
+// If booking just completed, force open Confirmation tab
+const shouldOpenConfirmationTab = @json(session()->has('booking_success') || session()->has('booking_error'));
+if (shouldOpenConfirmationTab) {
+  localStorage.setItem('activeTab', 'tab3');
+} else if (localStorage.getItem('activeTab') === 'tab3') {
+  localStorage.setItem('activeTab', 'tab1');
 }
 
 if(localStorage.getItem('activeTab')) {

@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\frontend;
 
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Stay;
 use App\Models\Reservation;
-use App\Models\Guests;
+use App\Models\Guest;
 use App\Models\ReservationRoom;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class DashboardController extends Controller
 {
@@ -84,48 +86,108 @@ class DashboardController extends Controller
             'adults' => 'required|integer|min:1',
             'children' => 'required|integer|min:0',
             'room_id' => 'required|exists:rooms,id',
-            'room_type_id' => 'required|exists:room_types,id',
-
+            'id_type' => 'nullable|string|max:50',
+            'id_number' => 'nullable|string|max:50',
         ]);
-        
-        $guestData = [
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'address' => $data['address'] ?? null,
-        ];
-        $guest = Guests::create($guestData); 
 
-        $reservationData = [
-            'guest_id' => $guest->id,
-            'check_in_date' => $data['check_in_date'],
-            'check_out_date' => $data['check_out_date'],
-            'status' => 'pending',
-            'payment_status' => 'unpaid',
-            'note' => $data['note'] ?? null,
-            'adults' => $data['adults'] ?? 1,
-            'children' => $data['children'] ?? 0,
-            'channel' => 'website',
-        ];
+        DB::beginTransaction();
 
-      $reservation=  Reservation::create($reservationData);
+        try {
 
-      $reservationRoomsData = [
-        'room_id' => $data['room_id'],
-        'room_type_id' => $data['room_type_id'],
-        'rate_plan_named' => 'Standard Rate',
-        'nightly_rate' => 100.00,
-        'discount_amount' => 0.00,
-        'tax_amount' => 10.00,
-        'total_amount' => 110.00,
-        'status' => 'booked',
-      ];
+            // Re-check room availability to prevent race conditions
+            $room = Room::query()->with('roomType')->whereKey($data['room_id'])->where('is_active', true)
+                ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps(
+                    $q,
+                    $data['check_in_date'],
+                    $data['check_out_date']
+                ))
+                ->first();
 
-      $reservationRoomsData = ReservationRoom::create($reservationRoomsData);
-      
-        return redirect()->route('frontend.index')->with('success', 'Your booking has been successfully made!');
+            if (!$room) {
+                throw ValidationException::withMessages([
+                    'room_id' => 'Selected room is no longer available for these dates.',
+                ]);
+            }
 
+            $guest = Guest::create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'address' => $data['address'] ?? null,
+                'id_type' => $data['id_type'] ?? null,
+                'id_number' => $data['id_number'] ?? null,
+            ]);
+
+            $reservation = Reservation::create([
+                'guest_id' => $guest->id,
+                'check_in_date' => $data['check_in_date'],
+                'check_out_date' => $data['check_out_date'],
+                'status' => 'pending',
+                'payment_status' => 'unpaid',
+                'note' => $data['note'] ?? null,
+                'adults' => $data['adults'],
+                'children' => $data['children'],
+                'channel' => 'website',
+            ]);
+
+            $roomPrice = $room->roomType->base_price ?? 0.00;
+            $discountAmount = $room->roomType->discount_amount ?? 0.00;
+
+            ReservationRoom::create([
+                'room_id' => $data['room_id'],
+                'reservation_id' => $reservation->id,
+                'room_type_id' => $room->room_type_id,
+                'rate_plan_named' => 'Standard Rate',
+                'nightly_rate' => $roomPrice,
+                'discount_amount' => $discountAmount,
+                'tax_amount' => 10.00,
+                'total_amount' => $roomPrice + 10.00 - $discountAmount,
+                'status' => 'reserved',
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('frontend.room_details', [   
+                    'check_in_date' => $data['check_in_date'],
+                    'check_out_date' => $data['check_out_date'],
+                    'adults' => $data['adults'],
+                    'children' => $data['children'],
+                    'room_id' => $data['room_id'],
+                ])
+                ->with('booking_success', 'Your booking has been successfully made!')
+                ->with('reservation_id', $reservation->id);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+
+            $message = collect($e->errors())->flatten()->first() ?? 'Selected room is no longer available for these dates.';
+
+            return redirect()
+                ->route('frontend.room_details', [
+                    'check_in_date' => $data['check_in_date'],
+                    'check_out_date' => $data['check_out_date'],
+                    'adults' => $data['adults'],
+                    'children' => $data['children'],
+                    'room_id' => $data['room_id'],
+                ])
+                ->with('booking_error', $message)
+                ->withErrors($e->errors());
+        } catch (\Exception $e) {
+            // return $e->getMessage();
+            DB::rollBack();
+
+            return redirect()
+                ->route('frontend.room_details', [
+                    'check_in_date' => $data['check_in_date'],
+                    'check_out_date' => $data['check_out_date'],
+                    'adults' => $data['adults'],
+                    'children' => $data['children'],
+                    'room_id' => $data['room_id'],
+                ])
+                ->with('booking_error', 'An error occurred while processing your booking. Please try again.');
+        }
     }
 
     

@@ -34,8 +34,17 @@
             </div>
 
             <div class="mt-4 flex gap-2">
+                 @php       
+                    $checkOutDateTime = \Carbon\Carbon::parse($reservation->check_out_date);
+                    $currentDateTime = \Carbon\Carbon::now();
+                @endphp
+                @if($currentDateTime->greaterThanOrEqualTo($checkOutDateTime))
                 <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
-                <a class="kt-btn kt-btn-destructive" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
+                <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
+                @else
+                <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
+                @endif
+
             </div>
             @else
             <div>No reservation found.</div>

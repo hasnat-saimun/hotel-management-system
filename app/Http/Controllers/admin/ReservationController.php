@@ -30,4 +30,22 @@ class ReservationController extends Controller
         return view('admin.reservations.show', compact('reservation'));
     }
 
+    public function checkin($id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->status = 'checked_in';
+        $reservation->save();
+
+
+        return redirect()->route('admin.reservations.index')->with('success', 'Guest checked in successfully.');
+    }
+
+    public function checkout($id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->status = 'checked_out';
+        $reservation->save();
+
+        return redirect()->route('admin.reservations.index')->with('success', 'Guest checked out successfully.');
+    }
 }

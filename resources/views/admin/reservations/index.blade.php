@@ -65,13 +65,20 @@
                                     $status = strtolower($r->status ?? 'pending');
                                 @endphp
                                 @if($status == 'confirmed')
-                                    <span class="kt-badge kt-badge-outline kt-badge-success">Confirmed</span>
-                                @elseif($status == 'checked-in' || $status == 'checkedin')
-                                    <span class="kt-badge kt-badge-outline kt-badge-primary">In-house</span>
+                                <span class="kt-badge kt-badge-outline kt-badge-success">Confirmed</span>
+                                @elseif($status == 'pending')
+                                    <span class="kt-badge kt-badge-outline kt-badge-info">Pending</span>
+                                @elseif($status == 'checked-in' || $status == 'checkedin' || $status == 'checked_in')
+                                    <span class="kt-badge kt-badge-outline kt-badge-primary">Checked-in</span>
+                                    @elseif($status == 'checked-out' || $status == 'checkedout' || $status == 'checked_out')
+                                    <span class="kt-badge kt-badge-outline kt-badge-secondary">Checked-out</span>
                                 @elseif($status == 'cancelled')
                                     <span class="kt-badge kt-badge-outline kt-badge-destructive">Cancelled</span>
+                                
                                 @elseif($status == 'no-show' || $status == 'noshow')
                                     <span class="kt-badge kt-badge-outline kt-badge-warning">No-show</span>
+                                @elseif($status == 'booked' )
+                                    <span class="kt-badge kt-badge-outline kt-badge-info">Booked</span>
                                 @else
                                     <span class="kt-badge kt-badge-outline kt-badge-info">{{ ucfirst($r->reservation?->status ?? 'Pending') }}</span>
                                 @endif

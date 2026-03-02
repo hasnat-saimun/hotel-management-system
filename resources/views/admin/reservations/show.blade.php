@@ -24,7 +24,29 @@
                 </div>
                 <div class="kt-card p-3">
                     <p class="text-sm text-secondary-foreground">Status</p>
-                    <p class="font-medium">{{ $reservation->status ?? '-' }}</p>
+                    <p class="font-medium">
+                         @php
+                                    $status = strtolower($reservation->status ?? 'pending');
+                                @endphp
+                                @if($status == 'confirmed')
+                                <p> Confirmed</p>
+                                @elseif($status == 'pending')
+                                    <p>Pending</p>
+                                @elseif($status == 'checked-in' || $status == 'checkedin' || $status == 'checked_in')
+                                    <p>Checked-in</p>
+                                    @elseif($status == 'checked-out' || $status == 'checkedout' || $status == 'checked_out')
+                                    <p>Checked-out</p>
+                                @elseif($status == 'cancelled')
+                                    <p>Cancelled</p>
+                                
+                                @elseif($status == 'no-show' || $status == 'noshow')
+                                    <p>No-show</p>
+                                @elseif($status == 'booked' )
+                                    <p>Booked</p>
+                                @else
+                                    {{ ucfirst($reservation->status ?? 'Pending') }}
+                                @endif
+                    </p>
                 </div>
             </div>
 
@@ -37,8 +59,9 @@
                  @php       
                     $checkOutDateTime = \Carbon\Carbon::parse($reservation->check_out_date);
                     $currentDateTime = \Carbon\Carbon::now();
+                    $status = strtolower($reservation->status );
                 @endphp
-                @if($currentDateTime->greaterThanOrEqualTo($checkOutDateTime))
+                @if($currentDateTime->greaterThanOrEqualTo($checkOutDateTime ) && $status == 'checked-in' || $status == 'checkedin' || $status == 'checked_in')
                 <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
                 <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
                 @else

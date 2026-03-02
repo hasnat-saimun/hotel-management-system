@@ -48,4 +48,16 @@ class ReservationController extends Controller
 
         return redirect()->route('admin.reservations.index')->with('success', 'Guest checked out successfully.');
     }
+
+    public function calendar()
+    {
+        $reservations = Reservation::with('guest','rooms')->get();
+        return view('admin.reservations.calendar', compact('reservations'));
+    }
+
+    public function walkin()
+    {
+        // This will show a form to create a new walk-in reservation
+        return view('admin.reservations.walkin');
+    }
 }

@@ -34,7 +34,7 @@
                 <table class="min-w-full table-auto kt-table">
                     <thead>
                         <tr class="text-sm text-secondary-foreground bg-muted/20">
-                            <th class="px-4 py-3 text-left">ID</th>
+                            <th class="px-4 py-3 text-left">Sl</th>
                             <th class="px-4 py-3 text-left">Guest</th>
                             <th class="px-4 py-3 text-left">Room</th>
                             <th class="px-4 py-3 text-left">Check-in</th>
@@ -46,19 +46,20 @@
                     <tbody class="text-sm">
                         @forelse($reservations as $r)
                         <tr class="border-b border-input hover:bg-accent/10">
-                            <td class="px-4 py-3 align-top">{{ $r->id }}</td>
+                            <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
                             <td class="px-4 py-3 align-top">
-                                <div class="flex items-center gap-3">
-                                    <div class="rounded-full size-8 bg-accent/30 flex items-center justify-center text-xs">G</div>
-                                    <div>
-                                        <div class="font-medium">{{ $r->guest_name ?? '-' }}</div>
-                                        <div class="text-2sm text-secondary-foreground">{{ $r->guest_email ?? '' }}</div>
-                                    </div>
-                                </div>
+                               
+                                       {{ $r->guest?->first_name ?? '-' }} {{ $r->guest?->last_name ?? '' }}
+                                        <div class="text-xs text-secondary-foreground">{{ $r->guest?->email ?? '-' }}</div>
                             </td>
-                            <td class="px-4 py-3 align-top">{{ $r->room_number ?? '-' }}</td>
+                            <td class="px-4 py-3 align-top">
+                                @foreach($r->rooms as $room)
+                                    <div class="text-xs">{{ $room->room_number }}</div>
+                                @endforeach
+                            </td>
                             <td class="px-4 py-3 align-top">{{ $r->check_in_date ? \Carbon\Carbon::parse($r->check_in_date)->format('M d, Y') : '-' }}</td>
                             <td class="px-4 py-3 align-top">{{ $r->check_out_date ? \Carbon\Carbon::parse($r->check_out_date)->format('M d, Y') : '-' }}</td>
+                            
                             <td class="px-4 py-3 align-top">
                                 @php
                                     $status = strtolower($r->status ?? 'pending');
@@ -72,7 +73,7 @@
                                 @elseif($status == 'no-show' || $status == 'noshow')
                                     <span class="kt-badge kt-badge-outline kt-badge-warning">No-show</span>
                                 @else
-                                    <span class="kt-badge kt-badge-outline kt-badge-info">{{ ucfirst($r->status ?? 'Pending') }}</span>
+                                    <span class="kt-badge kt-badge-outline kt-badge-info">{{ ucfirst($r->reservation?->status ?? 'Pending') }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 align-top">
@@ -88,7 +89,7 @@
                     </tbody>
                 </table>
                 <div class="mt-4">
-                    {{ $reservations->appends(request()->except('page'))->links() }}
+                    
                 </div>
             </div>
         </div>

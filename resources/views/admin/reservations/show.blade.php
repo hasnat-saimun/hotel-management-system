@@ -16,11 +16,11 @@
             <div class="grid lg:grid-cols-3 gap-4">
                 <div class="kt-card p-3">
                     <p class="text-sm text-secondary-foreground">Guest</p>
-                    <p class="font-medium">{{ $reservation->guest_name ?? '-' }}</p>
+                    <p class="font-medium">{{ $reservation->guest->first_name ?? '-' }} {{ $reservation->guest->last_name ?? '-' }}</p>
                 </div>
                 <div class="kt-card p-3">
                     <p class="text-sm text-secondary-foreground">Room</p>
-                    <p class="font-medium">{{ $reservation->room_number ?? '-' }}</p>
+                    <p class="font-medium">{{ $reservation->rooms->first()->room_number ?? '-' }}</p>
                 </div>
                 <div class="kt-card p-3">
                     <p class="text-sm text-secondary-foreground">Status</p>

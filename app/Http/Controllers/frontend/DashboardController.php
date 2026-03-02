@@ -132,7 +132,7 @@ class DashboardController extends Controller
             ]);
 
             $roomPrice = $room->roomType->base_price ?? 0.00;
-            $discountAmount = $room->roomType->discount_amount ?? 0.00;
+            $discountAmount = $room->roomType->discount_amount ?? 0.00; 
 
             ReservationRoom::create([
                 'room_id' => $data['room_id'],

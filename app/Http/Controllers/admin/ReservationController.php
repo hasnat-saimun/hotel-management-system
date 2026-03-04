@@ -57,7 +57,20 @@ class ReservationController extends Controller
 
     public function walkin()
     {
-        // This will show a form to create a new walk-in reservation
-        return view('admin.reservations.walkin');
+        // Get the check-in and check-out dates from the request and find roomid  during that period on reservation room table by resevrvation table through.
+        $checkInDate = request()->input('check_in_date');
+        $checkOutDate = request()->input('check_out_date');
+
+        $reservations = Reservation::whereBetween('check_in_date', [$checkInDate, $checkOutDate])
+            ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
+            ->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
+                $query->where('check_in_date', '<=', $checkInDate)
+                    ->where('check_out_date', '>=', $checkOutDate);
+            })
+            ->with('reservationRooms')
+            ->get();
+
+
+        return view('admin.reservations.walkin', );
     }
 }

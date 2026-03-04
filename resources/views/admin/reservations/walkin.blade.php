@@ -6,8 +6,23 @@
         <div class="text-sm text-secondary-foreground">Quick create reservation for walk-in guests</div>
     </div>
     <div class="kt-card-content p-4">
+        <div class="mb-4">
+            <h5 class="text-md font-semibold">Find Available Rooms</h5>
+        </div>
         <form method="POST" action="{{ route('admin.reservations.walkin.store') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             @csrf
+            <div>
+                <label class="text-sm text-secondary-foreground">Check-in</label>
+                <input type="date" class="kt-input w-full" name="check_in_date" />
+            </div>
+            <div>
+                <label class="text-sm text-secondary-foreground">Check-out</label>
+                <input type="date" class="kt-input w-full" name="check_out_date" />
+            </div>
+            <div class="lg:col-span-2 flex gap-2">
+                <button type="submit" class="kt-btn kt-btn-primary">Search</button>
+            </div>
+            
             <div>
                 <label class="text-sm text-secondary-foreground">Guest name</label>
                 <input class="kt-input w-full" name="guest_name" />
@@ -34,18 +49,6 @@
                 </div>
 
                 <input type="hidden" name="room_number" value="" />
-            </div>
-            <div>
-                <label class="text-sm text-secondary-foreground">Check-in</label>
-                <input type="date" class="kt-input w-full" name="check_in_date" />
-            </div>
-            <div>
-                <label class="text-sm text-secondary-foreground">Check-out</label>
-                <input type="date" class="kt-input w-full" name="check_out_date" />
-            </div>
-            <div class="lg:col-span-2 flex gap-2">
-                <button type="submit" class="kt-btn kt-btn-primary">Create</button>
-                <a class="kt-btn" href="{{ route('admin.reservations.index') }}">Cancel</a>
             </div>
         </form>
     </div>

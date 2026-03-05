@@ -55,22 +55,86 @@ class ReservationController extends Controller
         return view('admin.reservations.calendar', compact('reservations'));
     }
 
-    public function walkin()
+    public function walkin(Request $request)
     {
-        // Get the check-in and check-out dates from the request and find roomid  during that period on reservation room table by resevrvation table through.
-        $checkInDate = request()->input('check_in_date');
-        $checkOutDate = request()->input('check_out_date');
+        $checkInDateRaw = $request->input('check_in_date');
+        $checkOutDateRaw = $request->input('check_out_date');
 
-        $reservations = Reservation::whereBetween('check_in_date', [$checkInDate, $checkOutDate])
-            ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
-            ->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
-                $query->where('check_in_date', '<=', $checkInDate)
-                    ->where('check_out_date', '>=', $checkOutDate);
+        $reservationRooms = collect();
+        $missingMessage = null;
+
+        $hasAnyInput = ($checkInDateRaw !== null && $checkInDateRaw !== '')
+            || ($checkOutDateRaw !== null && $checkOutDateRaw !== '');
+ 
+        if (!$hasAnyInput) {
+            $missingMessage = 'Please select check-in and check-out dates, then click Search.';
+            return view('admin.reservations.walkin', [
+                'reservationRooms' => $reservationRooms,
+                'missingMessage' => $missingMessage,
+                'checkInDate' => null,
+                'checkOutDate' => null,
+            ]);
+        }
+
+        if (empty($checkInDateRaw) || empty($checkOutDateRaw)) {
+            $missingMessage = 'Missing check-in or check-out date.';
+            return view('admin.reservations.walkin', [
+                'reservationRooms' => $reservationRooms,
+                'missingMessage' => $missingMessage,
+                'checkInDate' => $checkInDateRaw,
+                'checkOutDate' => $checkOutDateRaw,
+            ]);
+        }
+
+        try {
+            $checkInDate = Carbon::parse($checkInDateRaw)->toDateString();
+            $checkOutDate = Carbon::parse($checkOutDateRaw)->toDateString();
+        } catch (\Throwable $e) {
+            $missingMessage = 'Invalid date value.';
+            return view('admin.reservations.walkin', [
+                'reservationRooms' => $reservationRooms,
+                'missingMessage' => $missingMessage,
+                'checkInDate' => $checkInDateRaw,
+                'checkOutDate' => $checkOutDateRaw,
+            ]);
+        }
+
+        if ($checkOutDate < $checkInDate) {
+            $missingMessage = 'Check-out date must be the same as or after check-in date.';
+            return view('admin.reservations.walkin', [
+                'reservationRooms' => $reservationRooms,
+                'missingMessage' => $missingMessage,
+                'checkInDate' => $checkInDate,
+                'checkOutDate' => $checkOutDate,
+            ]);
+        }
+
+        $reservationRooms = ReservationRoom::query()
+            ->with([
+                'reservation.guest',
+                'room',
+                'roomType',
+            ])
+            ->whereHas('reservation', function ($query) use ($checkInDate, $checkOutDate) {
+                $query->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
+                    ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
+                    ->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
+                        $query->where('check_in_date', '<=', $checkInDate)
+                            ->where('check_out_date', '>=', $checkOutDate);
+                    });
             })
-            ->with('reservationRooms')
+            ->latest('id')
             ->get();
 
+        if ($reservationRooms->isEmpty()) {
+            $missingMessage = 'No data found for the selected period.';
+        }
 
-        return view('admin.reservations.walkin', );
+        return view('admin.reservations.walkin', [
+            'reservationRooms' => $reservationRooms,
+            'missingMessage' => $missingMessage,
+            'checkInDate' => $checkInDate,
+            'checkOutDate' => $checkOutDate,
+        ]);
     }
 }

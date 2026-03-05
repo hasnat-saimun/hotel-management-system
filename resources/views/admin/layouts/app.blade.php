@@ -106,9 +106,11 @@
                     id="sidebar_header"
                 >
                     <a class="dark:hidden" href="index.html"
-                        ><img
-                            class="default-logo min-h-[22px] max-w-none"
+                        >
+                        <img
+                            class="default-logo h-10  max-w-none"
                             src="{{ asset('/public/hotel-management-admin/') }}/media/app/apple-touch-icon.png" />
+                            
                         <img
                             class="small-logo min-h-[22px] max-w-none"
                             src="{{ asset('/public/hotel-management-admin/') }}/media/app/mini-logo.svg" /></a

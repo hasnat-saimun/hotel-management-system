@@ -47,53 +47,30 @@
         </form>
 
         <div class="mt-6">
-            @php($reservationRooms = $reservationRooms ?? collect())
+            @php($availableRooms = $availableRooms ?? collect())
 
-            @if($reservationRooms->count() > 0)
+            @if($availableRooms->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-auto kt-table">
                         <thead>
                             <tr class="text-sm text-secondary-foreground bg-muted/20">
                                 <th class="px-4 py-3 text-left">Sl</th>
-                                <th class="px-4 py-3 text-left">Reservation</th>
-                                <th class="px-4 py-3 text-left">Guest</th>
-                                <th class="px-4 py-3 text-left">Room</th>
-                                <th class="px-4 py-3 text-left">Room Type</th>
-                                <th class="px-4 py-3 text-left">Check-in</th>
-                                <th class="px-4 py-3 text-left">Check-out</th>
+                                <th class="px-4 py-3 text-left">Room ID</th>
+                                <th class="px-4 py-3 text-left">Room #</th>
+                                <th class="px-4 py-3 text-left">Type</th>
+                                <th class="px-4 py-3 text-left">Floor</th>
                                 <th class="px-4 py-3 text-left">Status</th>
-                                <th class="px-4 py-3 text-left">Rate Plan</th>
-                                <th class="px-4 py-3 text-left">Nightly</th>
-                                <th class="px-4 py-3 text-left">Discount</th>
-                                <th class="px-4 py-3 text-left">Tax</th>
-                                <th class="px-4 py-3 text-left">Total</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm">
-                            @foreach($reservationRooms as $rr)
+                            @foreach($availableRooms as $room)
                                 <tr class="border-b border-input hover:bg-accent/10">
                                     <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                    <td class="px-4 py-3 align-top">
-                                        {{ $rr->reservation?->reservation_code ?? ('#' . ($rr->reservation_id ?? '-')) }}
-                                    </td>
-                                    <td class="px-4 py-3 align-top">
-                                        {{ $rr->reservation?->guest?->first_name ?? '-' }} {{ $rr->reservation?->guest?->last_name ?? '' }}
-                                        <div class="text-xs text-secondary-foreground">{{ $rr->reservation?->guest?->email ?? '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 align-top">{{ $rr->room?->room_number ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $rr->roomType?->name ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">
-                                        {{ $rr->reservation?->check_in_date ? \Carbon\Carbon::parse($rr->reservation->check_in_date)->format('M d, Y') : '-' }}
-                                    </td>
-                                    <td class="px-4 py-3 align-top">
-                                        {{ $rr->reservation?->check_out_date ? \Carbon\Carbon::parse($rr->reservation->check_out_date)->format('M d, Y') : '-' }}
-                                    </td>
-                                    <td class="px-4 py-3 align-top">{{ ucfirst($rr->status ?? '-') }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $rr->rate_plan_named ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">{{ number_format((float)($rr->nightly_rate ?? 0), 2) }}</td>
-                                    <td class="px-4 py-3 align-top">{{ number_format((float)($rr->discount_amount ?? 0), 2) }}</td>
-                                    <td class="px-4 py-3 align-top">{{ number_format((float)($rr->tax_amount ?? 0), 2) }}</td>
-                                    <td class="px-4 py-3 align-top">{{ number_format((float)($rr->total_amount ?? 0), 2) }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->id }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

@@ -60,7 +60,7 @@ class ReservationController extends Controller
         $checkInDateRaw = $request->input('check_in_date');
         $checkOutDateRaw = $request->input('check_out_date');
 
-        $reservationRooms = collect();
+        $availableRooms = collect();
         $missingMessage = null;
 
         $hasAnyInput = ($checkInDateRaw !== null && $checkInDateRaw !== '')
@@ -69,7 +69,7 @@ class ReservationController extends Controller
         if (!$hasAnyInput) {
             $missingMessage = 'Please select check-in and check-out dates, then click Search.';
             return view('admin.reservations.walkin', [
-                'reservationRooms' => $reservationRooms,
+                'availableRooms' => $availableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => null,
                 'checkOutDate' => null,
@@ -79,7 +79,7 @@ class ReservationController extends Controller
         if (empty($checkInDateRaw) || empty($checkOutDateRaw)) {
             $missingMessage = 'Missing check-in or check-out date.';
             return view('admin.reservations.walkin', [
-                'reservationRooms' => $reservationRooms,
+                'availableRooms' => $availableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDateRaw,
                 'checkOutDate' => $checkOutDateRaw,
@@ -92,7 +92,7 @@ class ReservationController extends Controller
         } catch (\Throwable $e) {
             $missingMessage = 'Invalid date value.';
             return view('admin.reservations.walkin', [
-                'reservationRooms' => $reservationRooms,
+                'availableRooms' => $availableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDateRaw,
                 'checkOutDate' => $checkOutDateRaw,
@@ -102,19 +102,14 @@ class ReservationController extends Controller
         if ($checkOutDate < $checkInDate) {
             $missingMessage = 'Check-out date must be the same as or after check-in date.';
             return view('admin.reservations.walkin', [
-                'reservationRooms' => $reservationRooms,
+                'availableRooms' => $availableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDate,
                 'checkOutDate' => $checkOutDate,
             ]);
         }
 
-        $reservationRooms = ReservationRoom::query()
-            ->with([
-                'reservation.guest',
-                'room',
-                'roomType',
-            ])
+        $bookedRoomIds = ReservationRoom::query()
             ->whereHas('reservation', function ($query) use ($checkInDate, $checkOutDate) {
                 $query->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
                     ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
@@ -123,15 +118,25 @@ class ReservationController extends Controller
                             ->where('check_out_date', '>=', $checkOutDate);
                     });
             })
-            ->latest('id')
+            ->distinct()
+            ->pluck('room_id');
+
+        $availableRooms = Room::query()
+            ->with(['roomType', 'floor'])
+            ->where('is_active', true)
+            ->where('status', 'available')
+            ->when($bookedRoomIds->isNotEmpty(), function ($query) use ($bookedRoomIds) {
+                $query->whereNotIn('id', $bookedRoomIds);
+            })
+            ->orderBy('room_number')
             ->get();
 
-        if ($reservationRooms->isEmpty()) {
-            $missingMessage = 'No data found for the selected period.';
+        if ($availableRooms->isEmpty()) {
+            $missingMessage = 'No rooms available for the selected period.';
         }
 
         return view('admin.reservations.walkin', [
-            'reservationRooms' => $reservationRooms,
+            'availableRooms' => $availableRooms,
             'missingMessage' => $missingMessage,
             'checkInDate' => $checkInDate,
             'checkOutDate' => $checkOutDate,

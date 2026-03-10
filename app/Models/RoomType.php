@@ -45,6 +45,12 @@ class RoomType extends Model
 
             $type->slug = $slug;
         });
+
+        static::saved(function (RoomType $type) {
+            if ($type->wasChanged('is_active')) {
+                Room::where('room_type_id', $type->id)->update(['is_active' => (bool) $type->is_active]);
+            }
+        });
     }
 
     public function amenities()

@@ -83,7 +83,10 @@ class RoomController extends Controller
     public function edit($id)
     {
         $room = Room::with('amenities')->findOrFail($id);
-        $types = RoomType::where('is_active', true)->orderBy('name')->get();
+        $types = RoomType::where('is_active', true)
+            ->orWhere('id', $room->room_type_id)
+            ->orderBy('name')
+            ->get();
         $floors = Floor::orderBy('level_number')->get();
         $amenities = Amenity::where('is_active', true)->orderBy('name')->get();
         return view('admin.rooms.edit', compact('room','types','floors','amenities'));

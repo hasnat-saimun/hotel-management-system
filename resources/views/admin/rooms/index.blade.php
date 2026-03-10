@@ -53,7 +53,14 @@
                     <td class="p-2"><input type="checkbox" class="row-checkbox" value="{{ $room->id }}"></td>
                     <td class="p-2">{{ $rooms->firstItem() ? $rooms->firstItem() + $loop->index : $loop->iteration }}</td>
                     <td class="p-2">{{ $room->room_number }}</td>
-                    <td class="p-2">{{ $room->roomType?->name ?? '-' }}</td>
+                    <td class="p-2">
+                        {{ $room->roomType?->name ?? '-' }}
+                        @if($room->roomType && !$room->roomType->is_active)
+                            <div class="mt-1">
+                                <span class="kt-badge kt-badge-outline kt-badge-destructive kt-badge-sm">Type inactive</span>
+                            </div>
+                        @endif
+                    </td>
                     <td class="p-2">{{ $room->floor?->name ?? '-' }}</td>
                     <td class="p-2">
                         <span class="kt-badge {{ $room->status == 'available' ? 'kt-badge-success' : 'kt-badge-warning' }}">{{ ucfirst($room->status) }}</span>

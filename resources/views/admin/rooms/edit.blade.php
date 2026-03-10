@@ -68,10 +68,10 @@
             </div>
             <div>
                 <label class="text-sm text-secondary-foreground required-label">Room Type</label>
-                <select name="room_type_id" required class="kt-input w-full">
+                <select name="room_type_id" id="room-type-select" required class="kt-input w-full">
                     <option value="">-- Select --</option>
                     @foreach($types as $t)
-                        <option value="{{ $t->id }}" {{ old('room_type_id', $room->room_type_id)==$t->id ? 'selected':'' }}>{{ $t->name }}</option>
+                        <option value="{{ $t->id }}" data-active="{{ $t->is_active ? 1 : 0 }}" {{ old('room_type_id', $room->room_type_id)==$t->id ? 'selected':'' }}>{{ $t->name }} --  A: {{ $t->capacity_adults }} - C: {{ $t->capacity_children }}</option>
                     @endforeach
                 </select>
             </div>
@@ -112,9 +112,31 @@
                 </div>
             </div>
             <div class="lg:col-span-2">
-                <label class="text-sm text-secondary-foreground">Active</label>
+                @php
+                    $selectedTypeId = old('room_type_id', $room->room_type_id);
+                    $selectedType = $types->firstWhere('id', (int) $selectedTypeId);
+                    $selectedTypeIsActive = $selectedType ? (bool) $selectedType->is_active : true;
+                @endphp
+                <label class="text-sm text-secondary-foreground">
+                    Active
+                    <span
+                        id="room-active-disabled-hint"
+                        class="text-xs text-secondary-foreground"
+                        style="{{ $selectedTypeIsActive ? 'display:none;' : '' }}"
+                    >(Disabled because the selected room type is inactive.)</span>
+                </label>
                 <div>
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" name="is_active" value="1" {{ old('is_active', $room->is_active) ? 'checked' : '' }} /> Enabled</label>
+                    <label class="inline-flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="room-is-active"
+                            name="is_active"
+                            value="1"
+                            {{ $selectedTypeIsActive ? '' : 'disabled' }}
+                            {{ ($selectedTypeIsActive && old('is_active', $room->is_active)) ? 'checked' : '' }}
+                        />
+                        Enabled
+                    </label>
                 </div>
             </div>
             <div class="lg:col-span-2 flex gap-2">
@@ -125,3 +147,42 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+    var typeSelect = document.getElementById('room-type-select');
+    var activeCheckbox = document.getElementById('room-is-active');
+    var hint = document.getElementById('room-active-disabled-hint');
+    if (!typeSelect || !activeCheckbox) return;
+
+    function setHintVisible(visible){
+        if (!hint) return;
+        hint.style.display = visible ? 'inline' : 'none';
+    }
+
+    function updateActiveToggle(){
+        if (!typeSelect.value) {
+            activeCheckbox.checked = false;
+            activeCheckbox.disabled = true;
+            setHintVisible(false);
+            return;
+        }
+
+        var opt = typeSelect.options[typeSelect.selectedIndex];
+        var typeIsActive = opt && opt.dataset ? (opt.dataset.active === '1') : true;
+        if (!typeIsActive) {
+            activeCheckbox.checked = false;
+            activeCheckbox.disabled = true;
+            setHintVisible(true);
+        } else {
+            activeCheckbox.disabled = false;
+            setHintVisible(false);
+        }
+    }
+
+    typeSelect.addEventListener('change', updateActiveToggle);
+    updateActiveToggle();
+})();
+</script>
+@endpush

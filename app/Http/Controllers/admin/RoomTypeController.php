@@ -45,7 +45,7 @@ class RoomTypeController extends Controller
             $base = Str::slug($data['name']);
             $slug = $base;
             $counter = 1;
-            while (RoomType::where('slug', $slug)->exists()) {
+            while (RoomType::withTrashed()->where('slug', $slug)->exists()) {
                 $slug = $base . '-' . $counter;
                 $counter++;
             }
@@ -76,11 +76,11 @@ class RoomTypeController extends Controller
         ]);
 
         $data['capacity_children'] = $data['capacity_children'] ?? 0;
-        if (empty($data['slug'])) {
+        if (empty($data['slug'] ?? null)) {
             $base = Str::slug($data['name']);
             $slug = $base;
             $counter = 1;
-            while (RoomType::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+            while (RoomType::withTrashed()->where('slug', $slug)->where('id', '!=', $id)->exists()) {
                 $slug = $base . '-' . $counter;
                 $counter++;
             }
@@ -106,7 +106,12 @@ class RoomTypeController extends Controller
             'ids.*' => 'integer|exists:room_types,id'
         ]);
 
-        $count = RoomType::whereIn('id', $data['ids'])->delete();
+        $types = RoomType::whereIn('id', $data['ids'])->get();
+        foreach ($types as $type) {
+            $type->delete();
+        }
+
+        $count = $types->count();
         return redirect()->route('admin.rooms.types.index')->with('success', "$count room types deleted");
     }
 }

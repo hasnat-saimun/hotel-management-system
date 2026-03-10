@@ -72,7 +72,10 @@ class RoomController extends Controller
                 }
             }
         $data['avatar'] = json_encode($images);
-        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : true;
+        $typeIsActive = (bool) RoomType::whereKey($data['room_type_id'])->value('is_active');
+        $data['is_active'] = $typeIsActive
+            ? (isset($data['is_active']) ? (bool) $data['is_active'] : true)
+            : false;
         $room = Room::create($data);
 
         $room->amenities()->sync($data['amenities'] ?? []);
@@ -107,7 +110,10 @@ class RoomController extends Controller
             'amenities.*' => 'integer|exists:amenities,id',
         ]);
 
-        $data['is_active'] = isset($data['is_active']) ? (bool)$data['is_active'] : false;
+        $typeIsActive = (bool) RoomType::whereKey($data['room_type_id'])->value('is_active');
+        $data['is_active'] = $typeIsActive && isset($data['is_active'])
+            ? (bool) $data['is_active']
+            : false;
         $room->update($data);
         $room->amenities()->sync($data['amenities'] ?? []);
 

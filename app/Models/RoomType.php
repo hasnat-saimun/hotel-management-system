@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Models\Amenity;
 use App\Models\Room;
 
 class RoomType extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name', 'slug', 'capacity_adults', 'capacity_children', 'base_price', 'description', 'is_active'
@@ -34,7 +35,7 @@ class RoomType extends Model
             $slug = $base;
             $counter = 1;
 
-            while (static::where('slug', $slug)
+            while (static::withTrashed()->where('slug', $slug)
                 ->when($type->exists, function ($q) use ($type) {
                     return $q->where('id', '!=', $type->id);
                 })
@@ -44,6 +45,15 @@ class RoomType extends Model
             }
 
             $type->slug = $slug;
+        });
+
+        static::deleting(function (RoomType $type) {
+            if (!$type->isForceDeleting()) {
+                Room::where('room_type_id', $type->id)->delete();
+                return;
+            }
+
+            Room::withTrashed()->where('room_type_id', $type->id)->forceDelete();
         });
 
         static::saved(function (RoomType $type) {

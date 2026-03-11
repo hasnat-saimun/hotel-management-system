@@ -148,6 +148,10 @@ class DashboardController extends Controller
                 'status' => 'reserved',
             ]);
 
+            // Update statuses after successful reservation creation
+            $room->update(['status' => 'reserved']);
+            $reservation->update(['status' => 'pending']);
+
             DB::commit();
 
             return redirect()

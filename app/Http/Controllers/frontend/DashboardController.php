@@ -57,6 +57,7 @@ class DashboardController extends Controller
     {
         $roomQuery
             ->where('is_active', true)
+            ->where('status', 'available')
             ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps($q, $fromDate, $toDate));
     }
 
@@ -96,6 +97,7 @@ class DashboardController extends Controller
 
             // Re-check room availability to prevent race conditions
             $room = Room::query()->with('roomType')->whereKey($data['room_id'])->where('is_active', true)
+                ->where('status', 'available')
                 ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps(
                     $q,
                     $data['check_in_date'],

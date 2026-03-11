@@ -67,7 +67,9 @@
                     </td>
                     <td class="p-2">{{ $room->is_active ? 'Yes' : 'No' }}</td>
                     <td class="p-2">
-                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.rooms.edit', $room->id) }}">Edit</a>
+                        @if(!in_array(strtolower($room->status ?? ''), ['reserved','occupied'], true))
+                            <a class="kt-btn kt-btn-sm" href="{{ route('admin.rooms.edit', $room->id) }}">Edit</a>
+                        @endif
                         <form action="{{ route('admin.rooms.destroy', $room->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this room?');">
                             @csrf
                             @method('DELETE')

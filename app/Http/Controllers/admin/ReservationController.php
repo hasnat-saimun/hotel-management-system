@@ -72,7 +72,7 @@ class ReservationController extends Controller
 
             $roomIds = $reservation->rooms->pluck('id')->filter()->values();
             if ($roomIds->isNotEmpty()) {
-                Room::whereIn('id', $roomIds)->update(['status' => 'available']);
+                Room::whereIn('id', $roomIds)->update(['status' => 'dirty']);
             }
         });
 

@@ -32,21 +32,52 @@ class ReservationController extends Controller
 
     public function checkin($id)
     {
-        $reservation = Reservation::findOrFail($id);
-        $reservation->status = 'checked_in';
-        $reservation->save();
+        $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);
 
+        if (($reservation->status ?? null) !== 'confirmed') {
+            return redirect()->back()->with('error', 'Only confirmed reservations can be checked in.');
+        }
 
-        return redirect()->route('admin.reservations.index')->with('success', 'Guest checked in successfully.');
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'checked_in';
+            $reservation->save();
+
+            ReservationRoom::where('reservation_id', $reservation->id)
+                ->update(['status' => 'occupied']);
+
+            $roomIds = $reservation->rooms->pluck('id')->filter()->values();
+            if ($roomIds->isNotEmpty()) {
+                Room::whereIn('id', $roomIds)->update(['status' => 'occupied']);
+            }
+        });
+
+        return redirect()->route('admin.reservations.show', $reservation->id)
+            ->with('success', 'Guest checked in successfully.');
     }
 
     public function checkout($id)
     {
-        $reservation = Reservation::findOrFail($id);
-        $reservation->status = 'checked_out';
-        $reservation->save();
+        $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);
 
-        return redirect()->route('admin.reservations.index')->with('success', 'Guest checked out successfully.');
+        if (($reservation->status ?? null) !== 'checked_in') {
+            return redirect()->back()->with('error', 'Only checked-in reservations can be checked out.');
+        }
+
+        DB::transaction(function () use ($reservation) {
+            $reservation->status = 'checked_out';
+            $reservation->save();
+
+            ReservationRoom::where('reservation_id', $reservation->id)
+                ->update(['status' => 'released']);
+
+            $roomIds = $reservation->rooms->pluck('id')->filter()->values();
+            if ($roomIds->isNotEmpty()) {
+                Room::whereIn('id', $roomIds)->update(['status' => 'available']);
+            }
+        });
+
+        return redirect()->route('admin.reservations.show', $reservation->id)
+            ->with('success', 'Guest checked out successfully.');
     }
 
     public function calendar()

@@ -86,7 +86,11 @@
                             <td class="px-4 py-3 align-top">
                                 <div class="flex items-center gap-2">
                                     <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $r->id) }}">Details</a>
-                                    <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.checkin', $r->id) }}">Check-in</a>
+                                    @if(($status ?? '') === 'confirmed')
+                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.checkin', $r->id) }}">Check-in</a>
+                                    @elseif(in_array(($status ?? ''), ['checked-in', 'checkedin', 'checked_in'], true))
+                                        <a class="kt-btn kt-btn-destructive kt-btn-sm" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $r->id) }}">Check-out</a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

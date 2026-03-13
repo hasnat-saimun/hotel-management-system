@@ -90,14 +90,9 @@
             </div>
 
             <div class="mt-4 flex gap-2">
-                @php
-                    $currentDateTime = \Carbon\Carbon::now();
-                    $checkOutDateTime = $reservation->check_out_date ? \Carbon\Carbon::parse($reservation->check_out_date) : null;
-                @endphp
-
                 @if($rawStatus === 'confirmed')
                     <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
-                @elseif($checkOutDateTime && $currentDateTime->greaterThanOrEqualTo($checkOutDateTime) && in_array($rawStatus, ['checked-in', 'checkedin', 'checked_in'], true))
+                @elseif(in_array($rawStatus, ['checked-in', 'checkedin', 'checked_in'], true))
                     <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
                 @endif
 

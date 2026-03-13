@@ -176,11 +176,15 @@ class ReservationController extends Controller
 
         $bookedRoomIds = ReservationRoom::query()
             ->whereHas('reservation', function ($query) use ($checkInDate, $checkOutDate) {
-                $query->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
-                    ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
-                    ->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
-                        $query->where('check_in_date', '<=', $checkInDate)
-                            ->where('check_out_date', '>=', $checkOutDate);
+                $query
+                    ->whereIn('status', ['pending', 'confirmed', 'checked_in', 'booked'])
+                    ->where(function ($q) use ($checkInDate, $checkOutDate) {
+                        $q->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
+                            ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
+                            ->orWhere(function ($q2) use ($checkInDate, $checkOutDate) {
+                                $q2->where('check_in_date', '<=', $checkInDate)
+                                    ->where('check_out_date', '>=', $checkOutDate);
+                            });
                     });
             })
             ->distinct()

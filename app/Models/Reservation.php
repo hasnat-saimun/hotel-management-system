@@ -18,11 +18,12 @@ class Reservation extends Model
         'payment_status',
         'check_in_date',
         'check_out_date',
-        'cancel_note',
-        'status',
+        'adults',
+        'children',
         'rate',
-        'channel',
-        'payment_status',
+        'extras',
+        'note',
+        'cancel_note',
     ];
 
     protected $casts = [

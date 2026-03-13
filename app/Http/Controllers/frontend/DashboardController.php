@@ -63,14 +63,16 @@ class DashboardController extends Controller
 
     private function reservationOverlaps($reservationQuery, string $fromDate, string $toDate): void
     {
-        $reservationQuery->where(function ($q) use ($fromDate, $toDate) {
-            $q->whereBetween('check_in_date', [$fromDate, $toDate])
-                ->orWhereBetween('check_out_date', [$fromDate, $toDate])
-                ->orWhere(function ($q2) use ($fromDate, $toDate) {
-                    $q2->where('check_in_date', '<=', $fromDate)
-                        ->where('check_out_date', '>=', $toDate);
-                });
-        });
+        $reservationQuery
+            ->whereIn('reservations.status', ['pending', 'confirmed', 'checked_in', 'booked'])
+            ->where(function ($q) use ($fromDate, $toDate) {
+                $q->whereBetween('check_in_date', [$fromDate, $toDate])
+                    ->orWhereBetween('check_out_date', [$fromDate, $toDate])
+                    ->orWhere(function ($q2) use ($fromDate, $toDate) {
+                        $q2->where('check_in_date', '<=', $fromDate)
+                            ->where('check_out_date', '>=', $toDate);
+                    });
+            });
     }
     
     public function store(Request $request)
@@ -85,11 +87,13 @@ class DashboardController extends Controller
             'note' => 'nullable|string|max:1000',
             'address' => 'nullable|string|max:1000',
             'adults' => 'required|integer|min:1',
-            'children' => 'required|integer|min:0',
+            'children' => 'nullable|integer|min:0',
             'room_id' => 'required|exists:rooms,id',
             'id_type' => 'nullable|string|max:50',
             'id_number' => 'nullable|string|max:50',
         ]);
+
+        $data['children'] = (int) ($data['children'] ?? 0);
 
         DB::beginTransaction();
 

@@ -590,8 +590,8 @@
                     <input type="hidden" name="check_in_date" value="{{ $data['check_in_date'] }}">
                     <input type="hidden" name="check_out_date" value="{{ $data['check_out_date'] }}">
                     <input type="hidden" name="adults" value="{{ $data['adults'] }}">
-                    <input type="hidden" name="children" value="{{ $data['children'] }}">
-                    <input type="hidden" name="room_id" value="{{ request()->query('room_id') }}">
+                  <input type="hidden" name="children" value="{{ $data['children'] ?? 0 }}">
+                  <input type="hidden" id="room_id" name="room_id" value="{{ request()->query('room_id') }}">
                 @endif
                 <!-- Header -->
                 <div class="flex items-start justify-between gap-6">

@@ -15,15 +15,15 @@
             @if($reservation)
             @php
                 $guest = $reservation->guest;
-                $guestName = trim(($guest->first_name ?? '') . ' ' . ($guest->last_name ?? ''));
+                $guestName = trim(($guest?->first_name ?? '') . ' ' . ($guest?->last_name ?? ''));
                 $guestName = $guestName !== '' ? $guestName : '-';
 
                 $room = $reservation->rooms->first();
-                $floorName = $room->floor->name ?? null;
-                $roomNumber = $room->room_number ?? '-';
+                $floorName = $room?->floor?->name;
+                $roomNumber = $room?->room_number ?? '-';
 
                 $reservationRoom = $reservation->reservationRooms->first();
-                $roomType = $reservationRoom->roomType ?? ($room->roomType ?? null);
+                $roomType = $reservationRoom?->roomType ?? ($room?->roomType ?? null);
 
                 $rawStatus = strtolower($reservation->status ?? 'pending');
                 if ($rawStatus === 'confirmed') {
@@ -56,37 +56,110 @@
                 $checkInDisplay = $reservation->check_in_date ? \Carbon\Carbon::parse($reservation->check_in_date)->format('M d, Y') : '-';
                 $checkOutDisplay = $reservation->check_out_date ? \Carbon\Carbon::parse($reservation->check_out_date)->format('M d, Y') : '-';
 
-                $roomTypeName = $roomType->name ?? '-';
-                $capacityAdults = $roomType->capacity_adults ?? null;
-                $capacityChildren = $roomType->capacity_children ?? null;
-                $roomPrice = $reservationRoom->nightly_rate ?? ($reservation->rate ?? ($roomType->base_price ?? null));
+                $roomTypeName = $roomType?->name ?? '-';
+                $capacityAdults = $roomType?->capacity_adults;
+                $capacityChildren = $roomType?->capacity_children;
+                $roomPrice = $reservationRoom?->nightly_rate ?? ($reservation->rate ?? ($roomType?->base_price ?? null));
             @endphp
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a class="kt-card p-3 block hover:bg-muted/10" data-kt-modal-toggle="#reservation_guest_modal" href="#">
-                    <p class="text-sm text-secondary-foreground">Guest</p>
-                    <p class="font-medium">{{ $guestName }}</p>
-                </a>
+                <div class="kt-card p-4 h-full flex flex-col">
+                    <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
+                    <div class="mt-1 text-base font-semibold text-mono break-words">{{ $guestName }}</div>
 
-                <a class="kt-card p-3 block hover:bg-muted/10" data-kt-modal-toggle="#reservation_room_modal" href="#">
-                    <p class="text-sm text-secondary-foreground">Room / Floor</p>
-                    <p class="font-medium">
-                        {{ $roomNumber }}
+                    <div class="mt-3 pt-3 border-t border-border">
+                        <dl class="grid gap-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Address</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono break-words">{{ $guest?->address ?? '-' }}</dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Email</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono break-words">{{ $guest?->email ?? '-' }}</dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Phone</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono break-words">{{ $guest?->phone ?? '-' }}</dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">ID Type</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono">{{ $guest?->id_type ?? '-' }}</dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">ID Number</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono break-words">{{ $guest?->id_number ?? '-' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="kt-card p-4 h-full flex flex-col">
+                    <div class="text-xs font-semibold text-secondary-foreground">Floor / Room</div>
+                    <div class="mt-1 text-base font-semibold text-mono break-words">
                         @if($floorName)
-                            • {{ $floorName }}
+                            <span class="text-sm font-normal text-secondary-foreground"> {{ $floorName }}</span>
                         @endif
-                    </p>
-                </a>
+                        <span class="text-sm font-normal text-secondary-foreground"> • </span>
+                        {{ $roomNumber }}
+                    </div>
 
-                <a class="kt-card p-3 block hover:bg-muted/10" data-kt-modal-toggle="#reservation_channel_modal" href="#">
-                    <p class="text-sm text-secondary-foreground">Channel / Status</p>
-                    <p class="font-medium">{{ $channelLabel }} • {{ $statusLabel }}</p>
-                </a>
+                    <div class="mt-3 pt-3 border-t border-border">
+                        <dl class="grid gap-2">
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Room Type</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono break-words">{{ $roomTypeName }}</dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Capacity</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono">
+                                    {{ $capacityAdults !== null ? $capacityAdults : '-' }} adults
+                                    <span class="text-secondary-foreground font-normal">•</span>
+                                    {{ $capacityChildren !== null ? $capacityChildren : '-' }} children
+                                </dd>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <dt class="text-xs text-secondary-foreground">Price</dt>
+                                <dd class="col-span-2 text-sm font-medium text-mono">
+                                    {{ $roomPrice !== null ? number_format((float) $roomPrice, 2) : '-' }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
 
-                <a class="kt-card p-3 block hover:bg-muted/10" data-kt-modal-toggle="#reservation_dates_modal" href="#">
-                    <p class="text-sm text-secondary-foreground">Dates</p>
-                    <p class="font-medium">{{ $checkInDisplay }} → {{ $checkOutDisplay }}</p>
-                </a>
+                <div class="kt-card p-4 h-full flex flex-col">
+                    <div class="text-xs font-semibold text-secondary-foreground">Channel / Status</div>
+
+                    <div class="mt-3 pt-3 border-t border-border">
+                        <dl class="grid gap-2">
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-xs text-secondary-foreground">Channel</dt>
+                                <dd><span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">{{ $channelLabel }}</span></dd>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-xs text-secondary-foreground">Status</dt>
+                                <dd><span class="kt-badge kt-badge-sm {{ $statusBadgeClass }}">{{ $statusLabel }}</span></dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="kt-card p-4 h-full flex flex-col">
+                    <div class="text-xs font-semibold text-secondary-foreground">Stay Dates</div>
+
+                    <div class="mt-3 pt-3 border-t border-border">
+                        <dl class="grid gap-2">
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-xs text-secondary-foreground">Check-in</dt>
+                                <dd class="text-sm font-medium text-mono">{{ $checkInDisplay }}</dd>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-xs text-secondary-foreground">Check-out</dt>
+                                <dd class="text-sm font-medium text-mono">{{ $checkOutDisplay }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-4 flex gap-2">
@@ -96,137 +169,6 @@
                     <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
                 @endif
 
-            </div>
-
-            <div class="kt-modal" data-kt-modal="true" id="reservation_guest_modal">
-                <div class="kt-modal-content max-w-[600px] top-[15%]">
-                    <div class="kt-modal-header">
-                        <h3 class="kt-modal-title">Guest Details</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                            <i class="ki-filled ki-cross"></i>
-                        </button>
-                    </div>
-                    <div class="kt-modal-body grid gap-5">
-                        <div class="grid gap-0.5">
-                            <div class="text-sm text-secondary-foreground">Guest</div>
-                            <div class="text-base font-semibold text-mono">{{ $guestName }}</div>
-                        </div>
-
-                        <div class="border-b border-border"></div>
-
-                        <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-                            <div class="sm:col-span-2 py-2">
-                                <dt class="text-sm text-secondary-foreground">Address</dt>
-                                <dd class="font-medium text-mono break-words">{{ $guest->address ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">Email</dt>
-                                <dd class="font-medium text-mono break-words">{{ $guest->email ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">Phone</dt>
-                                <dd class="font-medium text-mono break-words">{{ $guest->phone ?? '-' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">ID Type</dt>
-                                <dd class="font-medium text-mono">{{ $guest->id_type ?? '-' }}</dd>
-                            </div>
-                            <div class="sm:col-span-2 py-2">
-                                <dt class="text-sm text-secondary-foreground">ID Number</dt>
-                                <dd class="font-medium text-mono break-words">{{ $guest->id_number ?? '-' }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kt-modal" data-kt-modal="true" id="reservation_room_modal">
-                <div class="kt-modal-content max-w-[600px] top-[15%]">
-                    <div class="kt-modal-header">
-                        <h3 class="kt-modal-title">Room Details</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                            <i class="ki-filled ki-cross"></i>
-                        </button>
-                    </div>
-                    <div class="kt-modal-body grid gap-5">
-                        <div class="grid gap-0.5">
-                            <div class="text-sm text-secondary-foreground">Room / Floor</div>
-                            <div class="text-base font-semibold text-mono">
-                                {{ $roomNumber }}
-                                @if($floorName)
-                                    <span class="text-secondary-foreground font-normal">• {{ $floorName }}</span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="border-b border-border"></div>
-
-                        <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4 ">
-                            <div class="sm:col-span-2 py-2">
-                                <dt class="text-sm text-secondary-foreground">Room Type</dt>
-                                <dd class="font-medium text-mono break-words">{{ $roomTypeName }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">Capacity</dt>
-                                <dd class="font-medium text-mono">
-                                    Adults: {{ $capacityAdults !== null ? $capacityAdults : '-' }}
-                                    <span class="text-secondary-foreground font-normal">•</span>
-                                    Children: {{ $capacityChildren !== null ? $capacityChildren : '-' }}
-                                </dd>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <dt class="text-sm text-secondary-foreground">Price</dt>
-                                <dd class="font-medium text-mono">
-                                    {{ $roomPrice !== null ? number_format((float) $roomPrice, 2) : '-' }}
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kt-modal" data-kt-modal="true" id="reservation_channel_modal">
-                <div class="kt-modal-content max-w-[600px] top-[15%]">
-                    <div class="kt-modal-header">
-                        <h3 class="kt-modal-title">Channel & Status</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                            <i class="ki-filled ki-cross"></i>
-                        </button>
-                    </div>
-                    <div class="kt-modal-body grid gap-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="text-sm text-secondary-foreground">Channel</div>
-                            <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">{{ $channelLabel }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="text-sm text-secondary-foreground">Status</div>
-                            <span class="kt-badge kt-badge-sm {{ $statusBadgeClass }}">{{ $statusLabel }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="kt-modal" data-kt-modal="true" id="reservation_dates_modal">
-                <div class="kt-modal-content max-w-[600px] top-[15%]">
-                    <div class="kt-modal-header">
-                        <h3 class="kt-modal-title">Reservation Dates</h3>
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
-                            <i class="ki-filled ki-cross"></i>
-                        </button>
-                    </div>
-                    <div class="kt-modal-body">
-                        <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">Check-in Date</dt>
-                                <dd class="text-base font-semibold text-mono">{{ $checkInDisplay }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-secondary-foreground">Check-out Date</dt>
-                                <dd class="text-base font-semibold text-mono">{{ $checkOutDisplay }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
             </div>
             @else
             <div>No reservation found.</div>

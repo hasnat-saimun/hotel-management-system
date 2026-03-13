@@ -73,6 +73,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [ReservationController::class, 'index'])->name('index');
             Route::get('{id}/checkin', [ReservationController::class, 'checkin'])->name('checkin');
             Route::get('{id}/checkout', [ReservationController::class, 'checkout'])->name('checkout');
+            Route::post('{id}/cancel', [ReservationController::class, 'cancel'])->name('cancel');
             Route::get('{id}', [ReservationController::class, 'show'])->name('show');
         });
     // });

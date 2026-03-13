@@ -86,10 +86,15 @@
                             <td class="px-4 py-3 align-top">
                                 <div class="flex items-center gap-2">
                                     <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $r->id) }}">Details</a>
-                                    @if(($status ?? '') === 'confirmed')
-                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.checkin', $r->id) }}">Check-in</a>
-                                    @elseif(in_array(($status ?? ''), ['checked-in', 'checkedin', 'checked_in'], true))
-                                        <a class="kt-btn kt-btn-destructive kt-btn-sm" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $r->id) }}">Check-out</a>
+                                    @if(!in_array(($status ?? ''), ['cancelled', 'checked-in', 'checkedin', 'checked_in', 'checked-out', 'checkedout', 'checked_out'], true))
+                                        <button
+                                            type="button"
+                                            class="kt-btn kt-btn-destructive kt-btn-sm"
+                                            data-kt-modal-toggle="#cancel_reservation_modal"
+                                            data-cancel-action="{{ route('admin.reservations.cancel', $r->id) }}"
+                                        >
+                                            Cancel
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -103,6 +108,36 @@
                     
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="cancel_reservation_modal">
+    <div class="kt-modal-content max-w-[600px] top-[15%]">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Cancel Reservation</h3>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                <i class="ki-filled ki-cross"></i>
+            </button>
+        </div>
+        <div class="kt-modal-body grid gap-4">
+            <form id="cancel-reservation-form" method="POST" action="">
+                @csrf
+                <div class="grid gap-2">
+                    <label class="text-sm text-secondary-foreground" for="cancel_note">Note</label>
+                    <textarea
+                        id="cancel_note"
+                        name="cancel_note"
+                        class="kt-textarea w-full"
+                        rows="4"
+                        placeholder="Write a reason for cancellation (optional)"
+                    ></textarea>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button type="submit" class="kt-btn kt-btn-destructive">Cancel Reservation</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -124,6 +159,26 @@
         // submit when status select changes
         var selects = form.querySelectorAll('select');
         selects.forEach(function(s){ s.addEventListener('change', function(){ form.submit(); }); });
+
+        // cancel reservation modal wiring
+        var cancelForm = document.getElementById('cancel-reservation-form');
+        if (cancelForm) {
+            cancelForm.addEventListener('submit', function(e){
+                if (!confirm('Are you sure you want to cancel this reservation?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        var cancelButtons = document.querySelectorAll('[data-cancel-action]');
+        cancelButtons.forEach(function(btn){
+            btn.addEventListener('click', function(){
+                if (!cancelForm) return;
+                cancelForm.setAttribute('action', btn.getAttribute('data-cancel-action') || '');
+                var note = document.getElementById('cancel_note');
+                if (note) note.value = '';
+            });
+        });
     })();
     </script>
 @endpush

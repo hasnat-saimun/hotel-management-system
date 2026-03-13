@@ -80,6 +80,40 @@ class ReservationController extends Controller
             ->with('success', 'Guest checked out successfully.');
     }
 
+    public function cancel(Request $request, $id)
+    {
+        $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);
+
+        $data = $request->validate([
+            'cancel_note' => 'nullable|string|max:2000',
+        ]);
+
+        $currentStatus = strtolower((string) ($reservation->status ?? ''));
+        if (in_array($currentStatus, ['checked_in', 'checked-in', 'checkedin', 'checked_out', 'checked-out', 'checkedout'], true)) {
+            return redirect()->back()->with('error', 'Checked-in/out reservations cannot be cancelled.');
+        }
+
+        if ($currentStatus === 'cancelled') {
+            return redirect()->back()->with('success', 'Reservation already cancelled.');
+        }
+
+        DB::transaction(function () use ($reservation, $data) {
+            $reservation->status = 'cancelled';
+            $reservation->cancel_note = $data['cancel_note'] ?? null;
+            $reservation->save();
+
+            ReservationRoom::where('reservation_id', $reservation->id)
+                ->update(['status' => 'released']);
+
+            $roomIds = $reservation->rooms->pluck('id')->filter()->values();
+            if ($roomIds->isNotEmpty()) {
+                Room::whereIn('id', $roomIds)->update(['status' => 'available']);
+            }
+        });
+
+        return redirect()->route('admin.reservations.index')->with('success', 'Reservation cancelled successfully.');
+    }
+
     public function calendar()
     {
         $reservations = Reservation::with('guest','rooms')->get();

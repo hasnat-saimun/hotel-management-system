@@ -3,21 +3,23 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Amenity;
+use Illuminate\Support\Facades\DB;
 
 class AmenitySeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
+        $now = now();
+
         $list = [
-            ['name' => 'WiFi', 'icon' => '<i class="ki-filled ki-wifi"></i>'],
-            ['name' => 'AC', 'icon' => '<i class="ki-filled ki-snowflake"></i>'],
-            ['name' => 'TV', 'icon' => '<i class="ki-filled ki-screen"></i>'],
-            ['name' => 'Mini-bar', 'icon' => '<i class="ki-filled ki-cup"></i>'],
+            ['name' => 'WiFi', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Air Conditioning', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Smart TV', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Mini Bar', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Work Desk', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Ocean View', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
         ];
 
-        foreach ($list as $a) {
-            Amenity::updateOrCreate(['name' => $a['name']], $a);
-        }
+        DB::table('amenities')->upsert($list, ['name'], ['is_active', 'updated_at']);
     }
 }

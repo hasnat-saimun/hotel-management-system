@@ -48,34 +48,99 @@
 
         <div class="mt-6">
             @php($availableRooms = $availableRooms ?? collect())
+            @php($partiallyAvailableRooms = $partiallyAvailableRooms ?? collect())
 
-            @if($availableRooms->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto kt-table">
-                        <thead>
-                            <tr class="text-sm text-secondary-foreground bg-muted/20">
-                                <th class="px-4 py-3 text-left">Sl</th>
-                                <th class="px-4 py-3 text-left">Room ID</th>
-                                <th class="px-4 py-3 text-left">Room #</th>
-                                <th class="px-4 py-3 text-left">Type</th>
-                                <th class="px-4 py-3 text-left">Floor</th>
-                                <th class="px-4 py-3 text-left">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            @foreach($availableRooms as $room)
-                                <tr class="border-b border-input hover:bg-accent/10">
-                                    <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $room->id }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
-                                    <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
+            @if($availableRooms->count() > 0 || $partiallyAvailableRooms->count() > 0)
+                @if($availableRooms->count() > 0)
+                    <div class="mb-2">
+                        <h5 class="text-md font-semibold">Available for full stay</h5>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full table-auto kt-table">
+                            <thead>
+                                <tr class="text-sm text-secondary-foreground bg-muted/20">
+                                    <th class="px-4 py-3 text-left">Sl</th>
+                                    <th class="px-4 py-3 text-left">Room ID</th>
+                                    <th class="px-4 py-3 text-left">Room #</th>
+                                    <th class="px-4 py-3 text-left">Type</th>
+                                    <th class="px-4 py-3 text-left">Floor</th>
+                                    <th class="px-4 py-3 text-left">Status</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody class="text-sm">
+                                @foreach($availableRooms as $room)
+                                    <tr class="border-b border-input hover:bg-accent/10">
+                                        <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
+                                        <td class="px-4 py-3 align-top">{{ $room->id }}</td>
+                                        <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
+                                        <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
+                                        <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
+                                        <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="p-4 text-sm text-secondary-foreground bg-muted/20 rounded">
+                        No rooms available for the full selected period.
+                    </div>
+                @endif
+
+                @if($partiallyAvailableRooms->count() > 0)
+                    <div class="mt-6 mb-2">
+                        <h5 class="text-md font-semibold">Available within selected dates</h5>
+                        <div class="text-sm text-secondary-foreground">These rooms are not available for the whole stay but have free dates inside your selected range.</div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full table-auto kt-table">
+                            <thead>
+                                <tr class="text-sm text-secondary-foreground bg-muted/20">
+                                    <th class="px-4 py-3 text-left">Sl</th>
+                                    <th class="px-4 py-3 text-left">Room ID</th>
+                                    <th class="px-4 py-3 text-left">Room #</th>
+                                    <th class="px-4 py-3 text-left">Type</th>
+                                    <th class="px-4 py-3 text-left">Floor</th>
+                                    <th class="px-4 py-3 text-left">Status</th>
+                                    <th class="px-4 py-3 text-left">Available (Check-in &rarr; Check-out)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                @foreach($partiallyAvailableRooms as $row)
+                                    @php($room = $row['room'] ?? null)
+                                    @php($ranges = $row['availableRanges'] ?? [])
+
+                                    @if($room)
+                                        <tr class="border-b border-input hover:bg-accent/10">
+                                            <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
+                                            <td class="px-4 py-3 align-top">{{ $room->id }}</td>
+                                            <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
+                                            <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
+                                            <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
+                                            <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
+                                            <td class="px-4 py-3 align-top">
+                                                @forelse($ranges as $range)
+                                                    <span class="whitespace-nowrap">
+                                                        {{ \Carbon\Carbon::parse($range['from'])->format('d M Y') }}
+                                                        &rarr;
+                                                        {{ \Carbon\Carbon::parse($range['to'])->format('d M Y') }}
+                                                    </span>
+                                                    @if(!$loop->last)
+                                                        <span class="text-secondary-foreground">,</span>
+                                                    @endif
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             @else
                 <div class="p-4 text-sm text-secondary-foreground bg-muted/20 rounded">
                     {{ $missingMessage ?? 'No data found.' }}

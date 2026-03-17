@@ -36,6 +36,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('types', [App\Http\Controllers\admin\RoomTypeController::class, 'store'])->name('types.store');
             Route::get('types/{id}/edit', [App\Http\Controllers\admin\RoomTypeController::class, 'edit'])->name('types.edit');
             Route::put('types/{id}', [App\Http\Controllers\admin\RoomTypeController::class, 'update'])->name('types.update');
+            Route::post('types/{id}/toggle-status', [App\Http\Controllers\admin\RoomTypeController::class, 'toggleStatus'])->name('types.toggleStatus');
             Route::delete('types/{id}', [App\Http\Controllers\admin\RoomTypeController::class, 'destroy'])->name('types.destroy');
             Route::post('types/bulk-delete', [App\Http\Controllers\admin\RoomTypeController::class, 'bulkDestroy'])->name('types.bulkDestroy');
 

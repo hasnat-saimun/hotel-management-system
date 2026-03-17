@@ -114,4 +114,21 @@ class RoomTypeController extends Controller
         $count = $types->count();
         return redirect()->route('admin.rooms.types.index')->with('success', "$count room types deleted");
     }
+
+    public function toggleStatus(Request $request, $id)
+    {
+        $type = RoomType::findOrFail($id);
+        $type->update(['is_active' => !$type->is_active]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'id' => $type->id,
+                'is_active' => (bool) $type->is_active,
+                'label' => $type->is_active ? 'Active' : 'Inactive',
+            ]);
+        }
+
+        return redirect()->route('admin.rooms.types.index')->with('success', 'Room type status updated');
+    }
 }

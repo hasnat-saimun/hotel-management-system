@@ -16,6 +16,65 @@ use App\Models\Payment;
 
 class ReservationController extends Controller
 {
+    private function freeDateRangesWithinWindow(Carbon $windowStart, Carbon $windowEnd, $overlappingReservations): array
+    {
+        if ($windowEnd->lessThanOrEqualTo($windowStart)) {
+            return [];
+        }
+
+        $cursor = $windowStart->copy();
+        $ranges = [];
+
+        foreach (collect($overlappingReservations)->sortBy('check_in_date') as $reservation) {
+            try {
+                $blockedStart = Carbon::parse($reservation->check_in_date)->startOfDay();
+                $blockedEnd = Carbon::parse($reservation->check_out_date)->startOfDay();
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($blockedEnd->lessThanOrEqualTo($windowStart)) {
+                continue;
+            }
+
+            if ($blockedStart->greaterThanOrEqualTo($windowEnd)) {
+                break;
+            }
+
+            if ($blockedStart->lessThan($windowStart)) {
+                $blockedStart = $windowStart->copy();
+            }
+
+            if ($blockedEnd->greaterThan($windowEnd)) {
+                $blockedEnd = $windowEnd->copy();
+            }
+
+            if ($blockedStart->greaterThan($cursor)) {
+                $ranges[] = [
+                    'from' => $cursor->toDateString(),
+                    'to' => $blockedStart->toDateString(),
+                ];
+            }
+
+            if ($blockedEnd->greaterThan($cursor)) {
+                $cursor = $blockedEnd->copy();
+            }
+
+            if ($cursor->greaterThanOrEqualTo($windowEnd)) {
+                break;
+            }
+        }
+
+        if ($cursor->lessThan($windowEnd)) {
+            $ranges[] = [
+                'from' => $cursor->toDateString(),
+                'to' => $windowEnd->toDateString(),
+            ];
+        }
+
+        return array_values(array_filter($ranges, fn ($range) => ($range['from'] ?? null) < ($range['to'] ?? null)));
+    }
+
     public function index()
     {
         $reservations = Reservation::with('guest','reservationRooms','rooms')->get();
@@ -126,6 +185,7 @@ class ReservationController extends Controller
         $checkOutDateRaw = $request->input('check_out_date');
 
         $availableRooms = collect();
+        $partiallyAvailableRooms = collect();
         $missingMessage = null;
 
         $hasAnyInput = ($checkInDateRaw !== null && $checkInDateRaw !== '')
@@ -135,6 +195,7 @@ class ReservationController extends Controller
             $missingMessage = 'Please select check-in and check-out dates, then click Search.';
             return view('admin.reservations.walkin', [
                 'availableRooms' => $availableRooms,
+                'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => null,
                 'checkOutDate' => null,
@@ -145,6 +206,7 @@ class ReservationController extends Controller
             $missingMessage = 'Missing check-in or check-out date.';
             return view('admin.reservations.walkin', [
                 'availableRooms' => $availableRooms,
+                'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDateRaw,
                 'checkOutDate' => $checkOutDateRaw,
@@ -158,6 +220,7 @@ class ReservationController extends Controller
             $missingMessage = 'Invalid date value.';
             return view('admin.reservations.walkin', [
                 'availableRooms' => $availableRooms,
+                'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDateRaw,
                 'checkOutDate' => $checkOutDateRaw,
@@ -168,44 +231,75 @@ class ReservationController extends Controller
             $missingMessage = 'Check-out date must be the same as or after check-in date.';
             return view('admin.reservations.walkin', [
                 'availableRooms' => $availableRooms,
+                'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
                 'checkInDate' => $checkInDate,
                 'checkOutDate' => $checkOutDate,
             ]);
         }
 
-        $bookedRoomIds = ReservationRoom::query()
-            ->whereHas('reservation', function ($query) use ($checkInDate, $checkOutDate) {
-                $query
-                    ->whereIn('status', ['pending', 'confirmed', 'checked_in', 'booked'])
-                    ->where(function ($q) use ($checkInDate, $checkOutDate) {
-                        $q->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
-                            ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate])
-                            ->orWhere(function ($q2) use ($checkInDate, $checkOutDate) {
-                                $q2->where('check_in_date', '<=', $checkInDate)
-                                    ->where('check_out_date', '>=', $checkOutDate);
-                            });
-                    });
-            })
-            ->distinct()
-            ->pluck('room_id');
+        $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
+        $excludedRoomStatuses = ['maintenance', 'out_of_service'];
+
+        $reservationOverlapsWindow = function ($query) use ($checkInDate, $checkOutDate, $activeReservationStatuses) {
+            $query
+                ->whereIn('reservations.status', $activeReservationStatuses)
+                ->where('reservations.check_in_date', '<', $checkOutDate)
+                ->where('reservations.check_out_date', '>', $checkInDate);
+        };
 
         $availableRooms = Room::query()
             ->with(['roomType', 'floor'])
             ->where('is_active', true)
-            ->where('status', 'available')
-            ->when($bookedRoomIds->isNotEmpty(), function ($query) use ($bookedRoomIds) {
-                $query->whereNotIn('id', $bookedRoomIds);
-            })
+            ->whereNotIn('status', $excludedRoomStatuses)
+            ->whereDoesntHave('reservations', $reservationOverlapsWindow)
             ->orderBy('room_number')
             ->get();
 
-        if ($availableRooms->isEmpty()) {
-            $missingMessage = 'No rooms available for the selected period.';
+        $roomsWithOverlaps = Room::query()
+            ->with([
+                'roomType',
+                'floor',
+                'reservations' => function ($query) use ($checkInDate, $checkOutDate, $activeReservationStatuses) {
+                    $query
+                        ->whereIn('reservations.status', $activeReservationStatuses)
+                        ->where('reservations.check_in_date', '<', $checkOutDate)
+                        ->where('reservations.check_out_date', '>', $checkInDate)
+                        ->orderBy('reservations.check_in_date');
+                },
+            ])
+            ->where('is_active', true)
+            ->whereNotIn('status', $excludedRoomStatuses)
+            ->whereHas('reservations', $reservationOverlapsWindow)
+            ->orderBy('room_number')
+            ->get();
+
+        $windowStart = Carbon::parse($checkInDate)->startOfDay();
+        $windowEnd = Carbon::parse($checkOutDate)->startOfDay();
+
+        $partiallyAvailableRooms = $roomsWithOverlaps
+            ->map(function ($room) use ($windowStart, $windowEnd) {
+                $availableRanges = $this->freeDateRangesWithinWindow($windowStart, $windowEnd, $room->reservations);
+
+                if (empty($availableRanges)) {
+                    return null;
+                }
+
+                return [
+                    'room' => $room,
+                    'availableRanges' => $availableRanges,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        if ($availableRooms->isEmpty() && $partiallyAvailableRooms->isEmpty()) {
+            $missingMessage = 'No rooms available within the selected period.';
         }
 
         return view('admin.reservations.walkin', [
             'availableRooms' => $availableRooms,
+            'partiallyAvailableRooms' => $partiallyAvailableRooms,
             'missingMessage' => $missingMessage,
             'checkInDate' => $checkInDate,
             'checkOutDate' => $checkOutDate,

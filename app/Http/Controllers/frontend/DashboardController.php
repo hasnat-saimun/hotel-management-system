@@ -65,14 +65,8 @@ class DashboardController extends Controller
     {
         $reservationQuery
             ->whereIn('reservations.status', ['pending', 'confirmed', 'checked_in', 'booked'])
-            ->where(function ($q) use ($fromDate, $toDate) {
-                $q->whereBetween('check_in_date', [$fromDate, $toDate])
-                    ->orWhereBetween('check_out_date', [$fromDate, $toDate])
-                    ->orWhere(function ($q2) use ($fromDate, $toDate) {
-                        $q2->where('check_in_date', '<=', $fromDate)
-                            ->where('check_out_date', '>=', $toDate);
-                    });
-            });
+            ->where('reservations.check_in_date', '<', $toDate)
+            ->where('reservations.check_out_date', '>', $fromDate);
     }
     
     public function store(Request $request)

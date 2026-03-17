@@ -35,7 +35,7 @@
                     <th class="p-2">Capacity (Adults/Children)</th>
                     <th class="p-2">Base Price</th>
                     <th class="p-2">Description</th>
-                    <th class="p-2">Active</th>
+                    <th class="p-2">Status</th>
                     <th class="p-2">Actions</th>
                 </tr>
             </thead>
@@ -49,7 +49,16 @@
                     <td class="p-2">A: {{ $type->capacity_adults }} - C: {{ $type->capacity_children }}</td>
                     <td class="p-2">{{ number_format($type->base_price,2) }}</td>
                     <td class="p-2">{{ Str::limit($type->description, 60) }}</td>
-                    <td class="p-2">{{ $type->is_active ? 'Active' : 'Inactive' }}</td>
+                    <td class="p-2">
+                        <form method="POST" action="{{ route('admin.rooms.types.toggleStatus', $type->id) }}" class="inline-block">
+                            @csrf
+                            <button type="submit" class="p-0 bg-transparent border-0" title="Click to toggle">
+                                <span class="kt-badge kt-badge-sm {{ $type->is_active ? 'kt-badge-success' : 'kt-badge-outline kt-badge-destructive' }}">
+                                    {{ $type->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </button>
+                        </form>
+                    </td>
                     <td class="p-2">
                         <a class="kt-btn kt-btn-sm" href="{{ route('admin.rooms.types.edit', $type->id) }}">Edit</a>
                         <form action="{{ route('admin.rooms.types.destroy', $type->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this room type?');">
@@ -69,6 +78,7 @@
         <div class="mt-4">
             {{ $types->appends(request()->except('page'))->links() }}
         </div>
+
     @push('scripts')
     <script>
     (function(){
@@ -83,9 +93,8 @@
     })();
     </script>
     @endpush
-        </table>
-    </div>
-@push('scripts')
+
+    @push('scripts')
 <script>
 (function(){
     var deleteBtn = document.getElementById('types-delete-selected');
@@ -127,5 +136,7 @@
 })();
 </script>
 @endpush
+
+    </div>
 </div>
 @endsection

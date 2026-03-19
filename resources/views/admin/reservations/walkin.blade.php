@@ -42,7 +42,6 @@
                                         <input type="checkbox" data-room-select-all aria-label="Select all rooms" />
                                     </th>
                                     <th class="px-4 py-3 text-left">Sl</th>
-                                    <th class="px-4 py-3 text-left">Room ID</th>
                                     <th class="px-4 py-3 text-left">Room #</th>
                                     <th class="px-4 py-3 text-left">Type</th>
                                     <th class="px-4 py-3 text-left">Floor</th>
@@ -68,10 +67,9 @@
                                             />
                                         </td>
                                         <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                        <td class="px-4 py-3 align-top">{{ $room->id }}</td>
                                         <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
                                         <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
-                                        <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
+                                        <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td> 
                                         <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
                                     </tr>
                                     <tr id="{{ $detailsId }}" class="hidden border-b border-input bg-muted/10">
@@ -137,7 +135,6 @@
                                         <input type="checkbox" data-room-select-all aria-label="Select all rooms" />
                                     </th>
                                     <th class="px-4 py-3 text-left">Sl</th>
-                                    <th class="px-4 py-3 text-left">Room ID</th>
                                     <th class="px-4 py-3 text-left">Room #</th>
                                     <th class="px-4 py-3 text-left">Type</th>
                                     <th class="px-4 py-3 text-left">Floor</th>
@@ -168,7 +165,6 @@
                                                 />
                                             </td>
                                             <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                            <td class="px-4 py-3 align-top">{{ $room->id }}</td>
                                             <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
                                             <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
                                             <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>

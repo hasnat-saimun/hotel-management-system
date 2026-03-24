@@ -2,7 +2,7 @@
 <html class="h-full" data-kt-theme="true" data-kt-theme-mode="light" dir="ltr" lang="en">
     <head>
         <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-        <title>Metronic - Tailwind CSS Light Sidebar</title>
+        <title>hotel</title>
         <meta charset="utf-8" />
         <meta content="follow, index" name="robots" />
         <link href="index.html" rel="canonical" />
@@ -27,9 +27,13 @@
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
             rel="stylesheet"
         />
+
         <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/apexcharts/apexcharts.css" rel="stylesheet" />
         <link href="{{ asset('/public/hotel-management-admin/') }}/vendors/keenicons/styles.bundle.css" rel="stylesheet" />
-        <link href="{{ asset('/public/hotel-management-admin/') }}/css/styles.css" rel="stylesheet" />
+        <link href="{{ asset('/public/hotel-management-admin/') }}/css/styles.css" rel="stylesheet" />   
+        <!-- Flaticon CSS -->
+    <link rel="stylesheet" href="{{ asset('/public/back-office/') }}/fonts/flaticon.css">
+    <script src="https://kit.fontawesome.com/163dbb3d41.js" crossorigin="anonymous"></script>
 
         <style>
             /* Fixed footer for admin layout (sidebar-aware) */

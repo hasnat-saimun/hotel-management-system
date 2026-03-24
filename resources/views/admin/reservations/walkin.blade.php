@@ -29,212 +29,259 @@
             @php($partiallyAvailableRooms = $partiallyAvailableRooms ?? collect())
 
             @if($availableRooms->count() > 0 || $partiallyAvailableRooms->count() > 0)
-                @if($availableRooms->count() > 0)
-                    <div class="mb-2">
-                        <h5 class="text-md font-semibold">Available for full stay</h5>
-                    </div>
+                @php($rows = [])
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto kt-table">
-                            <thead>
-                                <tr class="text-sm text-secondary-foreground bg-muted/20">
-                                    <th class="px-4 py-3 text-left w-10">
-                                        <input type="checkbox" data-room-select-all aria-label="Select all rooms" />
-                                    </th>
-                                    <th class="px-4 py-3 text-left">Sl</th>
-                                    <th class="px-4 py-3 text-left">Room #</th>
-                                    <th class="px-4 py-3 text-left">Type</th>
-                                    <th class="px-4 py-3 text-left">Floor</th>
-                                    <th class="px-4 py-3 text-left">Status</th>
+                @foreach($availableRooms as $room)
+                    @php($rows[] = ['room' => $room, 'availabilityType' => 'full', 'availableRanges' => []])
+                @endforeach
+
+                @foreach($partiallyAvailableRooms as $row)
+                    @php($room = $row['room'] ?? null)
+                    @if($room)
+                        @php($rows[] = ['room' => $room, 'availabilityType' => 'partial', 'availableRanges' => ($row['availableRanges'] ?? [])])
+                    @endif
+                @endforeach
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto kt-table">
+                        <thead>
+                            <tr class="text-sm text-secondary-foreground bg-muted/20">
+                                <th class="px-4 py-3 text-left w-10">
+                                    <input type="checkbox" data-room-select-all aria-label="Select all rooms" />
+                                </th>
+                                <th class="px-4 py-3 text-left">Sl</th>
+                                <th class="px-4 py-3 text-left">Room #</th>
+                                <th class="px-4 py-3 text-left">Type</th>
+                                <th class="px-4 py-3 text-left">Floor</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Availability</th>
+                                <th class="px-4 py-3 text-left">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @foreach($rows as $row)
+                                @php($room = $row['room'])
+                                @php($ranges = $row['availableRanges'] ?? [])
+                                @php($detailsId = 'room-details-' . $room->id)
+
+                                <tr
+                                    class="border-b border-input hover:bg-accent/10 cursor-pointer"
+                                    data-room-details-target="{{ $detailsId }}"
+                                    aria-expanded="false"
+                                >
+                                    <td class="px-4 py-3 align-top">
+                                        <input
+                                            type="checkbox"
+                                            class="room-select-checkbox"
+                                            value="{{ $room->id }}"
+                                            data-room-number="{{ $room->room_number ?? '' }}"
+                                            data-room-type="{{ $room->roomType?->name ?? '' }}"
+                                            aria-label="Select room"
+                                        />
+                                    </td>
+                                    <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
+                                    <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
+                                    <td class="px-4 py-3 align-top">
+                                        @if(($row['availabilityType'] ?? '') === 'full')
+                                            <span class="whitespace-nowrap">Full stay</span>
+                                            @if(!empty($checkInDate) && !empty($checkOutDate))
+                                                <span class="text-secondary-foreground whitespace-nowrap">
+                                                    ({{ \Carbon\Carbon::parse($checkInDate)->format('d M Y') }}
+                                                    &rarr;
+                                                    {{ \Carbon\Carbon::parse($checkOutDate)->format('d M Y') }})
+                                                </span>
+                                            @endif
+                                        @else
+                                            @forelse($ranges as $range)
+                                                <span class="whitespace-nowrap">
+                                                    {{ \Carbon\Carbon::parse($range['from'])->format('d M Y') }}
+                                                    &rarr;
+                                                    {{ \Carbon\Carbon::parse($range['to'])->format('d M Y') }}
+                                                </span>
+                                                @if(!$loop->last)
+                                                    <span class="text-secondary-foreground">,</span>
+                                                @endif
+                                            @empty
+                                                -
+                                            @endforelse
+                                        @endif
+                                    </td>
+                                    <td><i class="fa-duotone fa-solid fa-calendar-circle-plus fa-lg" style="--fa-primary-color: rgb(211, 18, 22); --fa-secondary-color: rgb(211, 18, 22);"></i></td>
                                 </tr>
-                            </thead>
-                            <tbody class="text-sm">
-                                @foreach($availableRooms as $room)
-                                    @php($detailsId = 'room-details-full-' . $room->id)
-                                    <tr
-                                        class="border-b border-input hover:bg-accent/10 cursor-pointer"
-                                        data-room-details-target="{{ $detailsId }}"
-                                        aria-expanded="false"
-                                    >
-                                        <td class="px-4 py-3 align-top">
-                                            <input
-                                                type="checkbox"
-                                                class="room-select-checkbox"
-                                                value="{{ $room->id }}"
-                                                data-room-number="{{ $room->room_number ?? '' }}"
-                                                data-room-type="{{ $room->roomType?->name ?? '' }}"
-                                                aria-label="Select room"
-                                            />
-                                        </td>
-                                        <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                        <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
-                                        <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
-                                        <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td> 
-                                        <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
-                                    </tr>
-                                    <tr id="{{ $detailsId }}" class="hidden border-b border-input bg-muted/10">
-                                        <td colspan="7" class="px-4 py-3">
-                                            <div class="rounded border border-input bg-background p-4">
-                                                <div class="grid gap-4 grid-cols-1 lg:grid-cols-3">
-                                                    <div class="space-y-2">
-                                                        <div class="text-xs font-semibold text-secondary-foreground">Room</div>
-                                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                            <dt class="text-secondary-foreground">Active</dt>
-                                                            <dd class="text-foreground">{{ $room->is_active ? 'Yes' : 'No' }}</dd>
-                                                            <dt class="text-secondary-foreground">Notes</dt>
-                                                            <dd class="text-foreground">{{ $room->notes ?: '-' }}</dd>
-                                                        </dl>
-                                                    </div>
-                                                    <div class="space-y-2">
-                                                        <div class="text-xs font-semibold text-secondary-foreground">Room Type</div>
-                                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                            <dt class="text-secondary-foreground">Name</dt>
-                                                            <dd class="text-foreground">{{ $room->roomType?->name ?? '-' }}</dd>
-                                                            <dt class="text-secondary-foreground">Capacity</dt>
-                                                            <dd class="text-foreground">A {{ $room->roomType?->capacity_adults ?? '-' }}, C {{ $room->roomType?->capacity_children ?? '-' }}</dd>
-                                                            <dt class="text-secondary-foreground">Base price</dt>
-                                                            <dd class="text-foreground">{{ $room->roomType?->base_price ?? '-' }}</dd>
-                                                            <dt class="text-secondary-foreground">Type active</dt>
-                                                            <dd class="text-foreground">{{ $room->roomType ? ($room->roomType->is_active ? 'Yes' : 'No') : '-' }}</dd>
-                                                        </dl>
-                                                    </div>
-                                                    <div class="space-y-2">
-                                                        <div class="text-xs font-semibold text-secondary-foreground">Floor</div>
-                                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                            <dt class="text-secondary-foreground">Name</dt>
-                                                            <dd class="text-foreground">{{ $room->floor?->name ?? '-' }}</dd>
-                                                            <dt class="text-secondary-foreground">Level</dt>
-                                                            <dd class="text-foreground">{{ $room->floor?->level_number ?? '-' }}</dd>
-                                                        </dl>
-                                                    </div>
+
+                                <tr id="{{ $detailsId }}" class="hidden border-b border-input bg-muted/10">
+                                    <td colspan="7" class="px-4 py-3">
+                                        <div class="rounded border border-input bg-background p-4">
+                                            <div class="grid gap-4 grid-cols-1 lg:grid-cols-3">
+                                                <div class="space-y-2">
+                                                    <div class="text-xs font-semibold text-secondary-foreground">Room</div>
+                                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                                        <dt class="text-secondary-foreground">Active</dt>
+                                                        <dd class="text-foreground">{{ $room->is_active ? 'Yes' : 'No' }}</dd>
+                                                        <dt class="text-secondary-foreground">Notes</dt>
+                                                        <dd class="text-foreground">{{ $room->notes ?: '-' }}</dd>
+                                                    </dl>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <div class="text-xs font-semibold text-secondary-foreground">Room Type</div>
+                                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                                        <dt class="text-secondary-foreground">Name</dt>
+                                                        <dd class="text-foreground">{{ $room->roomType?->name ?? '-' }}</dd>
+                                                        <dt class="text-secondary-foreground">Capacity</dt>
+                                                        <dd class="text-foreground">A {{ $room->roomType?->capacity_adults ?? '-' }}, C {{ $room->roomType?->capacity_children ?? '-' }}</dd>
+                                                        <dt class="text-secondary-foreground">Base price</dt>
+                                                        <dd class="text-foreground">{{ $room->roomType?->base_price ?? '-' }}</dd>
+                                                        <dt class="text-secondary-foreground">Type active</dt>
+                                                        <dd class="text-foreground">{{ $room->roomType ? ($room->roomType->is_active ? 'Yes' : 'No') : '-' }}</dd>
+                                                    </dl>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <div class="text-xs font-semibold text-secondary-foreground">Floor</div>
+                                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                                        <dt class="text-secondary-foreground">Name</dt>
+                                                        <dd class="text-foreground">{{ $room->floor?->name ?? '-' }}</dd>
+                                                        <dt class="text-secondary-foreground">Level</dt>
+                                                        <dd class="text-foreground">{{ $room->floor?->level_number ?? '-' }}</dd>
+                                                    </dl>
                                                 </div>
                                             </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="p-4 text-sm text-secondary-foreground bg-muted/20 rounded">
-                        No rooms available for the full selected period.
-                    </div>
-                @endif
-
-                @if($partiallyAvailableRooms->count() > 0)
-                    <div class="mt-6 mb-2">
-                        <h5 class="text-md font-semibold">Available within selected dates</h5>
-                        <div class="text-sm text-secondary-foreground">These rooms are not available for the whole stay but have free dates inside your selected range.</div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto kt-table">
-                            <thead>
-                                <tr class="text-sm text-secondary-foreground bg-muted/20">
-                                    <th class="px-4 py-3 text-left w-10">
-                                        <input type="checkbox" data-room-select-all aria-label="Select all rooms" />
-                                    </th>
-                                    <th class="px-4 py-3 text-left">Sl</th>
-                                    <th class="px-4 py-3 text-left">Room #</th>
-                                    <th class="px-4 py-3 text-left">Type</th>
-                                    <th class="px-4 py-3 text-left">Floor</th>
-                                    <th class="px-4 py-3 text-left">Status</th>
-                                    <th class="px-4 py-3 text-left">Available (Check-in &rarr; Check-out)</th>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="text-sm">
-                                @foreach($partiallyAvailableRooms as $row)
-                                    @php($room = $row['room'] ?? null)
-                                    @php($ranges = $row['availableRanges'] ?? [])
-
-                                    @if($room)
-                                        @php($detailsId = 'room-details-partial-' . $room->id)
-                                        <tr
-                                            class="border-b border-input hover:bg-accent/10 cursor-pointer"
-                                            data-room-details-target="{{ $detailsId }}"
-                                            aria-expanded="false"
-                                        >
-                                            <td class="px-4 py-3 align-top">
-                                                <input
-                                                    type="checkbox"
-                                                    class="room-select-checkbox"
-                                                    value="{{ $room->id }}"
-                                                    data-room-number="{{ $room->room_number ?? '' }}"
-                                                    data-room-type="{{ $room->roomType?->name ?? '' }}"
-                                                    aria-label="Select room"
-                                                />
-                                            </td>
-                                            <td class="px-4 py-3 align-top">{{ $loop->iteration }}</td>
-                                            <td class="px-4 py-3 align-top">{{ $room->room_number ?? '-' }}</td>
-                                            <td class="px-4 py-3 align-top">{{ $room->roomType?->name ?? '-' }}</td>
-                                            <td class="px-4 py-3 align-top">{{ $room->floor?->name ?? '-' }}</td>
-                                            <td class="px-4 py-3 align-top">{{ ucfirst($room->status ?? '-') }}</td>
-                                            <td class="px-4 py-3 align-top">
-                                                @forelse($ranges as $range)
-                                                    <span class="whitespace-nowrap">
-                                                        {{ \Carbon\Carbon::parse($range['from'])->format('d M Y') }}
-                                                        &rarr;
-                                                        {{ \Carbon\Carbon::parse($range['to'])->format('d M Y') }}
-                                                    </span>
-                                                    @if(!$loop->last)
-                                                        <span class="text-secondary-foreground">,</span>
-                                                    @endif
-                                                @empty
-                                                    -
-                                                @endforelse
-                                            </td>
-                                        </tr>
-                                        <tr id="{{ $detailsId }}" class="hidden border-b border-input bg-muted/10">
-                                            <td colspan="8" class="px-4 py-3">
-                                                <div class="rounded border border-input bg-background p-4">
-                                                    <div class="grid gap-4 grid-cols-1 lg:grid-cols-3">
-                                                        <div class="space-y-2">
-                                                            <div class="text-xs font-semibold text-secondary-foreground">Room</div>
-                                                            <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                                <dt class="text-secondary-foreground">Active</dt>
-                                                                <dd class="text-foreground">{{ $room->is_active ? 'Yes' : 'No' }}</dd>
-                                                                <dt class="text-secondary-foreground">Notes</dt>
-                                                                <dd class="text-foreground">{{ $room->notes ?: '-' }}</dd>
-                                                            </dl>
-                                                        </div>
-                                                        <div class="space-y-2">
-                                                            <div class="text-xs font-semibold text-secondary-foreground">Room Type</div>
-                                                            <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                                <dt class="text-secondary-foreground">Name</dt>
-                                                                <dd class="text-foreground">{{ $room->roomType?->name ?? '-' }}</dd>
-                                                                <dt class="text-secondary-foreground">Capacity</dt>
-                                                                <dd class="text-foreground">A {{ $room->roomType?->capacity_adults ?? '-' }}, C {{ $room->roomType?->capacity_children ?? '-' }}</dd>
-                                                                <dt class="text-secondary-foreground">Base price</dt>
-                                                                <dd class="text-foreground">{{ $room->roomType?->base_price ?? '-' }}</dd>
-                                                                <dt class="text-secondary-foreground">Type active</dt>
-                                                                <dd class="text-foreground">{{ $room->roomType ? ($room->roomType->is_active ? 'Yes' : 'No') : '-' }}</dd>
-                                                            </dl>
-                                                        </div>
-                                                        <div class="space-y-2">
-                                                            <div class="text-xs font-semibold text-secondary-foreground">Floor</div>
-                                                            <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                                                <dt class="text-secondary-foreground">Name</dt>
-                                                                <dd class="text-foreground">{{ $room->floor?->name ?? '-' }}</dd>
-                                                                <dt class="text-secondary-foreground">Level</dt>
-                                                                <dd class="text-foreground">{{ $room->floor?->level_number ?? '-' }}</dd>
-                                                            </dl>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @else
                 <div class="p-4 text-sm text-secondary-foreground bg-muted/20 rounded">
                     {{ $missingMessage ?? 'No data found.' }}
                 </div>
             @endif
         </div>
+        <!-- calender -->
+         <div class="bg-gray-100 p-6">
+            <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+            
+            <!-- Header -->
+            <h2 class="text-center text-xl font-semibold mb-2">
+                Reservation Availability Calendar
+            </h2>
+            <p class="text-center text-sm text-gray-500 mb-6">
+                Select your dates • Lowest price shown per night
+            </p>
+
+            <!-- Calendar Grid -->
+            <div class="grid md:grid-cols-2 gap-6">
+
+                <!-- Month -->
+                <div>
+                <h3 class="text-center font-semibold mb-3">April 2026</h3>
+
+                <!-- Days -->
+                <div class="grid grid-cols-7 text-center text-sm text-gray-500 mb-2">
+                    <div>Sun</div><div>Mon</div><div>Tue</div>
+                    <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+
+                <!-- Dates -->
+                <div class="grid grid-cols-7 gap-2">
+
+                    <!-- Disabled -->
+                    <div class="h-16 bg-gray-200 relative rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400">✕</span>
+                    </div>
+
+                    <!-- Check-in -->
+                    <div class="h-16 bg-gray-800 text-white rounded flex flex-col justify-center items-center">
+                    <span class="text-sm">1</span>
+                    <span class="text-xs">Check in</span>
+                    </div>
+
+                    <!-- Check-out -->
+                    <div class="h-16 bg-gray-500 text-white rounded flex flex-col justify-center items-center">
+                    <span class="text-sm">2</span>
+                    <span class="text-xs">Check out</span>
+                    </div>
+
+                    <!-- Normal Date -->
+                    <div class="h-16 border rounded flex flex-col justify-center items-center hover:bg-gray-50 cursor-pointer">
+                    <span>17</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                    <!-- More dates -->
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>18</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>19</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                    <!-- Disabled -->
+                    <div class="h-16 bg-gray-200 relative rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400">✕</span>
+                    </div>
+
+                </div>
+                </div>
+
+                <!-- Month 2 -->
+                <div>
+                <h3 class="text-center font-semibold mb-3">May 2026</h3>
+
+                <!-- Days -->
+                <div class="grid grid-cols-7 text-center text-sm text-gray-500 mb-2">
+                    <div>Sun</div><div>Mon</div><div>Tue</div>
+                    <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+
+                <!-- Dates -->
+                <div class="grid grid-cols-7 gap-2">
+
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>2</span>
+                    <span class="text-xs text-gray-500">$4,060</span>
+                    </div>
+
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>3</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                    <!-- Disabled -->
+                    <div class="h-16 bg-gray-200 relative rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400">✕</span>
+                    </div>
+
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>10</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                    <div class="h-16 border rounded flex flex-col justify-center items-center">
+                    <span>11</span>
+                    <span class="text-xs text-gray-500">$3,060</span>
+                    </div>
+
+                </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-6 text-center bg-yellow-100 py-3 rounded text-yellow-700">
+                Not available
+            </div>
+
+            </div>
+
+</div>
     </div>
 </div>
 @endsection

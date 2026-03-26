@@ -175,7 +175,7 @@ class ReservationController extends Controller
 
     public function calendar()
     {
-        $reservations = Reservation::with(['guest', 'rooms'])->get();
+        $reservations = Reservation::with(['guest', 'rooms.floor'])->get();
 
         $calendarEvents = $reservations
             ->filter(fn ($reservation) => !empty($reservation->check_in_date) && !empty($reservation->check_out_date))
@@ -199,11 +199,43 @@ class ReservationController extends Controller
                         ->all();
                 }
 
-                $titleParts = [];
-                if (!empty($reservation->reservation_code)) {
-                    $titleParts[] = $reservation->reservation_code;
+                $floorLabels = [];
+                if ($reservation->relationLoaded('rooms') && $reservation->rooms) {
+                    $floorLabels = $reservation->rooms
+                        ->map(function ($room) {
+                            $floor = $room->floor ?? null;
+                            if (!$floor) {
+                                return null;
+                            }
+
+                            $name = trim((string) ($floor->name ?? ''));
+                            $level = trim((string) ($floor->level_number ?? ''));
+
+                            if ($name !== '') {
+                                return $name;
+                            }
+
+                            if ($level !== '') {
+                                return 'Floor ' . $level;
+                            }
+
+                            return null;
+                        })
+                        ->filter()
+                        ->unique()
+                        ->values()
+                        ->all();
                 }
-                $titleParts[] = $guestName;
+
+                $titleParts = [];
+                $statusLabel = $reservation->status
+                    ? ucfirst(str_replace(['_', '-'], ' ', (string) $reservation->status))
+                    : 'Reserved';
+
+                $titleParts[] = $statusLabel;
+                if (!empty($floorLabels)) {
+                    $titleParts[] = 'Floor ' . implode(', ', $floorLabels);
+                }
                 if (!empty($roomNumbers)) {
                     $titleParts[] = 'Room ' . implode(', ', $roomNumbers);
                 }
@@ -227,6 +259,22 @@ class ReservationController extends Controller
         return view('admin.reservations.calendar', [
             'reservations' => $reservations,
             'calendarEvents' => $calendarEvents,
+        ]);
+    }
+
+    public function calendarModal($id)
+    {
+        $reservation = Reservation::with([
+            'guest',
+            'rooms.floor',
+            'reservationRooms.roomType',
+            'payments',
+            'invoice',
+        ])->findOrFail($id);
+
+        return response()->json([
+            'title' => 'Reservation Details',
+            'html' => view('admin.reservations.partials.calendar-modal-details', compact('reservation'))->render(),
         ]);
     }
 

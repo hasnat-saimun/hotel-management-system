@@ -175,8 +175,59 @@ class ReservationController extends Controller
 
     public function calendar()
     {
-        $reservations = Reservation::with('guest','rooms')->get();
-        return view('admin.reservations.calendar', compact('reservations'));
+        $reservations = Reservation::with(['guest', 'rooms'])->get();
+
+        $calendarEvents = $reservations
+            ->filter(fn ($reservation) => !empty($reservation->check_in_date) && !empty($reservation->check_out_date))
+            ->map(function ($reservation) {
+                $guestName = '';
+                if ($reservation->relationLoaded('guest') && $reservation->guest) {
+                    $guestName = trim(($reservation->guest->first_name ?? '') . ' ' . ($reservation->guest->last_name ?? ''));
+                }
+
+                if ($guestName === '') {
+                    $guestName = 'Guest';
+                }
+
+                $roomNumbers = [];
+                if ($reservation->relationLoaded('rooms') && $reservation->rooms) {
+                    $roomNumbers = $reservation->rooms
+                        ->pluck('room_number')
+                        ->filter()
+                        ->unique()
+                        ->values()
+                        ->all();
+                }
+
+                $titleParts = [];
+                if (!empty($reservation->reservation_code)) {
+                    $titleParts[] = $reservation->reservation_code;
+                }
+                $titleParts[] = $guestName;
+                if (!empty($roomNumbers)) {
+                    $titleParts[] = 'Room ' . implode(', ', $roomNumbers);
+                }
+
+                $startDate = optional($reservation->check_in_date)->toDateString();
+                $endDate = optional($reservation->check_out_date)->toDateString();
+                if ($endDate !== null && $startDate !== null && $endDate <= $startDate) {
+                    $endDate = optional($reservation->check_in_date)->copy()->addDay()->toDateString();
+                }
+
+                return [
+                    'id' => $reservation->id,
+                    'title' => implode(' - ', $titleParts),
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'allDay' => true,
+                ];
+            })
+            ->values();
+
+        return view('admin.reservations.calendar', [
+            'reservations' => $reservations,
+            'calendarEvents' => $calendarEvents,
+        ]);
     }
 
     public function walkin(Request $request)

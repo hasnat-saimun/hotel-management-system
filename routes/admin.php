@@ -76,5 +76,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('{id}/cancel', [ReservationController::class, 'cancel'])->name('cancel');
             Route::get('{id}', [ReservationController::class, 'show'])->name('show');
         });
+
     // });
+    //calendar view
+    
+Route::get('/calendar', function () {
+    return view('admin.calendar');
+});
 });

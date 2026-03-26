@@ -1,4 +1,31 @@
 @extends('admin.layouts.app')
+@section('title', 'Booking Calendar')
+
+@push('scripts')
+     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+    <script>    
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendarEvents = @json($calendarEvents ?? []);
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            // initialView: 'dayGridMonth',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,timeGridDay,dayGridMonth'
+            },
+            dayMaxEvents: true,
+            events: calendarEvents,
+            eventClick: function(info) {
+                alert('Event: ' + info.event.title);
+                // You can also navigate to a reservation detail page here
+            }
+        });
+        calendar.render();
+      });
+    </script>
+@endpush
 @section('content')
 <div class="kt-card">
     <div class="kt-card-header flex items-center justify-between">
@@ -12,7 +39,7 @@
         </div>
     </div>
     <div class="kt-card-content p-4">
-        <div class="h-80 flex items-center justify-center text-muted">Calendar widget goes here</div>
+        <div id="calendar"></div>
     </div>
 </div>
 @endsection

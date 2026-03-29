@@ -113,7 +113,7 @@
 <button id="reservation_details_modal_toggle" class="hidden" type="button" data-kt-modal-toggle="#reservation_details_modal"></button>
 
 <div class="kt-modal" data-kt-modal="true" id="reservation_details_modal">
-    <div class="kt-modal-content w-full lg:w-[25vw] lg:min-w-[360px] max-w-none top-5 lg:top-[10%]">
+    <div class="kt-modal-content w-full max-w-[600px] top-5 lg:top-[10%]">
         <div class="kt-modal-header">
             <h3 class="kt-modal-title" id="reservation_details_modal_title">Reservation Details</h3>
             <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">

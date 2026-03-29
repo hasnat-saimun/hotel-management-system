@@ -109,11 +109,23 @@
                                             @endforelse
                                         @endif
                                     </td>
-                                    <td><i class="fa-duotone fa-solid fa-calendar-circle-plus fa-lg" style="--fa-primary-color: rgb(211, 18, 22); --fa-secondary-color: rgb(211, 18, 22);"></i></td>
+                                    <td class="px-4 py-3 align-top">
+                                        @php($calendarParams = ['room_id' => $room->id])
+                                        @if(!empty($checkInDate))
+                                            @php($calendarParams['month'] = \Carbon\Carbon::parse($checkInDate)->format('Y-m'))
+                                        @endif
+                                        <a
+                                            class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
+                                            href="{{ route('admin.reservations.calendar-by-room', $calendarParams) }}"
+                                            aria-label="Open room calendar"
+                                        >
+                                            <i class="fa-duotone fa-solid fa-calendar-circle-plus fa-lg" style="--fa-primary-color: rgb(211, 18, 22); --fa-secondary-color: rgb(211, 18, 22);"></i>
+                                        </a>
+                                    </td>
                                 </tr>
 
                                 <tr id="{{ $detailsId }}" class="hidden border-b border-input bg-muted/10">
-                                    <td colspan="7" class="px-4 py-3">
+                                    <td colspan="8" class="px-4 py-3">
                                         <div class="rounded border border-input bg-background p-4">
                                             <div class="grid gap-4 grid-cols-1 lg:grid-cols-3">
                                                 <div class="space-y-2">

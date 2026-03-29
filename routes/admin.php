@@ -68,6 +68,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Reservations & Front Desk
         Route::prefix('reservations')->name('reservations.')->group(function () {
             Route::get('calendar', [ReservationController::class, 'calendar'])->name('calendar');
+            Route::get('calendar-by-room', [ReservationController::class, 'calendarByRoom'])->name('calendar-by-room');
             Route::get('{id}/calendar-modal', [ReservationController::class, 'calendarModal'])->name('calendar-modal');
             Route::get('create-walkin', [ReservationController::class, 'walkin'])->name('walkin');
             Route::post('create-walkin', [ReservationController::class, 'storeWalkin'])->name('walkin.store');

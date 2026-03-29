@@ -262,6 +262,119 @@ class ReservationController extends Controller
         ]);
     }
 
+    public function calendarByRoom(Request $request)
+    {
+        $rooms = Room::query()
+            ->with(['roomType'])
+            ->orderBy('room_number')
+            ->get();
+
+        $roomId = $request->input('room_id');
+        $month = $request->input('month'); // YYYY-MM
+
+        $initialDate = null;
+        $monthStart = null;
+        $monthEndExclusive = null;
+
+        if (!empty($month)) {
+            try {
+                $monthStart = Carbon::parse($month . '-01')->startOfMonth();
+                $monthEndExclusive = $monthStart->copy()->addMonth();
+                $initialDate = $monthStart->toDateString();
+            } catch (\Throwable $e) {
+                $monthStart = null;
+                $monthEndExclusive = null;
+                $initialDate = null;
+            }
+        }
+
+        $reservations = Reservation::query()
+            ->with(['guest', 'rooms.floor'])
+            ->when(!empty($roomId), function ($query) use ($roomId) {
+                $query->whereHas('rooms', function ($roomQuery) use ($roomId) {
+                    $roomQuery->where('rooms.id', $roomId);
+                });
+            })
+            ->when($monthStart && $monthEndExclusive, function ($query) use ($monthStart, $monthEndExclusive) {
+                $query
+                    ->where('check_in_date', '<', $monthEndExclusive->toDateString())
+                    ->where('check_out_date', '>', $monthStart->toDateString());
+            })
+            ->get();
+
+        $roomCalendarEvents = $reservations
+            ->filter(fn ($reservation) => !empty($reservation->check_in_date) && !empty($reservation->check_out_date))
+            ->map(function ($reservation) use ($roomId) {
+                $guestName = '';
+                if ($reservation->relationLoaded('guest') && $reservation->guest) {
+                    $guestName = trim(($reservation->guest->first_name ?? '') . ' ' . ($reservation->guest->last_name ?? ''));
+                }
+
+                if ($guestName === '') {
+                    $guestName = 'Guest';
+                }
+
+                $rooms = $reservation->relationLoaded('rooms') && $reservation->rooms
+                    ? $reservation->rooms
+                    : collect();
+
+                if (!empty($roomId)) {
+                    $rooms = $rooms->where('id', (int) $roomId)->values();
+                }
+
+                $roomNumbers = $rooms->pluck('room_number')->filter()->unique()->values()->all();
+                $floorLabels = $rooms
+                    ->map(function ($room) {
+                        $floor = $room->floor ?? null;
+                        if (!$floor) return null;
+                        $name = trim((string) ($floor->name ?? ''));
+                        $level = trim((string) ($floor->level_number ?? ''));
+                        if ($name !== '') return $name;
+                        if ($level !== '') return 'Floor ' . $level;
+                        return null;
+                    })
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $statusLabel = $reservation->status
+                    ? ucfirst(str_replace(['_', '-'], ' ', (string) $reservation->status))
+                    : 'Reserved';
+
+                $titleParts = [$statusLabel, $guestName];
+                if (!empty($floorLabels)) {
+                    $titleParts[] = implode(', ', $floorLabels);
+                }
+                if (!empty($roomNumbers)) {
+                    $titleParts[] = 'Room ' . implode(', ', $roomNumbers);
+                }
+
+                $startDate = optional($reservation->check_in_date)->toDateString();
+                $endDate = optional($reservation->check_out_date)->toDateString();
+                if ($endDate !== null && $startDate !== null && $endDate <= $startDate) {
+                    $endDate = optional($reservation->check_in_date)->copy()->addDay()->toDateString();
+                }
+
+                $title = implode(' - ', array_filter($titleParts));
+
+                return [
+                    'id' => $reservation->id,
+                    'title' => $title,
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'allDay' => true,
+                ];
+            })
+            ->values();
+
+        return view('admin.reservations.calendarByroom', [
+            'rooms' => $rooms,
+            'roomCalendarEvents' => $roomCalendarEvents,
+            'initialDate' => $initialDate,
+        ]);
+    }
+
     public function calendarModal($id)
     {
         $reservation = Reservation::with([

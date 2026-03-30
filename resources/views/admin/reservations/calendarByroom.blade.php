@@ -57,6 +57,7 @@
 			var reservationShowUrlTemplate = @json(route('admin.reservations.show', ['id' => '__ID__']));
 			var reservationCreateUrl = @json(route('admin.reservations.create'));
 			var selectedRoomId = @json(old('room_id', request('room_id')));
+			var preselectedDatesRaw = @json(old('dates', request('dates')));
 
 			function toIsoDate(dateObj) {
 				var y = dateObj.getFullYear();
@@ -75,6 +76,15 @@
 				var d = new Date(dateObj.getTime());
 				d.setDate(d.getDate() + days);
 				return d;
+			}
+
+			function parseDateList(raw) {
+				if (!raw) return [];
+				if (Array.isArray(raw)) return raw;
+				return String(raw)
+					.split(',')
+					.map(function (s) { return String(s || '').trim(); })
+					.filter(function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s); });
 			}
 
 			function buildBookedDateSet(eventList) {
@@ -119,7 +129,31 @@
 
 			var bookedDates = buildBookedDateSet(events);
 			var bookedDateToReservationId = buildBookedDateToReservationIdMap(events);
-			var selectedDates = new Set();
+			var selectedDates = new Set(parseDateList(preselectedDatesRaw));
+
+			function sanitizeSelectedDates() {
+				if (!selectedDates || selectedDates.size === 0) return;
+				var today = new Date();
+				today.setHours(0, 0, 0, 0);
+				Array.from(selectedDates).forEach(function (iso) {
+					var d = parseIsoDate(iso);
+					if (!d) {
+						selectedDates.delete(iso);
+						return;
+					}
+					d.setHours(0, 0, 0, 0);
+					if (d < today) {
+						selectedDates.delete(iso);
+						return;
+					}
+					if (bookedDates && bookedDates.has(iso)) {
+						selectedDates.delete(iso);
+						return;
+					}
+				});
+			}
+
+			sanitizeSelectedDates();
 
 			function syncBookingButton() {
 				if (!bookingBtn) return;

@@ -8,6 +8,22 @@
 @php($checkOutDate = old('check_out_date', request('check_out_date', $checkOutDate ?? '')))
 @php($selectedDates = $selectedDates ?? collect())
 @php($selectedRoom = $roomId ? $rooms->firstWhere('id', (int) $roomId) : null)
+@php($dateSegments = $dateSegments ?? collect())
+@php($hasMultipleSegments = $dateSegments->count() > 1)
+@php($backMonth = $selectedDates->isNotEmpty() ? \Carbon\Carbon::parse($selectedDates->first())->format('Y-m') : ($checkInDate ? \Carbon\Carbon::parse($checkInDate)->format('Y-m') : null))
+@php($backDates = $selectedDates->implode(','))
+
+@php(
+    $ordinal = function (int $n) {
+        if ($n % 100 >= 11 && $n % 100 <= 13) return $n . 'th';
+        switch ($n % 10) {
+            case 1: return $n . 'st';
+            case 2: return $n . 'nd';
+            case 3: return $n . 'rd';
+            default: return $n . 'th';
+        }
+    }
+)
 
 <div class="kt-card">
     <div class="kt-card-header flex items-center justify-between">
@@ -15,7 +31,7 @@
             <h3 class="kt-card-title">Create Reservation</h3>
             <div class="text-sm text-secondary-foreground">Prefilled from calendar selection</div>
         </div>
-        <a class="kt-btn" href="{{ route('admin.reservations.calendar-by-room', ['room_id' => $roomId]) }}">Back to Calendar</a>
+        <a class="kt-btn" href="{{ route('admin.reservations.calendar-by-room', array_filter(['room_id' => $roomId, 'month' => $backMonth, 'dates' => $backDates], fn ($v) => $v !== null && $v !== '')) }}">Back to Calendar</a>
     </div>
 
     <div class="kt-card-content p-4">
@@ -52,6 +68,31 @@
                         </div>
                     </div>
 
+                    @if($dateSegments->isNotEmpty())
+                        <div>
+                            <div class="text-xs font-semibold text-secondary-foreground">Stays</div>
+                            <div class="mt-2 space-y-2">
+                                @foreach($dateSegments as $idx => $seg)
+                                    <div class="rounded border border-input bg-muted/10 p-3">
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-sm font-medium text-foreground">{{ $ordinal($idx + 1) }} stay</div>
+                                            <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $seg['nights'] ?? 1 }} night(s)</span>
+                                        </div>
+                                        <div class="mt-1 text-sm text-secondary-foreground">
+                                            Check-in: <span class="text-foreground">{{ $seg['check_in'] ?? '-' }}</span>
+                                            &nbsp;&nbsp; Check-out: <span class="text-foreground">{{ $seg['check_out'] ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($hasMultipleSegments)
+                                <div class="mt-2 text-xs text-secondary-foreground">
+                                    Your selected dates contain gaps. This will create {{ $dateSegments->count() }} reservations.
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     <div>
                         <div class="text-xs font-semibold text-secondary-foreground">Selected dates</div>
                         @if($selectedDates->isNotEmpty())
@@ -84,6 +125,7 @@
                 <form method="POST" action="{{ route('admin.reservations.store') }}" class="mt-4 grid gap-3 grid-cols-1 lg:grid-cols-2">
                     @csrf
                     <input type="hidden" name="room_id" value="{{ $roomId }}" />
+                    <input type="hidden" name="dates" value="{{ old('dates', $backDates) }}" />
                     <input type="hidden" name="check_in_date" value="{{ $checkInDate }}" />
                     <input type="hidden" name="check_out_date" value="{{ $checkOutDate }}" />
 
@@ -158,7 +200,7 @@
                     </div>
 
                     <div class="lg:col-span-2 flex gap-2">
-                        <button type="submit" class="kt-btn kt-btn-primary">Confirm Reservation</button>
+                        <button type="submit" class="kt-btn kt-btn-primary">{{ $hasMultipleSegments ? 'Confirm Reservations' : 'Confirm Reservation' }}</button>
                         <a class="kt-btn" href="{{ route('admin.reservations.calendar-by-room', ['room_id' => $roomId]) }}">Cancel</a>
                     </div>
                 </form>

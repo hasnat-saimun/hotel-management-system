@@ -13,6 +13,7 @@ use App\Models\Guest;
 use App\Models\ReservationRoom;
 use App\Models\Invoice;
 use App\Models\Payment;
+use Illuminate\Support\Str;
 
 class ReservationController extends Controller
 {
@@ -440,6 +441,134 @@ class ReservationController extends Controller
             'checkOutDate' => $checkOutDate,
             'selectedDates' => $selectedDates,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'check_in_date' => ['required', 'date'],
+            'check_out_date' => ['required', 'date', 'after:check_in_date'],
+            'guest_first_name' => ['required', 'string', 'max:255'],
+            'guest_last_name' => ['required', 'string', 'max:255'],
+            'guest_email' => ['required', 'email', 'max:255'],
+            'guest_phone' => ['nullable', 'string', 'max:50'],
+            'guest_address' => ['nullable', 'string', 'max:2000'],
+            'guest_id_type' => ['nullable', 'in:passport,driver_license,national_id,other'],
+            'guest_id_number' => ['nullable', 'string', 'max:255'],
+            'adults' => ['nullable', 'integer', 'min:1'],
+            'children' => ['nullable', 'integer', 'min:0'],
+            'special_requests' => ['nullable', 'string', 'max:4000'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            $checkInDate = Carbon::parse($data['check_in_date'])->toDateString();
+            $checkOutDate = Carbon::parse($data['check_out_date'])->toDateString();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['check_in_date' => 'Invalid date range.'])->withInput();
+        }
+
+        $room = Room::query()->with(['roomType'])->findOrFail((int) $data['room_id']);
+
+        $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
+        $overlaps = Reservation::query()
+            ->whereIn('status', $activeReservationStatuses)
+            ->where('check_in_date', '<', $checkOutDate)
+            ->where('check_out_date', '>', $checkInDate)
+            ->whereHas('rooms', function ($q) use ($room) {
+                $q->where('rooms.id', $room->id);
+            })
+            ->exists();
+
+        if ($overlaps) {
+            return back()
+                ->withErrors(['check_in_date' => 'This room already has a reservation in the selected date range.'])
+                ->withInput();
+        }
+
+        $adults = (int) ($data['adults'] ?? 1);
+        $children = (int) ($data['children'] ?? 0);
+        $nightlyRate = (float) ($room->roomType?->base_price ?? 0);
+
+        $checkIn = Carbon::parse($checkInDate)->startOfDay();
+        $checkOut = Carbon::parse($checkOutDate)->startOfDay();
+        $nights = max(1, $checkOut->diffInDays($checkIn));
+        $totalAmount = $nightlyRate * $nights;
+
+        $reservation = DB::transaction(function () use ($data, $room, $checkInDate, $checkOutDate, $adults, $children, $nightlyRate, $totalAmount) {
+            $guest = Guest::query()->where('email', $data['guest_email'])->first();
+            if ($guest) {
+                $guest->first_name = $data['guest_first_name'];
+                $guest->last_name = $data['guest_last_name'];
+                $guest->phone = $data['guest_phone'] ?? $guest->phone;
+                $guest->address = array_key_exists('guest_address', $data) ? ($data['guest_address'] ?? null) : $guest->address;
+                $guest->id_type = array_key_exists('guest_id_type', $data) ? ($data['guest_id_type'] ?? null) : $guest->id_type;
+                $guest->id_number = array_key_exists('guest_id_number', $data) ? ($data['guest_id_number'] ?? null) : $guest->id_number;
+                $guest->save();
+            } else {
+                $guest = Guest::create([
+                    'first_name' => $data['guest_first_name'],
+                    'last_name' => $data['guest_last_name'],
+                    'email' => $data['guest_email'],
+                    'phone' => $data['guest_phone'] ?? null,
+                    'address' => $data['guest_address'] ?? null,
+                    'id_type' => $data['guest_id_type'] ?? null,
+                    'id_number' => $data['guest_id_number'] ?? null,
+                ]);
+            }
+
+            $reservationCode = null;
+            for ($i = 0; $i < 5; $i++) {
+                $candidate = 'RSV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+                if (!Reservation::where('reservation_code', $candidate)->exists()) {
+                    $reservationCode = $candidate;
+                    break;
+                }
+            }
+
+            $noteParts = [];
+            if (!empty($data['special_requests'])) {
+                $noteParts[] = 'Special Requests: ' . trim((string) $data['special_requests']);
+            }
+            if (!empty($data['note'])) {
+                $noteParts[] = trim((string) $data['note']);
+            }
+            $finalNote = empty($noteParts) ? null : implode("\n\n", $noteParts);
+
+            $reservation = Reservation::create([
+                'guest_id' => $guest->id,
+                'reservation_code' => $reservationCode,
+                'channel' => 'admin-calendar',
+                'status' => 'booked',
+                'payment_status' => 'unpaid',
+                'check_in_date' => $checkInDate,
+                'check_out_date' => $checkOutDate,
+                'adults' => $adults,
+                'children' => $children,
+                'rate' => $totalAmount,
+                'note' => $finalNote,
+            ]);
+
+            ReservationRoom::create([
+                'reservation_id' => $reservation->id,
+                'room_id' => $room->id,
+                'room_type_id' => (int) $room->room_type_id,
+                'nightly_rate' => $nightlyRate,
+                'discount_amount' => 0,
+                'tax_amount' => 0,
+                'total_amount' => $totalAmount,
+                'status' => 'reserved',
+            ]);
+
+            $room->status = 'reserved';
+            $room->save();
+
+            return $reservation;
+        });
+
+        return redirect()->route('admin.reservations.show', $reservation->id)
+            ->with('success', 'Reservation created successfully.');
     }
 
     public function walkin(Request $request)

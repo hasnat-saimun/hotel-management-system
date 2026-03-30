@@ -10,6 +10,14 @@
 			filter: grayscale(0.2);
 		}
 
+		/* Multi-selected (unbooked) dates */
+		#room_calendar .fc-daygrid-day.room-multi-selected .fc-daygrid-day-frame {
+			background-color: var(--muted);
+		}
+		#room_calendar .fc-daygrid-day.room-multi-selected .fc-daygrid-day-top {
+			z-index: 3;
+		}
+
 		/* Month view: hide event boxes/text (we mark booked days via overlay icon) */
 		#room_calendar .fc-dayGridMonth-view .fc-daygrid-event-harness,
 		#room_calendar .fc-dayGridMonth-view .fc-daygrid-event {
@@ -41,10 +49,14 @@
 		document.addEventListener('DOMContentLoaded', function () {
 			var calendarEl = document.getElementById('room_calendar');
 			if (!calendarEl || typeof FullCalendar === 'undefined') return;
+			var selectedDatesInput = document.getElementById('room_calendar_selected_dates');
+			var bookingBtn = document.getElementById('room_calendar_booking_btn');
 
 			var events = @json($roomCalendarEvents ?? $calendarEvents ?? []);
 			var initialDate = @json($initialDate ?? null);
 			var reservationShowUrlTemplate = @json(route('admin.reservations.show', ['id' => '__ID__']));
+			var walkinUrl = @json(route('admin.reservations.walkin'));
+			var selectedRoomId = @json($selectedRoomId ?? null);
 
 			function toIsoDate(dateObj) {
 				var y = dateObj.getFullYear();
@@ -107,6 +119,47 @@
 
 			var bookedDates = buildBookedDateSet(events);
 			var bookedDateToReservationId = buildBookedDateToReservationIdMap(events);
+			var selectedDates = new Set();
+
+			function syncBookingButton() {
+				if (!bookingBtn) return;
+				var arr = Array.from(selectedDates);
+				arr.sort();
+				if (arr.length === 0) {
+					bookingBtn.classList.add('hidden');
+					bookingBtn.setAttribute('aria-hidden', 'true');
+					bookingBtn.setAttribute('tabindex', '-1');
+					bookingBtn.removeAttribute('href');
+					return;
+				}
+
+				var checkIn = arr[0];
+				var last = arr[arr.length - 1];
+				var lastDateObj = parseIsoDate(last);
+				var checkOutObj = lastDateObj ? addDays(lastDateObj, 1) : null;
+				var checkOut = checkOutObj ? toIsoDate(checkOutObj) : '';
+
+				var url = walkinUrl
+					+ '?check_in_date=' + encodeURIComponent(checkIn)
+					+ '&check_out_date=' + encodeURIComponent(checkOut)
+					+ '&dates=' + encodeURIComponent(arr.join(','));
+				if (selectedRoomId !== null && selectedRoomId !== '') {
+					url += '&room_id=' + encodeURIComponent(String(selectedRoomId));
+				}
+
+				bookingBtn.setAttribute('href', url);
+				bookingBtn.classList.remove('hidden');
+				bookingBtn.removeAttribute('aria-hidden');
+				bookingBtn.removeAttribute('tabindex');
+			}
+
+			function syncSelectedDatesField() {
+				if (!selectedDatesInput) return;
+				var arr = Array.from(selectedDates);
+				arr.sort();
+				selectedDatesInput.value = arr.join(', ');
+				syncBookingButton();
+			}
 
 			var calendar = new FullCalendar.Calendar(calendarEl, {
 				initialView: 'dayGridMonth',
@@ -114,6 +167,9 @@
 				dayCellDidMount: function (info) {
 					if (!info || !info.view || info.view.type !== 'dayGridMonth') return;
 					var iso = toIsoDate(info.date);
+					if (selectedDates && selectedDates.has(iso) && info.el && info.el.classList) {
+						info.el.classList.add('room-multi-selected');
+					}
 					if (!bookedDates || !bookedDates.has(iso)) return;
 
 					var frame = info.el && info.el.querySelector
@@ -150,6 +206,21 @@
 					if (reservationId) {
 						var showUrl = reservationShowUrlTemplate.replace('__ID__', reservationId);
 						window.location.href = showUrl;
+						return;
+					}
+
+					// Multi-select future, unbooked dates (month view)
+					if (info && info.view && info.view.type === 'dayGridMonth') {
+						var dayEl = info.dayEl || info.el;
+						if (!dayEl || !dayEl.classList) return;
+						if (selectedDates.has(iso)) {
+							selectedDates.delete(iso);
+							dayEl.classList.remove('room-multi-selected');
+						} else {
+							selectedDates.add(iso);
+							dayEl.classList.add('room-multi-selected');
+						}
+						syncSelectedDatesField();
 					}
 				},
 				headerToolbar: {
@@ -168,6 +239,7 @@
 			});
 
 			calendar.render();
+			syncSelectedDatesField();
 		});
 	</script>
 @endpush
@@ -227,6 +299,15 @@
 			@if(empty($selectedRoomId))
 				<span class="text-sm text-secondary-foreground">Select a room to load its calendar events.</span>
 			@endif
+		</div>
+
+		<div class="mt-4">
+			<label class="text-sm text-secondary-foreground">Selected dates</label>
+			<input id="room_calendar_selected_dates" type="text" class="kt-input w-full" readonly placeholder="Click dates on the calendar" />
+		</div>
+
+		<div class="mt-4">
+			<a id="room_calendar_booking_btn" class="kt-btn kt-btn-primary hidden" href="{{ route('admin.reservations.walkin') }}" aria-hidden="true" tabindex="-1">Booking</a>
 		</div>
 
 		<div class="mt-4">

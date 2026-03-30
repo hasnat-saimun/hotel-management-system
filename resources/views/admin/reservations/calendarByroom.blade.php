@@ -167,16 +167,8 @@
 					return;
 				}
 
-				var checkIn = arr[0];
-				var last = arr[arr.length - 1];
-				var lastDateObj = parseIsoDate(last);
-				var checkOutObj = lastDateObj ? addDays(lastDateObj, 1) : null;
-				var checkOut = checkOutObj ? toIsoDate(checkOutObj) : '';
-
 				var url = reservationCreateUrl
-					+ '?check_in_date=' + encodeURIComponent(checkIn)
-					+ '&check_out_date=' + encodeURIComponent(checkOut)
-					+ '&dates=' + encodeURIComponent(arr.join(','));
+					+ '?dates=' + encodeURIComponent(arr.join(','));
 				if (selectedRoomId !== null && selectedRoomId !== '') {
 					url += '&room_id=' + encodeURIComponent(String(selectedRoomId));
 				}

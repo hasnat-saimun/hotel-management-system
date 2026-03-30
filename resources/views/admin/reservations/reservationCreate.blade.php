@@ -4,13 +4,11 @@
 @section('content')
 @php($rooms = $rooms ?? collect())
 @php($roomId = old('room_id', request('room_id', $roomId ?? '')))
-@php($checkInDate = old('check_in_date', request('check_in_date', $checkInDate ?? '')))
-@php($checkOutDate = old('check_out_date', request('check_out_date', $checkOutDate ?? '')))
 @php($selectedDates = $selectedDates ?? collect())
 @php($selectedRoom = $roomId ? $rooms->firstWhere('id', (int) $roomId) : null)
 @php($dateSegments = $dateSegments ?? collect())
 @php($hasMultipleSegments = $dateSegments->count() > 1)
-@php($backMonth = $selectedDates->isNotEmpty() ? \Carbon\Carbon::parse($selectedDates->first())->format('Y-m') : ($checkInDate ? \Carbon\Carbon::parse($checkInDate)->format('Y-m') : null))
+@php($backMonth = $selectedDates->isNotEmpty() ? \Carbon\Carbon::parse($selectedDates->first())->format('Y-m') : null)
 @php($backDates = $selectedDates->implode(','))
 
 @php(
@@ -51,20 +49,27 @@
                                 <div class="text-secondary-foreground">
                                     {{ $selectedRoom->roomType?->name ?? '-' }}
                                 </div>
+                                <div class="mt-2 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div class="text-xs font-semibold text-secondary-foreground">Base price (per day)</div>
+                                        <div class="text-sm text-foreground mt-1">
+                                            @if($selectedRoom->roomType?->base_price !== null)
+                                                {{ number_format((float) $selectedRoom->roomType->base_price, 2) }}
+                                            @else
+                                                -
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-semibold text-secondary-foreground">Capacity</div>
+                                        <div class="text-sm text-foreground mt-1">
+                                            A: {{ (int) ($selectedRoom->roomType?->capacity_adults ?? 0) }} - C: {{ (int) ($selectedRoom->roomType?->capacity_children ?? 0) }}
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 -
                             @endif
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <div class="text-xs font-semibold text-secondary-foreground">Check-in</div>
-                            <div class="text-sm text-foreground mt-1">{{ $checkInDate ?: '-' }}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs font-semibold text-secondary-foreground">Check-out</div>
-                            <div class="text-sm text-foreground mt-1">{{ $checkOutDate ?: '-' }}</div>
                         </div>
                     </div>
 
@@ -73,14 +78,22 @@
                             <div class="text-xs font-semibold text-secondary-foreground">Stays</div>
                             <div class="mt-2 space-y-2">
                                 @foreach($dateSegments as $idx => $seg)
-                                    <div class="rounded border border-input bg-muted/10 p-3">
-                                        <div class="flex items-center justify-between">
-                                            <div class="text-sm font-medium text-foreground">{{ $ordinal($idx + 1) }} stay</div>
-                                            <span class="kt-badge kt-badge-sm kt-badge-outline">{{ $seg['nights'] ?? 1 }} night(s)</span>
+                                    <div class="rounded border border-input bg-background p-3">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <div class="text-sm font-medium text-foreground">{{ $ordinal($idx + 1) }} stay</div>
+                                            </div>
                                         </div>
-                                        <div class="mt-1 text-sm text-secondary-foreground">
-                                            Check-in: <span class="text-foreground">{{ $seg['check_in'] ?? '-' }}</span>
-                                            &nbsp;&nbsp; Check-out: <span class="text-foreground">{{ $seg['check_out'] ?? '-' }}</span>
+
+                                        <div class="mt-3 grid grid-cols-2 gap-3">
+                                            <div>
+                                                <div class="text-xs font-semibold text-secondary-foreground">Check-in</div>
+                                                <div class="text-sm text-foreground mt-1">{{ $seg['check_in'] ?? '-' }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-semibold text-secondary-foreground">Check-out</div>
+                                                <div class="text-sm text-foreground mt-1">{{ $seg['check_out'] ?? '-' }}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -126,8 +139,6 @@
                     @csrf
                     <input type="hidden" name="room_id" value="{{ $roomId }}" />
                     <input type="hidden" name="dates" value="{{ old('dates', $backDates) }}" />
-                    <input type="hidden" name="check_in_date" value="{{ $checkInDate }}" />
-                    <input type="hidden" name="check_out_date" value="{{ $checkOutDate }}" />
 
                     <div class="lg:col-span-2">
                         <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
@@ -201,7 +212,7 @@
 
                     <div class="lg:col-span-2 flex gap-2">
                         <button type="submit" class="kt-btn kt-btn-primary">{{ $hasMultipleSegments ? 'Confirm Reservations' : 'Confirm Reservation' }}</button>
-                        <a class="kt-btn" href="{{ route('admin.reservations.calendar-by-room', ['room_id' => $roomId]) }}">Cancel</a>
+                        <button type="reset" class="kt-btn">Reset</button>
                     </div>
                 </form>
             </div>

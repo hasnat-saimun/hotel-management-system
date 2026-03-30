@@ -400,8 +400,6 @@ class ReservationController extends Controller
             ->get();
 
         $roomId = $request->input('room_id');
-        $checkInDate = $request->input('check_in_date');
-        $checkOutDate = $request->input('check_out_date');
         $datesRaw = (string) $request->input('dates', '');
 
         $selectedDates = collect(array_filter(array_map('trim', explode(',', $datesRaw))))
@@ -467,37 +465,9 @@ class ReservationController extends Controller
             })
             ->values();
 
-        // Only auto-fill check-in/out if the selection is one continuous segment.
-        if ($dateSegments->count() === 1) {
-            $only = $dateSegments->first();
-            $checkInDate = $checkInDate ?: ($only['check_in'] ?? null);
-            $checkOutDate = $checkOutDate ?: ($only['check_out'] ?? null);
-        } else {
-            $checkInDate = null;
-            $checkOutDate = null;
-        }
-
-        try {
-            if (!empty($checkInDate) && !empty($checkOutDate)) {
-                $in = Carbon::parse($checkInDate)->toDateString();
-                $out = Carbon::parse($checkOutDate)->toDateString();
-
-                if ($out <= $in) {
-                    $out = Carbon::parse($in)->addDay()->toDateString();
-                }
-
-                $checkInDate = $in;
-                $checkOutDate = $out;
-            }
-        } catch (\Throwable $e) {
-            // ignore invalid values
-        }
-
         return view('admin.reservations.reservationCreate', [
             'rooms' => $rooms,
             'roomId' => $roomId,
-            'checkInDate' => $checkInDate,
-            'checkOutDate' => $checkOutDate,
             'selectedDates' => $selectedDates,
             'dateSegments' => $dateSegments,
         ]);
@@ -507,9 +477,7 @@ class ReservationController extends Controller
     {
         $data = $request->validate([
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
-            'dates' => ['nullable', 'string', 'max:20000'],
-            'check_in_date' => ['nullable', 'date'],
-            'check_out_date' => ['nullable', 'date'],
+            'dates' => ['required', 'string', 'max:20000'],
             'guest_first_name' => ['required', 'string', 'max:255'],
             'guest_last_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
@@ -534,75 +502,53 @@ class ReservationController extends Controller
             ->sort()
             ->values();
 
-        if ($selectedDates->isNotEmpty()) {
-            $rawSegments = [];
-            $segment = null;
-            $prev = null;
-            foreach ($selectedDates as $dateStr) {
-                try {
-                    $cur = Carbon::parse($dateStr)->startOfDay();
-                } catch (\Throwable $e) {
-                    continue;
-                }
-
-                if (!$segment) {
-                    $segment = ['start' => $cur, 'end' => $cur];
-                    $prev = $cur;
-                    continue;
-                }
-
-                $expectedNext = $prev->copy()->addDay();
-                if ($cur->equalTo($expectedNext)) {
-                    $segment['end'] = $cur;
-                } else {
-                    $rawSegments[] = $segment;
-                    $segment = ['start' => $cur, 'end' => $cur];
-                }
-
-                $prev = $cur;
-            }
-
-            if ($segment) {
-                $rawSegments[] = $segment;
-            }
-
-            $segments = collect($rawSegments)
-                ->map(function ($seg) {
-                    $start = $seg['start'];
-                    $end = $seg['end'];
-                    return [
-                        'check_in' => $start->toDateString(),
-                        'check_out' => $end->copy()->addDay()->toDateString(),
-                        'nights' => max(1, $end->diffInDays($start) + 1),
-                    ];
-                })
-                ->values()
-                ->all();
-        } else {
-            $rawIn = $data['check_in_date'] ?? null;
-            $rawOut = $data['check_out_date'] ?? null;
-            if (empty($rawIn) || empty($rawOut)) {
-                return back()->withErrors(['dates' => 'Please select dates from the calendar.'])->withInput();
-            }
-
-            try {
-                $checkInDate = Carbon::parse($rawIn)->toDateString();
-                $checkOutDate = Carbon::parse($rawOut)->toDateString();
-            } catch (\Throwable $e) {
-                return back()->withErrors(['check_in_date' => 'Invalid date range.'])->withInput();
-            }
-
-            if ($checkOutDate <= $checkInDate) {
-                return back()->withErrors(['check_out_date' => 'Check-out date must be after check-in date.'])->withInput();
-            }
-
-            $nights = max(1, Carbon::parse($checkOutDate)->startOfDay()->diffInDays(Carbon::parse($checkInDate)->startOfDay()));
-            $segments = [[
-                'check_in' => $checkInDate,
-                'check_out' => $checkOutDate,
-                'nights' => $nights,
-            ]];
+        if ($selectedDates->isEmpty()) {
+            return back()->withErrors(['dates' => 'Please select dates from the calendar.'])->withInput();
         }
+
+        $rawSegments = [];
+        $segment = null;
+        $prev = null;
+        foreach ($selectedDates as $dateStr) {
+            try {
+                $cur = Carbon::parse($dateStr)->startOfDay();
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if (!$segment) {
+                $segment = ['start' => $cur, 'end' => $cur];
+                $prev = $cur;
+                continue;
+            }
+
+            $expectedNext = $prev->copy()->addDay();
+            if ($cur->equalTo($expectedNext)) {
+                $segment['end'] = $cur;
+            } else {
+                $rawSegments[] = $segment;
+                $segment = ['start' => $cur, 'end' => $cur];
+            }
+
+            $prev = $cur;
+        }
+
+        if ($segment) {
+            $rawSegments[] = $segment;
+        }
+
+        $segments = collect($rawSegments)
+            ->map(function ($seg) {
+                $start = $seg['start'];
+                $end = $seg['end'];
+                return [
+                    'check_in' => $start->toDateString(),
+                    'check_out' => $end->copy()->addDay()->toDateString(),
+                    'nights' => max(1, $end->diffInDays($start) + 1),
+                ];
+            })
+            ->values()
+            ->all();
 
         if (empty($segments)) {
             return back()->withErrors(['dates' => 'No valid dates provided.'])->withInput();

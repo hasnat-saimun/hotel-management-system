@@ -55,8 +55,8 @@
 			var events = @json($roomCalendarEvents ?? $calendarEvents ?? []);
 			var initialDate = @json($initialDate ?? null);
 			var reservationShowUrlTemplate = @json(route('admin.reservations.show', ['id' => '__ID__']));
-			var walkinUrl = @json(route('admin.reservations.walkin'));
-			var selectedRoomId = @json($selectedRoomId ?? null);
+			var reservationCreateUrl = @json(route('admin.reservations.create'));
+			var selectedRoomId = @json(old('room_id', request('room_id')));
 
 			function toIsoDate(dateObj) {
 				var y = dateObj.getFullYear();
@@ -139,7 +139,7 @@
 				var checkOutObj = lastDateObj ? addDays(lastDateObj, 1) : null;
 				var checkOut = checkOutObj ? toIsoDate(checkOutObj) : '';
 
-				var url = walkinUrl
+				var url = reservationCreateUrl
 					+ '?check_in_date=' + encodeURIComponent(checkIn)
 					+ '&check_out_date=' + encodeURIComponent(checkOut)
 					+ '&dates=' + encodeURIComponent(arr.join(','));
@@ -307,7 +307,7 @@
 		</div>
 
 		<div class="mt-4">
-			<a id="room_calendar_booking_btn" class="kt-btn kt-btn-primary hidden" href="{{ route('admin.reservations.walkin') }}" aria-hidden="true" tabindex="-1">Booking</a>
+			<a id="room_calendar_booking_btn" class="kt-btn kt-btn-primary hidden" href="{{ route('admin.reservations.create') }}" aria-hidden="true" tabindex="-1">Booking</a>
 		</div>
 
 		<div class="mt-4">

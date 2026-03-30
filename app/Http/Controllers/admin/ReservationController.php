@@ -391,6 +391,57 @@ class ReservationController extends Controller
         ]);
     }
 
+    public function create(Request $request)
+    {
+        $rooms = Room::query()
+            ->with(['roomType'])
+            ->orderBy('room_number')
+            ->get();
+
+        $roomId = $request->input('room_id');
+        $checkInDate = $request->input('check_in_date');
+        $checkOutDate = $request->input('check_out_date');
+        $datesRaw = (string) $request->input('dates', '');
+
+        $selectedDates = collect(array_filter(array_map('trim', explode(',', $datesRaw))))
+            ->filter(fn ($value) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value))
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ((!$checkInDate || !$checkOutDate) && $selectedDates->isNotEmpty()) {
+            $checkInDate = $checkInDate ?: $selectedDates->first();
+            try {
+                $last = Carbon::parse($selectedDates->last())->startOfDay();
+                $checkOutDate = $checkOutDate ?: $last->copy()->addDay()->toDateString();
+            } catch (\Throwable $e) {
+                // fall back to empty
+            }
+        }
+
+        try {
+            if (!empty($checkInDate) && !empty($checkOutDate)) {
+                $in = Carbon::parse($checkInDate)->toDateString();
+                $out = Carbon::parse($checkOutDate)->toDateString();
+                if ($out <= $in) {
+                    $out = Carbon::parse($in)->addDay()->toDateString();
+                }
+                $checkInDate = $in;
+                $checkOutDate = $out;
+            }
+        } catch (\Throwable $e) {
+            // ignore invalid values
+        }
+
+        return view('admin.reservations.reservationCreate', [
+            'rooms' => $rooms,
+            'roomId' => $roomId,
+            'checkInDate' => $checkInDate,
+            'checkOutDate' => $checkOutDate,
+            'selectedDates' => $selectedDates,
+        ]);
+    }
+
     public function walkin(Request $request)
     {
         $checkInDateRaw = $request->input('check_in_date');

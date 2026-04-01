@@ -17,7 +17,7 @@
                     type="date"
                     class="kt-input w-full"
                     name="check_in_date"
-                    value="{{ $checkInDate ?? '' }}"
+                    value="{{ $checkInDate ?? now()->toDateString() }}"
                     min="{{ now()->toDateString() }}"
                 />
             </div>
@@ -30,6 +30,7 @@
                     name="check_out_date"
                     value="{{ $checkOutDate ?? '' }}"
                     min="{{ !empty($checkInDate) ? \Carbon\Carbon::parse($checkInDate)->toDateString() : now()->toDateString() }}"
+                    required
                 />
             </div>
             
@@ -211,6 +212,23 @@
         }
     }
 
+    function setDefaultValueIfEmpty(input, value) {
+        if (!input) return;
+        if (!input.value) input.value = value;
+    }
+
+    function submitFormRespectingValidation(form) {
+        if (!form) return;
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+            return;
+        }
+        if (typeof form.reportValidity === 'function') {
+            if (!form.reportValidity()) return;
+        }
+        form.submit();
+    }
+
     function roomCheckboxes() {
         return Array.from(document.querySelectorAll('.room-select-checkbox'));
     }
@@ -286,11 +304,15 @@
 
             var today = isoToday();
             setMinDate(checkIn, today);
+            setDefaultValueIfEmpty(checkIn, today);
 
             var minCheckOut = (checkIn && checkIn.value) ? checkIn.value : today;
             setMinDate(checkOut, minCheckOut);
 
-            if (form) form.submit();
+            // With required check-out, only auto-submit once user has provided it.
+            if (!checkOut || !checkOut.value) return;
+
+            submitFormRespectingValidation(form);
             return;
         }
 
@@ -341,6 +363,7 @@
         var checkOut = document.getElementById('check-out-date');
         var today = isoToday();
         setMinDate(checkIn, today);
+        setDefaultValueIfEmpty(checkIn, today);
         var minCheckOut = (checkIn && checkIn.value) ? checkIn.value : today;
         setMinDate(checkOut, minCheckOut);
     })();

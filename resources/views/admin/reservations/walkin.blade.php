@@ -9,14 +9,28 @@
         <div class="mb-4">
             <h5 class="text-md font-semibold">Find Available Rooms</h5>
         </div>
-        <form method="GET" action="{{ route('admin.reservations.walkin') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
+        <form id="walkin-search-form" method="GET" action="{{ route('admin.reservations.walkin') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             <div>
                 <label class="text-sm text-secondary-foreground">Check-in</label>
-                <input type="date" class="kt-input w-full" name="check_in_date" value="{{ $checkInDate ?? '' }}" />
+                <input
+                    id="check-in-date"
+                    type="date"
+                    class="kt-input w-full"
+                    name="check_in_date"
+                    value="{{ $checkInDate ?? '' }}"
+                    min="{{ now()->toDateString() }}"
+                />
             </div>
             <div>
                 <label class="text-sm text-secondary-foreground">Check-out</label>
-                <input type="date" class="kt-input w-full" name="check_out_date" value="{{ $checkOutDate ?? '' }}" />
+                <input
+                    id="check-out-date"
+                    type="date"
+                    class="kt-input w-full"
+                    name="check_out_date"
+                    value="{{ $checkOutDate ?? '' }}"
+                    min="{{ !empty($checkInDate) ? \Carbon\Carbon::parse($checkInDate)->toDateString() : now()->toDateString() }}"
+                />
             </div>
             
             <div class="lg:col-span-2 flex gap-2">
@@ -180,6 +194,23 @@
 @push('scripts')
 <script>
 (function () {
+    function isoToday() {
+        var d = new Date();
+        d.setHours(0, 0, 0, 0);
+        var yyyy = d.getFullYear();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
+    }
+
+    function setMinDate(input, minValue) {
+        if (!input) return;
+        input.min = minValue;
+        if (input.value && input.value < minValue) {
+            input.value = minValue;
+        }
+    }
+
     function roomCheckboxes() {
         return Array.from(document.querySelectorAll('.room-select-checkbox'));
     }
@@ -248,6 +279,21 @@
     document.addEventListener('change', function (event) {
         var el = event.target;
 
+        if (el && (el.id === 'check-in-date' || el.id === 'check-out-date')) {
+            var form = document.getElementById('walkin-search-form');
+            var checkIn = document.getElementById('check-in-date');
+            var checkOut = document.getElementById('check-out-date');
+
+            var today = isoToday();
+            setMinDate(checkIn, today);
+
+            var minCheckOut = (checkIn && checkIn.value) ? checkIn.value : today;
+            setMinDate(checkOut, minCheckOut);
+
+            if (form) form.submit();
+            return;
+        }
+
         if (el && el.classList && el.classList.contains('room-select-checkbox')) {
             syncSelectedRooms();
             return;
@@ -288,6 +334,16 @@
 
     // initial sync
     syncSelectedRooms();
+
+    // initial date guard (in case browser didn't respect server-side min)
+    (function () {
+        var checkIn = document.getElementById('check-in-date');
+        var checkOut = document.getElementById('check-out-date');
+        var today = isoToday();
+        setMinDate(checkIn, today);
+        var minCheckOut = (checkIn && checkIn.value) ? checkIn.value : today;
+        setMinDate(checkOut, minCheckOut);
+    })();
 })();
 </script>
 @endpush

@@ -10,6 +10,14 @@
 			filter: grayscale(0.2);
 		}
 
+		/* Booked day cells: visually disabled */
+		#room_calendar .fc-dayGridMonth-view .fc-daygrid-day.room-booked-day {
+			cursor: not-allowed;
+		}
+		#room_calendar .fc-dayGridMonth-view .fc-daygrid-day.room-booked-day .fc-daygrid-day-frame {
+			opacity: 0.75;
+		}
+
 		/* Multi-selected (unbooked) dates */
 		#room_calendar .fc-daygrid-day.room-multi-selected .fc-daygrid-day-frame {
 			background-color: var(--muted);
@@ -27,22 +35,31 @@
 		/* Booked icon overlay inside each booked day cell */
 		#room_calendar .fc-daygrid-day-frame {
 			position: relative;
+			overflow: hidden;
 		}
 		#room_calendar .fc-daygrid-day-top {
 			position: relative;
-			z-index: 2;
+			z-index: 4;
 		}
-		#room_calendar .room-booked-day-icon {
+		/* Month view: booked label as diagonal corner ribbon */
+		#room_calendar .room-booked-day-badge {
 			position: absolute;
-			inset: 0;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			opacity: 0.95;
-			z-index: 1;
-		}
-		#room_calendar .room-booked-day-icon i {
-			font-size: 150px;
+			top: 48px;
+			left: -23px;
+			width: 185px;
+			z-index: 3;
+			pointer-events: none;
+			text-transform: uppercase;
+			letter-spacing: 0.50em;
+			font-size: 13px;
+			line-height: 1.2;
+			padding: 6px 0;
+			text-align: center;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			transform: rotate(-40deg);
+			transform-origin: center;
 		}
 	</style>
 	<script>
@@ -66,10 +83,32 @@
 				return y + '-' + m + '-' + d;
 			}
 
-			function parseIsoDate(dateStr) {
-				if (!dateStr) return null;
-				var d = new Date(String(dateStr) + 'T00:00:00');
-				return isNaN(d.getTime()) ? null : d;
+			function parseIsoDate(dateValue) {
+				if (!dateValue) return null;
+				if (dateValue instanceof Date) {
+					var copy = new Date(dateValue.getTime());
+					return isNaN(copy.getTime()) ? null : copy;
+				}
+				var s = String(dateValue).trim();
+				var d;
+				// Prefer local-midnight parsing for date-only strings to avoid UTC day shifts
+				if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+					d = new Date(s + 'T00:00:00');
+					return isNaN(d.getTime()) ? null : d;
+				}
+				// Normalize "YYYY-MM-DD HH:MM:SS" to ISO-like
+				if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s)) {
+					s = s.replace(' ', 'T');
+				}
+				d = new Date(s);
+				if (!isNaN(d.getTime())) return d;
+				// Last fallback: if we can at least extract the date portion
+				var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+				if (m) {
+					d = new Date(m[1] + 'T00:00:00');
+					return isNaN(d.getTime()) ? null : d;
+				}
+				return null;
 			}
 
 			function addDays(dateObj, days) {
@@ -198,22 +237,22 @@
 					}
 					if (!bookedDates || !bookedDates.has(iso)) return;
 
+					if (info.el && info.el.classList) {
+						info.el.classList.add('room-booked-day');
+						info.el.setAttribute('aria-disabled', 'true');
+					}
+
 					var frame = info.el && info.el.querySelector
 						? (info.el.querySelector('.fc-daygrid-day-frame') || info.el)
 						: info.el;
 					if (!frame) return;
-					if (frame.querySelector && frame.querySelector('[data-booked-icon="1"]')) return;
+					if (frame.querySelector && frame.querySelector('[data-booked-badge="1"]')) return;
 
-					var wrap = document.createElement('div');
-					wrap.className = 'room-booked-day-icon';
-					wrap.setAttribute('data-booked-icon', '1');
-
-					var icon = document.createElement('i');
-					icon.className = 'fa-thin fa-xmark';
-					icon.style.color = 'rgb(211, 18, 22)';
-					wrap.appendChild(icon);
-
-					frame.appendChild(wrap);
+					var badge = document.createElement('span');
+					badge.className = 'kt-badge kt-badge-destructive room-booked-day-badge';
+					badge.setAttribute('data-booked-badge', '1');
+					badge.textContent = 'BOOKED';
+					frame.appendChild(badge);
 				},
 				dateClick: function (info) {
 					// Guard: treat past dates as disabled
@@ -224,16 +263,9 @@
 					clicked.setHours(0, 0, 0, 0);
 					if (clicked < today) return;
 
-					// If this date is booked, open its reservation details
+					// Guard: booked dates are disabled (no click action)
 					var iso = toIsoDate(clicked);
-					var reservationId = bookedDateToReservationId && bookedDateToReservationId[iso]
-						? String(bookedDateToReservationId[iso])
-						: '';
-					if (reservationId) {
-						var showUrl = reservationShowUrlTemplate.replace('__ID__', reservationId);
-						window.location.href = showUrl;
-						return;
-					}
+					if (bookedDates && bookedDates.has(iso)) return;
 
 					// Multi-select future, unbooked dates (month view)
 					if (info && info.view && info.view.type === 'dayGridMonth') {
@@ -319,7 +351,6 @@
 		<div class="mt-4 flex flex-wrap items-center gap-2">
 			<span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">Click event = open reservation</span>
 			<span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-destructive">
-				<i class="fa-thin fa-xmark" style="color: rgb(211, 18, 22);"></i>
 				Booked
 			</span>
 			@if(empty($selectedRoomId))

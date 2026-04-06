@@ -9,6 +9,20 @@
 			opacity: 0.45;
 			filter: grayscale(0.2);
 		}
+        #room_calendar  .fc-col-header {
+            width:100% !important;
+        }
+		#room_calendar .fc-daygrid-body{
+            width:100% !important;
+        }
+		#room_calendar .fc-scrollgrid-sync-table {
+            width:100% !important;
+        }
+		#room_calendar .fc-scrollgrid-sync-table{
+            width:100% !important;
+        }
+
+
 
 		/* Booked day cells: visually disabled */
 		#room_calendar .fc-dayGridMonth-view .fc-daygrid-day.room-booked-day {
@@ -40,27 +54,30 @@
 		#room_calendar .fc-daygrid-day-top {
 			position: relative;
 			z-index: 4;
+            align-items: center;
+            justify-content: center;
 		}
 		/* Month view: booked label as diagonal corner ribbon */
 		#room_calendar .room-booked-day-badge {
 			position: absolute;
-			top: 48px;
-			left: -23px;
-			width: 185px;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			z-index: 3;
 			pointer-events: none;
-			text-transform: uppercase;
-			letter-spacing: 0.50em;
-			font-size: 13px;
-			line-height: 1.2;
-			padding: 6px 0;
+			padding: 4px;
+            margin-top: 20px;
+		}
+		#room_calendar .room-booked-day-badge .kt-badge {
+			font-size: 10px;
 			text-align: center;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			transform: rotate(-40deg);
-			transform-origin: center;
 		}
+
+      
 	</style>
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
@@ -226,9 +243,16 @@
 				syncBookingButton();
 			}
 
+			function getCalendarContentHeight() {
+				// Keep in sync with your Tailwind breakpoint usage
+				return window.matchMedia('(max-width: 640px)').matches ? 320 : 400;
+			}
+
 			var calendar = new FullCalendar.Calendar(calendarEl, {
 				initialView: 'dayGridMonth',
 				initialDate: initialDate || undefined,
+				contentHeight: getCalendarContentHeight(),
+				expandRows: true,
 				dayCellDidMount: function (info) {
 					if (!info || !info.view || info.view.type !== 'dayGridMonth') return;
 					var iso = toIsoDate(info.date);
@@ -248,10 +272,15 @@
 					if (!frame) return;
 					if (frame.querySelector && frame.querySelector('[data-booked-badge="1"]')) return;
 
-					var badge = document.createElement('span');
-					badge.className = 'kt-badge kt-badge-destructive room-booked-day-badge';
+					var badge = document.createElement('div');
+					badge.className = 'room-booked-day-badge';
 					badge.setAttribute('data-booked-badge', '1');
-					badge.textContent = 'BOOKED';
+
+					var pill = document.createElement('span');
+					pill.className = 'kt-badge kt-badge-destructive';
+					pill.textContent = 'BOOKED';
+					badge.appendChild(pill);
+
 					frame.appendChild(badge);
 				},
 				dateClick: function (info) {
@@ -298,6 +327,15 @@
 
 			calendar.render();
 			syncSelectedDatesField();
+
+			var resizeTimer;
+			window.addEventListener('resize', function () {
+				window.clearTimeout(resizeTimer);
+				resizeTimer = window.setTimeout(function () {
+					calendar.setOption('contentHeight', getCalendarContentHeight());
+					calendar.updateSize();
+				}, 150);
+			});
 		});
 	</script>
 @endpush

@@ -157,55 +157,16 @@
                                 data-kt-menu-item-toggle="accordion"
                                 data-kt-menu-item-trigger="click"
                             >
-                                <div
-                                    class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
-                                    tabindex="0"
+                                <a href="{{ route('admin.index') }}"
+                                    class="kt-menu-link flex items-center grow border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
                                 >
                                     <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"
                                         ><i class="ki-filled ki-element-11 text-lg"></i></span
                                     ><span
-                                        class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary"
+                                         class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary"
                                         >Dashboards</span
-                                    ><span
-                                        class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]"
-                                        ><span class="inline-flex kt-menu-item-show:hidden"
-                                            ><i class="ki-filled ki-plus text-[11px]"></i></span
-                                        ><span class="hidden kt-menu-item-show:inline-flex"
-                                            ><i class="ki-filled ki-minus text-[11px]"></i></span
-                                    ></span>
-                                </div>
-                                <div
-                                    class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border"
-                                >
-                                    <div class="kt-menu-item active">
-                                        <a
-                                            class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
-                                            href="{{ route('admin.index') }}"
-                                            tabindex="0"
-                                            ><span
-                                                class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"
-                                            ></span
-                                            ><span
-                                                class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary"
-                                                >Light Sidebar</span
-                                            ></a
-                                        >
-                                    </div>
-                                    <div class="kt-menu-item">
-                                        <a
-                                            class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
-                                            href="dashboards/dark-sidebar.html"
-                                            tabindex="0"
-                                            ><span
-                                                class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"
-                                            ></span
-                                            ><span
-                                                class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary"
-                                                >Dark Sidebar</span
-                                            ></a
-                                        >
-                                    </div>
-                                </div>
+                                    >
+                                </a>
                             </div>
                             <div
                                 class="kt-menu-item {{ request()->routeIs('admin.reservations.*') ? 'here show' : '' }}"
@@ -359,18 +320,19 @@
                                 data-kt-modal-toggle="#search_modal"
                             >
                                 <i class="ki-filled ki-magnifier text-lg group-hover:text-primary"></i></button
-                            ><button
+                            >
+                            <!-- <button
                                 class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:bg-primary/10 hover:[&amp;_i]:text-primary"
                                 data-kt-drawer-toggle="#notifications_drawer"
-                            >
+                                >
                                 <i class="ki-filled ki-notification-status text-lg"></i>
-                            </button>
-                            <div
+                            </button> -->
+                            <!-- <div
                                 class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
                                 data-kt-drawer="true"
                                 data-kt-drawer-container="body"
                                 id="notifications_drawer"
-                            >
+                                >
                                 <div
                                     class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
                                     id="notifications_header"
@@ -502,14 +464,14 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <button
+                            </div> -->
+                            <!-- <button
                                 class="kt-btn kt-btn-ghost kt-btn-icon size-9 rounded-full hover:bg-primary/10 hover:[&amp;_i]:text-primary"
                                 data-kt-drawer-toggle="#chat_drawer"
                             >
                                 <i class="ki-filled ki-messages text-lg"></i>
-                            </button>
-                            <div
+                            </button> -->
+                            <!-- <div
                                 class="hidden kt-drawer kt-drawer-end card flex-col max-w-[90%] w-[450px] top-5 bottom-5 end-5 rounded-xl border border-border"
                                 data-kt-drawer="true"
                                 data-kt-drawer-container="body"
@@ -532,8 +494,8 @@
                                     </div>
                                 </div>
                               
-                            </div>
-                            <div
+                            </div> -->
+                            <!-- <div
                                 data-kt-dropdown="true"
                                 data-kt-dropdown-offset="10px, 10px"
                                 data-kt-dropdown-offset-rtl="-10px, 10px"
@@ -558,7 +520,7 @@
                                         >
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                             <div
                                 class="shrink-0"
                                 data-kt-dropdown="true"

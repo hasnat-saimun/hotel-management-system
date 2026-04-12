@@ -253,7 +253,7 @@
                 <div class="rounded border border-border bg-background overflow-hidden">
                     <div class="px-4 py-3 border-b border-border bg-muted/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
                         <div>
-                            <div class="font-medium">Step 1 — Block Details</div>
+                            <div class="font-medium">Block Details</div>
                         </div>
                     </div>
 
@@ -300,7 +300,7 @@
             </div>
 
             <div class="lg:col-span-2">
-                <div class="font-medium">Step 2 — Assign Inventory</div>
+                <div class="font-medium">Assign Inventory</div>
             </div>
 
             <div class="lg:col-span-2">

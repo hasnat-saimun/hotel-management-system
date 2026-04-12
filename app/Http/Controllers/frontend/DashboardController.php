@@ -63,7 +63,7 @@ class DashboardController extends Controller
                 $q->active()
                     ->where('room_blocks.start_date', '<', $toDate)
                     ->where('room_blocks.end_date', '>', $fromDate)
-                    ->wherePivot('status', 'blocked');
+                    ->where('room_block_rooms.status', 'blocked');
             });
     }
 
@@ -111,7 +111,7 @@ class DashboardController extends Controller
                     $q->active()
                         ->where('room_blocks.start_date', '<', $data['check_out_date'])
                         ->where('room_blocks.end_date', '>', $data['check_in_date'])
-                        ->wherePivot('status', 'blocked');
+                        ->where('room_block_rooms.status', 'blocked');
                 })
                 ->lockForUpdate()
                 ->first();

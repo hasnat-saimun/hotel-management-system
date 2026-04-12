@@ -634,7 +634,7 @@ class ReservationController extends Controller
                     ->active()
                     ->where('room_blocks.start_date', '<', $segOut)
                     ->where('room_blocks.end_date', '>', $segIn)
-                    ->wherePivot('status', 'blocked')
+                    ->where('room_block_rooms.status', 'blocked')
                     ->exists();
 
                 if ($blockedByRoomBlock) {
@@ -690,7 +690,7 @@ class ReservationController extends Controller
                             ->active()
                             ->where('room_blocks.start_date', '<', $segOut)
                             ->where('room_blocks.end_date', '>', $segIn)
-                            ->wherePivot('status', 'blocked')
+                            ->where('room_block_rooms.status', 'blocked')
                             ->exists();
 
                         if ($blockedByRoomBlock) {
@@ -873,7 +873,7 @@ class ReservationController extends Controller
                         ->active()
                         ->where('room_blocks.start_date', '<', $checkOutDate)
                         ->where('room_blocks.end_date', '>', $checkInDate)
-                        ->wherePivot('status', 'blocked');
+                        ->where('room_block_rooms.status', 'blocked');
                 });
             })
             ->orderBy('room_number')

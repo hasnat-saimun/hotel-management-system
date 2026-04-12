@@ -44,7 +44,7 @@ class RoomAvailabilityService
                 ->active()
                 ->where('room_blocks.start_date', '<', $to)
                 ->where('room_blocks.end_date', '>', $from)
-                ->wherePivot('status', 'blocked')
+                ->where('room_block_rooms.status', 'blocked')
                 ->when($ignoreRoomBlockId, function ($q) use ($ignoreRoomBlockId) {
                     $q->where('room_blocks.id', '!=', $ignoreRoomBlockId);
                 });

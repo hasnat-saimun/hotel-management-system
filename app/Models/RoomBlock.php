@@ -49,10 +49,10 @@ class RoomBlock extends Model
     public function scopeActive($query)
     {
         return $query
-            ->where('status', '!=', 'cancelled')
-            ->whereNull('released_at')
+            ->where('room_blocks.status', '!=', 'cancelled')
+            ->whereNull('room_blocks.released_at')
             ->where(function ($q) {
-                $q->whereNull('release_at')->orWhere('release_at', '>', now());
+                $q->whereNull('room_blocks.release_at')->orWhere('room_blocks.release_at', '>', now());
             });
     }
 }

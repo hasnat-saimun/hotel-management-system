@@ -12,6 +12,7 @@ class Reservation extends Model
 
     protected $fillable = [
         'guest_id',
+        'room_block_id',
         'reservation_code',
         'channel',
         'status',
@@ -60,6 +61,23 @@ class Reservation extends Model
     public function guest()
     {
         return $this->belongsTo(Guest::class);
+    }
+
+    public function guests()
+    {
+        return $this->belongsToMany(Guest::class, 'reservation_guests')
+            ->withPivot(['is_primary'])
+            ->withTimestamps();
+    }
+
+    public function roomBlock()
+    {
+        return $this->belongsTo(RoomBlock::class, 'room_block_id');
+    }
+
+    public function folio()
+    {
+        return $this->hasOne(Folio::class);
     }
 
     public function reservationRooms()

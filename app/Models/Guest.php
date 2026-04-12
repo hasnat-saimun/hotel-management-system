@@ -36,6 +36,13 @@ class Guest extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    public function reservationsAsGuest()
+    {
+        return $this->belongsToMany(Reservation::class, 'reservation_guests')
+            ->withPivot(['is_primary'])
+            ->withTimestamps();
+    }
+
     public function documents()
     {
         return $this->hasMany(GuestDocument::class);

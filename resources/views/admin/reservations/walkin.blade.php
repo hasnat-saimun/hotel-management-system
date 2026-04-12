@@ -35,6 +35,10 @@
             </div>
             
             <div class="lg:col-span-2 flex gap-2">
+                <label class="inline-flex items-center gap-2 text-sm text-secondary-foreground">
+                    <input type="checkbox" name="ignore_blocks" value="1" {{ request('ignore_blocks') ? 'checked' : '' }} />
+                    Override Room Blocks (admin)
+                </label>
                 <button type="submit" class="kt-btn kt-btn-primary">Search</button>
             </div>
         </form>

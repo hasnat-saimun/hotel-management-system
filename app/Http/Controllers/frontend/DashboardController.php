@@ -58,7 +58,13 @@ class DashboardController extends Controller
         $roomQuery
             ->where('is_active', true)
             ->where('status', 'available')
-            ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps($q, $fromDate, $toDate));
+            ->whereDoesntHave('reservations', fn ($q) => $this->reservationOverlaps($q, $fromDate, $toDate))
+            ->whereDoesntHave('roomBlocks', function ($q) use ($fromDate, $toDate) {
+                $q->active()
+                    ->where('room_blocks.start_date', '<', $toDate)
+                    ->where('room_blocks.end_date', '>', $fromDate)
+                    ->wherePivot('status', 'blocked');
+            });
     }
 
     private function reservationOverlaps($reservationQuery, string $fromDate, string $toDate): void
@@ -101,6 +107,13 @@ class DashboardController extends Controller
                     $data['check_in_date'],
                     $data['check_out_date']
                 ))
+                ->whereDoesntHave('roomBlocks', function ($q) use ($data) {
+                    $q->active()
+                        ->where('room_blocks.start_date', '<', $data['check_out_date'])
+                        ->where('room_blocks.end_date', '>', $data['check_in_date'])
+                        ->wherePivot('status', 'blocked');
+                })
+                ->lockForUpdate()
                 ->first();
 
             if (!$room) {

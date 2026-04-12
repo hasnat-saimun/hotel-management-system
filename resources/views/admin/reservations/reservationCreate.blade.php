@@ -141,6 +141,13 @@
                     <input type="hidden" name="dates" value="{{ old('dates', $backDates) }}" />
 
                     <div class="lg:col-span-2">
+                        <label class="inline-flex items-center gap-2 text-sm text-secondary-foreground">
+                            <input type="checkbox" name="ignore_blocks" value="1" {{ old('ignore_blocks') ? 'checked' : '' }} />
+                            Override Room Blocks (admin)
+                        </label>
+                    </div>
+
+                    <div class="lg:col-span-2">
                         <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
                     </div>
 

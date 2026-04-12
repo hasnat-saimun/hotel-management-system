@@ -13,7 +13,9 @@ use App\Models\Guest;
 use App\Models\ReservationRoom;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\RoomBlockRoom;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ReservationController extends Controller
 {
@@ -369,9 +371,56 @@ class ReservationController extends Controller
             })
             ->values();
 
+        $blockEvents = collect();
+
+        if (!empty($roomId)) {
+            $blockEvents = RoomBlockRoom::query()
+                ->with(['roomBlock'])
+                ->where('room_id', (int) $roomId)
+                ->where('status', 'blocked')
+                ->whereHas('roomBlock', function ($q) use ($monthStart, $monthEndExclusive) {
+                    $q->active()
+                        ->when($monthStart && $monthEndExclusive, function ($q2) use ($monthStart, $monthEndExclusive) {
+                            $q2
+                                ->where('start_date', '<', $monthEndExclusive->toDateString())
+                                ->where('end_date', '>', $monthStart->toDateString());
+                        });
+                })
+                ->get()
+                ->map(function ($row) {
+                    $block = $row->roomBlock;
+                    if (!$block || empty($block->start_date) || empty($block->end_date)) {
+                        return null;
+                    }
+
+                    $startDate = optional($block->start_date)->toDateString();
+                    $endDate = optional($block->end_date)->toDateString();
+                    if ($endDate !== null && $startDate !== null && $endDate <= $startDate) {
+                        $endDate = optional($block->start_date)->copy()->addDay()->toDateString();
+                    }
+
+                    $title = 'Blocked - ' . (string) ($block->group_name ?? 'Group');
+
+                    return [
+                        'id' => 'block-' . $block->id,
+                        'title' => $title,
+                        'start' => $startDate,
+                        'end' => $endDate,
+                        'allDay' => true,
+                        'type' => 'room_block',
+                        'room_block_id' => $block->id,
+                    ];
+                })
+                ->filter()
+                ->values();
+        }
+
         return view('admin.reservations.calendarByroom', [
             'rooms' => $rooms,
-            'roomCalendarEvents' => $roomCalendarEvents,
+            'roomCalendarEvents' => $roomCalendarEvents->map(function ($ev) {
+                $ev['type'] = 'reservation';
+                return $ev;
+            })->values()->merge($blockEvents)->values(),
             'initialDate' => $initialDate,
         ]);
     }
@@ -489,6 +538,7 @@ class ReservationController extends Controller
             'children' => ['nullable', 'integer', 'min:0'],
             'special_requests' => ['nullable', 'string', 'max:4000'],
             'note' => ['nullable', 'string', 'max:2000'],
+            'ignore_blocks' => ['nullable', 'boolean'],
         ]);
 
         $room = Room::query()->with(['roomType'])->findOrFail((int) $data['room_id']);
@@ -577,13 +627,80 @@ class ReservationController extends Controller
                     ->withErrors(['dates' => $label . ' overlaps an existing reservation for this room.'])
                     ->withInput();
             }
+
+            $ignoreBlocks = (bool) ($data['ignore_blocks'] ?? false);
+            if (!$ignoreBlocks) {
+                $blockedByRoomBlock = $room->roomBlocks()
+                    ->active()
+                    ->where('room_blocks.start_date', '<', $segOut)
+                    ->where('room_blocks.end_date', '>', $segIn)
+                    ->wherePivot('status', 'blocked')
+                    ->exists();
+
+                if ($blockedByRoomBlock) {
+                    $label = count($segments) > 1
+                        ? ('Stay #' . ($i + 1) . ' (' . $segIn . ' - ' . $segOut . ')')
+                        : ('Selected range (' . $segIn . ' - ' . $segOut . ')');
+
+                    return back()
+                        ->withErrors(['dates' => $label . ' overlaps an active room block for this room. Use Override Blocks to proceed.'])
+                        ->withInput();
+                }
+            }
         }
 
         $adults = (int) ($data['adults'] ?? 1);
         $children = (int) ($data['children'] ?? 0);
         $nightlyRate = (float) ($room->roomType?->base_price ?? 0);
 
-        $reservations = DB::transaction(function () use ($data, $room, $segments, $adults, $children, $nightlyRate) {
+        $ignoreBlocks = (bool) ($data['ignore_blocks'] ?? false);
+
+        try {
+            $reservations = DB::transaction(function () use ($data, $room, $segments, $adults, $children, $nightlyRate, $ignoreBlocks, $activeReservationStatuses) {
+                // Lock the room row to serialize concurrent bookings for the same room
+                $lockedRoom = Room::query()->whereKey($room->id)->lockForUpdate()->first();
+                if (!$lockedRoom) {
+                    throw ValidationException::withMessages([
+                        'room_id' => 'Selected room was not found.',
+                    ]);
+                }
+
+                // Re-check overlaps inside the transaction (race-condition safe)
+                foreach ($segments as $seg) {
+                    $segIn = $seg['check_in'];
+                    $segOut = $seg['check_out'];
+
+                    $overlaps = Reservation::query()
+                        ->whereIn('status', $activeReservationStatuses)
+                        ->where('check_in_date', '<', $segOut)
+                        ->where('check_out_date', '>', $segIn)
+                        ->whereHas('rooms', function ($q) use ($lockedRoom) {
+                            $q->where('rooms.id', $lockedRoom->id);
+                        })
+                        ->exists();
+
+                    if ($overlaps) {
+                        throw ValidationException::withMessages([
+                            'dates' => 'Selected dates overlap an existing reservation for this room.',
+                        ]);
+                    }
+
+                    if (!$ignoreBlocks) {
+                        $blockedByRoomBlock = $lockedRoom->roomBlocks()
+                            ->active()
+                            ->where('room_blocks.start_date', '<', $segOut)
+                            ->where('room_blocks.end_date', '>', $segIn)
+                            ->wherePivot('status', 'blocked')
+                            ->exists();
+
+                        if ($blockedByRoomBlock) {
+                            throw ValidationException::withMessages([
+                                'dates' => 'Selected dates overlap an active room block for this room. Use Override Blocks to proceed.',
+                            ]);
+                        }
+                    }
+                }
+
             $guest = Guest::query()->where('email', $data['guest_email'])->first();
             if ($guest) {
                 $guest->first_name = $data['guest_first_name'];
@@ -656,11 +773,14 @@ class ReservationController extends Controller
                 $created[] = $reservation;
             }
 
-            $room->status = 'reserved';
-            $room->save();
+            $lockedRoom->status = 'reserved';
+            $lockedRoom->save();
 
             return $created;
-        });
+            });
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
 
         if (count($reservations) === 1) {
             return redirect()->route('admin.reservations.show', $reservations[0]->id)
@@ -733,6 +853,8 @@ class ReservationController extends Controller
         $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
         $excludedRoomStatuses = ['maintenance', 'out_of_service'];
 
+        $ignoreBlocks = (bool) $request->boolean('ignore_blocks');
+
         $reservationOverlapsWindow = function ($query) use ($checkInDate, $checkOutDate, $activeReservationStatuses) {
             $query
                 ->whereIn('reservations.status', $activeReservationStatuses)
@@ -745,6 +867,15 @@ class ReservationController extends Controller
             ->where('is_active', true)
             ->whereNotIn('status', $excludedRoomStatuses)
             ->whereDoesntHave('reservations', $reservationOverlapsWindow)
+            ->when(!$ignoreBlocks, function ($q) use ($checkInDate, $checkOutDate) {
+                $q->whereDoesntHave('roomBlocks', function ($blockQuery) use ($checkInDate, $checkOutDate) {
+                    $blockQuery
+                        ->active()
+                        ->where('room_blocks.start_date', '<', $checkOutDate)
+                        ->where('room_blocks.end_date', '>', $checkInDate)
+                        ->wherePivot('status', 'blocked');
+                });
+            })
             ->orderBy('room_number')
             ->get();
 

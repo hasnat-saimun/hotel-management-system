@@ -56,4 +56,11 @@ class Room extends Model
             ])
             ->withTimestamps();
     }
+
+    public function roomBlocks()
+    {
+        return $this->belongsToMany(RoomBlock::class, 'room_block_rooms')
+            ->withPivot(['room_type_id', 'assigned_guest_id', 'status'])
+            ->withTimestamps();
+    }
 }

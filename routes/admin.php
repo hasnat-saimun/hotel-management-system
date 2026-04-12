@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\loginController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\ReservationController;
+use App\Http\Controllers\admin\RoomBlockController;
 use Illuminate\Http\Request;
 
 
@@ -79,6 +80,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('{id}/checkout', [ReservationController::class, 'checkout'])->name('checkout');
             Route::post('{id}/cancel', [ReservationController::class, 'cancel'])->name('cancel');
             Route::get('{id}', [ReservationController::class, 'show'])->name('show');
+        });
+
+        // Room Blocks (Group bookings)
+        Route::prefix('room-blocks')->name('room-blocks.')->group(function () {
+            Route::get('/', [RoomBlockController::class, 'index'])->name('index');
+            Route::get('create', [RoomBlockController::class, 'create'])->name('create');
+            Route::post('/', [RoomBlockController::class, 'createBlock'])->name('store');
+            Route::get('{id}', [RoomBlockController::class, 'show'])->name('show');
+            Route::put('{id}', [RoomBlockController::class, 'update'])->name('update');
+
+            Route::post('{id}/assign-rooms', [RoomBlockController::class, 'assignRooms'])->name('assign-rooms');
+            Route::post('{id}/unassign-rooms', [RoomBlockController::class, 'unassignRooms'])->name('unassign-rooms');
+
+            Route::post('{id}/release', [RoomBlockController::class, 'releaseBlock'])->name('release');
+
+            Route::get('{id}/convert', [RoomBlockController::class, 'convert'])->name('convert');
+            Route::post('{id}/convert', [RoomBlockController::class, 'convertToReservation'])->name('convert.store');
         });
 
     // });

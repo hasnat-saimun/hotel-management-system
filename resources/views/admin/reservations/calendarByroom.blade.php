@@ -89,6 +89,7 @@
 			var events = @json($roomCalendarEvents ?? $calendarEvents ?? []);
 			var initialDate = @json($initialDate ?? null);
 			var reservationShowUrlTemplate = @json(route('admin.reservations.show', ['id' => '__ID__']));
+			var roomBlockShowUrlTemplate = @json(route('admin.room-blocks.show', ['id' => '__ID__']));
 			var reservationCreateUrl = @json(route('admin.reservations.create'));
 			var selectedRoomId = @json(old('room_id', request('room_id')));
 			var preselectedDatesRaw = @json(old('dates', request('dates')));
@@ -162,6 +163,12 @@
 				return set;
 			}
 
+			function filterEventsByType(eventList, type) {
+				return (eventList || []).filter(function (ev) {
+					return (ev && ev.type ? String(ev.type) : 'reservation') === String(type);
+				});
+			}
+
 			function buildBookedDateToReservationIdMap(eventList) {
 				var map = Object.create(null);
 				(eventList || []).forEach(function (ev) {
@@ -183,8 +190,12 @@
 				return map;
 			}
 
-			var bookedDates = buildBookedDateSet(events);
-			var bookedDateToReservationId = buildBookedDateToReservationIdMap(events);
+			var reservationEvents = filterEventsByType(events, 'reservation');
+			var roomBlockEvents = filterEventsByType(events, 'room_block');
+			var bookedReservationDates = buildBookedDateSet(reservationEvents);
+			var blockedDates = buildBookedDateSet(roomBlockEvents);
+			var bookedDates = new Set(Array.from(bookedReservationDates).concat(Array.from(blockedDates)));
+			var bookedDateToReservationId = buildBookedDateToReservationIdMap(reservationEvents);
 			var selectedDates = new Set(parseDateList(preselectedDatesRaw));
 
 			function sanitizeSelectedDates() {
@@ -259,7 +270,7 @@
 					if (selectedDates && selectedDates.has(iso) && info.el && info.el.classList) {
 						info.el.classList.add('room-multi-selected');
 					}
-					if (!bookedDates || !bookedDates.has(iso)) return;
+					if ((!bookedReservationDates || !bookedReservationDates.has(iso)) && (!blockedDates || !blockedDates.has(iso))) return;
 
 					if (info.el && info.el.classList) {
 						info.el.classList.add('room-booked-day');
@@ -278,7 +289,7 @@
 
 					var pill = document.createElement('span');
 					pill.className = 'kt-badge kt-badge-destructive';
-					pill.textContent = 'BOOKED';
+					pill.textContent = (bookedReservationDates && bookedReservationDates.has(iso)) ? 'BOOKED' : 'BLOCKED';
 					badge.appendChild(pill);
 
 					frame.appendChild(badge);
@@ -318,9 +329,21 @@
 				dayMaxEvents: true,
 				events: events,
 				eventClick: function (info) {
-					var reservationId = info.event && info.event.id ? String(info.event.id) : '';
-					if (!reservationId) return;
-					var showUrl = reservationShowUrlTemplate.replace('__ID__', reservationId);
+					var idRaw = info.event && info.event.id ? String(info.event.id) : '';
+					if (!idRaw) return;
+					var type = (info.event.extendedProps && info.event.extendedProps.type)
+						? String(info.event.extendedProps.type)
+						: 'reservation';
+					if (type === 'room_block') {
+						var blockId = (info.event.extendedProps && info.event.extendedProps.room_block_id)
+							? String(info.event.extendedProps.room_block_id)
+							: idRaw.replace('block-', '');
+						var blockUrl = roomBlockShowUrlTemplate.replace('__ID__', blockId);
+						window.location.href = blockUrl;
+						return;
+					}
+
+					var showUrl = reservationShowUrlTemplate.replace('__ID__', idRaw);
 					window.location.href = showUrl;
 				}
 			});

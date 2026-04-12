@@ -211,7 +211,7 @@
                                 </div>
                             </div>
 
-                            <div class="kt-menu-item {{ request()->routeIs('admin.rooms.*') ? 'here show' : '' }}"
+                            <div class="kt-menu-item {{ (request()->routeIs('admin.rooms.*') || request()->routeIs('admin.room-blocks.*')) ? 'here show' : '' }}"
                                 data-kt-menu-item-toggle="accordion"
                                 data-kt-menu-item-trigger="click"
                             >
@@ -234,6 +234,12 @@
                                         <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.rooms.index') }}" tabindex="0">
                                             <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
                                             <span class="kt-menu-title text-2sm font-normal text-foreground">Rooms</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.room-blocks.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.room-blocks.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Room Blocks</span>
                                         </a>
                                     </div>
                                     <div class="kt-menu-item {{ request()->routeIs('admin.rooms.types.*') || request()->routeIs('admin.rooms.types.index') ? 'active' : '' }}">

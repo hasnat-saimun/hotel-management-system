@@ -36,7 +36,7 @@ class RoomBlockController extends Controller
     public function create()
     {
         $types = RoomType::query()->orderBy('name')->get();
-        $rooms = Room::query()->orderBy('room_number')->get();
+        $rooms = Room::query()->with(['roomType', 'floor'])->orderBy('room_number')->get();
 
         return view('admin.room_blocks.create', compact('types', 'rooms'));
     }

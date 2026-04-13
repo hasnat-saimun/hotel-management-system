@@ -86,6 +86,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('room-blocks')->name('room-blocks.')->group(function () {
             Route::get('/', [RoomBlockController::class, 'index'])->name('index');
             Route::get('create', [RoomBlockController::class, 'create'])->name('create');
+            Route::get('availability', [RoomBlockController::class, 'availability'])->name('availability');
             Route::post('/', [RoomBlockController::class, 'createBlock'])->name('store');
             Route::get('{id}', [RoomBlockController::class, 'show'])->name('show');
             Route::put('{id}', [RoomBlockController::class, 'update'])->name('update');

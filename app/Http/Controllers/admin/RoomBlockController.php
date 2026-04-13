@@ -41,6 +41,30 @@ class RoomBlockController extends Controller
         return view('admin.room_blocks.create', compact('types', 'rooms'));
     }
 
+    public function availability(Request $request)
+    {
+        $data = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'room_type_id' => 'required|integer|exists:room_types,id',
+        ]);
+
+        $query = Room::query()
+            ->where('room_type_id', (int) $data['room_type_id']);
+
+        $this->availability->constrainToAvailableRooms(
+            $query,
+            Carbon::parse($data['start_date'])->toDateString(),
+            Carbon::parse($data['end_date'])->toDateString(),
+            false,
+            null
+        );
+
+        return response()->json([
+            'available' => (int) $query->count(),
+        ]);
+    }
+
     /**
      * createBlock(): creates a block + assigns rooms.
      */

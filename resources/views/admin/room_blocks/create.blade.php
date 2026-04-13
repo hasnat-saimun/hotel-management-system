@@ -6,6 +6,8 @@
     (function () {
         function byId(id) { return document.getElementById(id); }
 
+        var availabilityUrl = @json(route('admin.room-blocks.availability'));
+
         function setDisabled(el, disabled) {
             if (!el) return;
             el.disabled = !!disabled;
@@ -38,6 +40,33 @@
             }
         }
 
+        function todayIsoDate() {
+            var d = new Date();
+            d.setHours(0, 0, 0, 0);
+            var yyyy = d.getFullYear();
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var dd = String(d.getDate()).padStart(2, '0');
+            return yyyy + '-' + mm + '-' + dd;
+        }
+
+        function normalizeReleaseDeadlineMin(releaseAtEl, startDateEl) {
+            if (!releaseAtEl) return;
+            var minDate = todayIsoDate();
+            var startVal = startDateEl ? String(startDateEl.value || '').trim() : '';
+            if (startVal && startVal > minDate) {
+                minDate = startVal;
+            }
+
+            var minVal = minDate + 'T00:00';
+            releaseAtEl.min = minVal;
+
+            var cur = String(releaseAtEl.value || '').trim();
+            if (cur && cur < minVal) {
+                releaseAtEl.value = minVal;
+                releaseAtEl.setAttribute('data-autofill', '1');
+            }
+        }
+
         function init() {
             var modeSpecific = byId('rb_mode_specific');
             var modeAuto = byId('rb_mode_auto');
@@ -50,9 +79,90 @@
             var roomsDropdownLabel = byId('rb_rooms_dropdown_label');
             var roomTypeSelect = byId('rb_room_type_id');
             var totalRoomsInput = byId('rb_total_rooms');
+            var autoAvailMsg = byId('rb_auto_availability_msg');
             var specificCount = byId('rb_specific_count');
             var startDate = byId('rb_start_date');
             var endDate = byId('rb_end_date');
+            var releaseAt = byId('rb_release_at');
+
+            var availFetchTimer = null;
+            function setAutoAvailabilityMessage(text) {
+                if (!autoAvailMsg) return;
+                autoAvailMsg.textContent = text || '';
+                autoAvailMsg.classList.toggle('hidden', !(text && String(text).trim() !== ''));
+            }
+
+            function fetchAutoAvailabilityCount() {
+                if (!modeAuto || !modeAuto.checked) {
+                    setAutoAvailabilityMessage('');
+                    if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                    return;
+                }
+
+                var st = startDate ? String(startDate.value || '').trim() : '';
+                var en = endDate ? String(endDate.value || '').trim() : '';
+                var rt = roomTypeSelect ? String(roomTypeSelect.value || '').trim() : '';
+
+                if (!st || !en || !rt) {
+                    setAutoAvailabilityMessage('');
+                    if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                    return;
+                }
+
+                if (en <= st) {
+                    setAutoAvailabilityMessage('');
+                    if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                    return;
+                }
+
+                setAutoAvailabilityMessage('Checking availability...');
+
+                var url = availabilityUrl + '?' + new URLSearchParams({
+                    start_date: st,
+                    end_date: en,
+                    room_type_id: rt
+                }).toString();
+
+                fetch(url, { headers: { 'Accept': 'application/json' } })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('Request failed');
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        var n = data && typeof data.available !== 'undefined' ? Number(data.available) : NaN;
+                        if (!isFinite(n) || n < 0) {
+                            setAutoAvailabilityMessage('');
+                            if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                            return;
+                        }
+
+                        setAutoAvailabilityMessage('Available rooms: ' + String(n));
+                        if (totalRoomsInput) {
+                            totalRoomsInput.max = String(n);
+                        }
+                    })
+                    .catch(function () {
+                        setAutoAvailabilityMessage('');
+                        if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                    });
+            }
+
+            function scheduleAutoAvailabilityFetch() {
+                if (availFetchTimer) clearTimeout(availFetchTimer);
+                availFetchTimer = setTimeout(fetchAutoAvailabilityCount, 250);
+            }
+
+            function autoFillReleaseAtFromEndDate() {
+                if (!endDate || !releaseAt) return;
+                var endVal = String(endDate.value || '').trim();
+                if (!endVal) return;
+
+                var canAutoFill = String(releaseAt.value || '').trim() === '' || releaseAt.getAttribute('data-autofill') === '1';
+                if (!canAutoFill) return;
+
+                releaseAt.value = endVal + 'T12:00';
+                releaseAt.setAttribute('data-autofill', '1');
+            }
 
             function renderCounts() {
                 if (!specificCount) return;
@@ -122,6 +232,13 @@
                 }
 
                 renderCounts();
+
+                if (isSpecific) {
+                    setAutoAvailabilityMessage('');
+                    if (totalRoomsInput) totalRoomsInput.removeAttribute('max');
+                } else {
+                    scheduleAutoAvailabilityFetch();
+                }
             }
 
             function detectModeFromOldInput() {
@@ -133,17 +250,33 @@
             }
 
             if (startDate && !startDate.min) {
-                var d = new Date();
-                d.setHours(0, 0, 0, 0);
-                var yyyy = d.getFullYear();
-                var mm = String(d.getMonth() + 1).padStart(2, '0');
-                var dd = String(d.getDate()).padStart(2, '0');
-                startDate.min = yyyy + '-' + mm + '-' + dd;
+                startDate.min = todayIsoDate();
             }
 
             if (startDate && endDate) {
-                startDate.addEventListener('change', function () { normalizeDateInputs(startDate, endDate); });
+                startDate.addEventListener('change', function () {
+                    normalizeDateInputs(startDate, endDate);
+                    normalizeReleaseDeadlineMin(releaseAt, startDate);
+                    scheduleAutoAvailabilityFetch();
+                });
                 normalizeDateInputs(startDate, endDate);
+            }
+
+            normalizeReleaseDeadlineMin(releaseAt, startDate);
+
+            if (releaseAt) {
+                releaseAt.addEventListener('input', function () {
+                    // User edited manually; stop overwriting.
+                    releaseAt.removeAttribute('data-autofill');
+                });
+            }
+
+            if (endDate) {
+                endDate.addEventListener('change', function () {
+                    autoFillReleaseAtFromEndDate();
+                    normalizeReleaseDeadlineMin(releaseAt, startDate);
+                    scheduleAutoAvailabilityFetch();
+                });
             }
 
             if (roomsList) {
@@ -197,6 +330,7 @@
                 roomTypeSelect.addEventListener('change', function () {
                     if (modeAuto) modeAuto.checked = true;
                     applyMode('auto');
+                    scheduleAutoAvailabilityFetch();
                 });
             }
 
@@ -223,6 +357,11 @@
 
             applyRoomsFilter();
             renderCounts();
+
+            autoFillReleaseAtFromEndDate();
+            normalizeReleaseDeadlineMin(releaseAt, startDate);
+
+            scheduleAutoAvailabilityFetch();
         }
 
         document.addEventListener('DOMContentLoaded', init);
@@ -250,11 +389,119 @@
             @csrf
 
             <div class="lg:col-span-2">
-                <div class="rounded border border-border bg-background overflow-hidden">
-                    <div class="px-4 py-3 border-b border-border bg-muted/10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                <div class="rounded border border-border bg-background">
+                    <div class="px-4 py-3 border-b border-border bg-muted/10">
+                        <div class="font-medium">Stay Dates & Inventory</div>
+                    </div>
+
+                    <div class="p-4 grid gap-4">
                         <div>
-                            <div class="font-medium">Block Details</div>
+                            <div class="text-sm text-secondary-foreground required-label">Stay Dates</div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-2">
+                                <div>
+                                    <label class="text-xs text-muted-foreground">Start Date</label>
+                                    <input id="rb_start_date" type="date" class="kt-input w-full" name="start_date" required value="{{ old('start_date') }}" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-muted-foreground">End Date</label>
+                                    <input id="rb_end_date" type="date" class="kt-input w-full" name="end_date" required value="{{ old('end_date') }}" />
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="p-3 rounded bg-muted/30">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
+                                <div class="font-medium">Assign Inventory</div>
+                                <div class="flex flex-wrap gap-3 text-sm">
+                                    <label class="inline-flex items-center gap-2">
+                                        <input id="rb_mode_specific" type="radio" name="__rb_mode" value="specific" checked>
+                                        Select specific rooms
+                                    </label>
+                                    <label class="inline-flex items-center gap-2">
+                                        <input id="rb_mode_auto" type="radio" name="__rb_mode" value="auto">
+                                        Auto-assign by room type
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                            <label class="text-sm text-secondary-foreground">Specific Rooms</label>
+                                            <div class="text-xs text-muted-foreground">Selected: <span id="rb_specific_count">0</span></div>
+                                    </div>
+                                        <div class="mt-2 relative">
+                                            <button
+                                                id="rb_rooms_dropdown_btn"
+                                                type="button"
+                                                class="kt-input w-full flex items-center justify-between gap-3"
+                                                aria-haspopup="listbox"
+                                                aria-expanded="false"
+                                            >
+                                                <span id="rb_rooms_dropdown_label" class="truncate">Select rooms</span>
+                                                <span class="text-muted-foreground">▾</span>
+                                            </button>
+
+                                            <div id="rb_rooms_dropdown_panel" class="hidden absolute z-20 mt-2 w-full rounded border border-input bg-background overflow-hidden">
+                                                <div class="p-3 border-b border-border bg-muted/10">
+                                                    <div class="flex items-center gap-2">
+                                                        <input id="rb_rooms_search" type="text" class="kt-input w-full" placeholder="Search room number, type, floor..." autocomplete="off" />
+                                                        <button id="rb_rooms_clear" class="kt-btn" type="button">Clear</button>
+                                                    </div>
+                                                </div>
+
+                                                <div id="rb_rooms_list" class="max-h-[360px] overflow-auto">
+                                                @php($oldRoomIds = (array) old('room_ids', []))
+                                                @foreach($rooms as $r)
+                                                    @php($typeName = $r->roomType->name ?? 'Type')
+                                                    @php($floorName = $r->floor->name ?? '')
+                                                    @php($search = strtolower(trim(($r->room_number ?? '') . ' ' . $typeName . ' ' . $floorName)))
+                                                    <div data-room-item="1" data-search="{{ $search }}" class="px-3 py-2 border-b border-border last:border-b-0 hover:bg-accent/10">
+                                                        <label class="flex items-center justify-between gap-3 cursor-pointer">
+                                                            <div class="flex items-center gap-3 min-w-0">
+                                                                <input type="checkbox" name="room_ids[]" value="{{ $r->id }}" {{ in_array($r->id, $oldRoomIds) ? 'checked' : '' }} />
+                                                                <div class="min-w-0">
+                                                                    <div class="text-sm font-medium text-foreground truncate">Room {{ $r->room_number }}</div>
+                                                                    <div class="text-xs text-muted-foreground truncate">{{ $typeName }}@if($floorName) • {{ $floorName }}@endif</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="text-xs text-muted-foreground whitespace-nowrap">{{ ucfirst($r->status ?? 'available') }}</span>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                                <div id="rb_rooms_empty" class="hidden px-3 py-6 text-center text-sm text-muted-foreground">No rooms match your search.</div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                                <div>
+                                    <label class="text-sm text-secondary-foreground">Auto-Assign by Room Type</label>
+                                    <div class="grid grid-cols-1 gap-2">
+                                        <select id="rb_room_type_id" name="room_type_id" class="kt-input w-full">
+                                            <option value="">-- Select Room Type --</option>
+                                            @foreach($types as $t)
+                                                <option value="{{ $t->id }}" {{ old('room_type_id')==$t->id ? 'selected':'' }}>
+                                                    {{ $t->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+
+                                        <input id="rb_total_rooms" class="kt-input w-full" type="number" min="1" name="total_rooms" placeholder="Total rooms" value="{{ old('total_rooms') }}" />
+                                        <div id="rb_auto_availability_msg" class="hidden text-xs text-muted-foreground"></div>
+                                        <div class="text-xs text-muted-foreground">Rooms will be picked from available inventory for the date range.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="rounded border border-border bg-background overflow-hidden">
+                    <div class="px-4 py-3 border-b border-border bg-muted/10">
+                        <div class="font-medium">Block Details</div>
                     </div>
 
                     <div class="p-4 grid gap-4 grid-cols-1 lg:grid-cols-2">
@@ -272,119 +519,14 @@
                             </select>
                         </div>
 
-                        <div class="lg:col-span-2">
-                            <div class="text-sm text-secondary-foreground required-label">Stay Dates</div>
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <label class="text-xs text-muted-foreground">Start Date</label>
-                                    <input id="rb_start_date" type="date" class="kt-input w-full" name="start_date" required value="{{ old('start_date') }}" />
-                                </div>
-                                <div>
-                                    <label class="text-xs text-muted-foreground">End Date</label>
-                                    <input id="rb_end_date" type="date" class="kt-input w-full" name="end_date" required value="{{ old('end_date') }}" />
-                                </div>
-                            </div>
-                        </div>
-
                         <div>
                             <label class="text-sm text-secondary-foreground">Release Deadline (auto-expire)</label>
-                            <input type="datetime-local" class="kt-input w-full" name="release_at" value="{{ old('release_at') }}" />
+                            <input id="rb_release_at" type="datetime-local" class="kt-input w-full" name="release_at" value="{{ old('release_at') }}" />
                         </div>
 
                         <div>
                             <label class="text-sm text-secondary-foreground">Notes</label>
                             <textarea class="kt-input w-full" name="notes" rows="2">{{ old('notes') }}</textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="font-medium">Assign Inventory</div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="p-3 rounded bg-muted/30">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-3">
-                        <div class="font-medium">Assignment Mode</div>
-                        <div class="flex flex-wrap gap-3 text-sm">
-                            <label class="inline-flex items-center gap-2">
-                                <input id="rb_mode_specific" type="radio" name="__rb_mode" value="specific" checked>
-                                Select specific rooms
-                            </label>
-                            <label class="inline-flex items-center gap-2">
-                                <input id="rb_mode_auto" type="radio" name="__rb_mode" value="auto">
-                                Auto-assign by room type
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div>
-                            <div class="flex items-center justify-between">
-                                    <label class="text-sm text-secondary-foreground">Specific Rooms</label>
-                                    <div class="text-xs text-muted-foreground">Selected: <span id="rb_specific_count">0</span></div>
-                            </div>
-                                <div class="mt-2 relative">
-                                    <button
-                                        id="rb_rooms_dropdown_btn"
-                                        type="button"
-                                        class="kt-input w-full flex items-center justify-between gap-3"
-                                        aria-haspopup="listbox"
-                                        aria-expanded="false"
-                                    >
-                                        <span id="rb_rooms_dropdown_label" class="truncate">Select rooms</span>
-                                        <span class="text-muted-foreground">▾</span>
-                                    </button>
-
-                                    <div id="rb_rooms_dropdown_panel" class="hidden absolute z-20 mt-2 w-full rounded border border-input bg-background overflow-hidden">
-                                        <div class="p-3 border-b border-border bg-muted/10">
-                                            <div class="flex items-center gap-2">
-                                                <input id="rb_rooms_search" type="text" class="kt-input w-full" placeholder="Search room number, type, floor..." autocomplete="off" />
-                                                <button id="rb_rooms_clear" class="kt-btn" type="button">Clear</button>
-                                            </div>
-                                        </div>
-
-                                        <div id="rb_rooms_list" class="max-h-[360px] overflow-auto">
-                                        @php($oldRoomIds = (array) old('room_ids', []))
-                                        @foreach($rooms as $r)
-                                            @php($typeName = $r->roomType->name ?? 'Type')
-                                            @php($floorName = $r->floor->name ?? '')
-                                            @php($search = strtolower(trim(($r->room_number ?? '') . ' ' . $typeName . ' ' . $floorName)))
-                                            <div data-room-item="1" data-search="{{ $search }}" class="px-3 py-2 border-b border-border last:border-b-0 hover:bg-accent/10">
-                                                <label class="flex items-center justify-between gap-3 cursor-pointer">
-                                                    <div class="flex items-center gap-3 min-w-0">
-                                                        <input type="checkbox" name="room_ids[]" value="{{ $r->id }}" {{ in_array($r->id, $oldRoomIds) ? 'checked' : '' }} />
-                                                        <div class="min-w-0">
-                                                            <div class="text-sm font-medium text-foreground truncate">Room {{ $r->room_number }}</div>
-                                                            <div class="text-xs text-muted-foreground truncate">{{ $typeName }}@if($floorName) • {{ $floorName }}@endif</div>
-                                                        </div>
-                                                    </div>
-                                                    <span class="text-xs text-muted-foreground whitespace-nowrap">{{ ucfirst($r->status ?? 'available') }}</span>
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                        <div id="rb_rooms_empty" class="hidden px-3 py-6 text-center text-sm text-muted-foreground">No rooms match your search.</div>
-                                    </div>
-                                    </div>
-                                </div>
-                        </div>
-
-                        <div>
-                            <label class="text-sm text-secondary-foreground">Auto-Assign by Room Type</label>
-                            <div class="grid grid-cols-1 gap-2">
-                                <select id="rb_room_type_id" name="room_type_id" class="kt-input w-full">
-                                    <option value="">-- Select Room Type --</option>
-                                    @foreach($types as $t)
-                                        <option value="{{ $t->id }}" {{ old('room_type_id')==$t->id ? 'selected':'' }}>
-                                            {{ $t->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                <input id="rb_total_rooms" class="kt-input w-full" type="number" min="1" name="total_rooms" placeholder="Total rooms" value="{{ old('total_rooms') }}" />
-                                <div class="text-xs text-muted-foreground">Rooms will be picked from available inventory for the date range.</div>
-                            </div>
                         </div>
                     </div>
                 </div>

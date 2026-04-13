@@ -1,6 +1,112 @@
 @extends('admin.layouts.app')
 @section('title', 'Manage Room Block')
 
+@push('scripts')
+<script>
+    (function () {
+        function byId(id) { return document.getElementById(id); }
+
+        function initAssignRoomsDropdown() {
+            var btn = byId('rb_assign_rooms_btn');
+            var panel = byId('rb_assign_rooms_panel');
+            var search = byId('rb_assign_rooms_search');
+            var clearBtn = byId('rb_assign_rooms_clear');
+            var list = byId('rb_assign_rooms_list');
+            var empty = byId('rb_assign_rooms_empty');
+            var countEl = byId('rb_assign_rooms_count');
+            var labelEl = byId('rb_assign_rooms_label');
+
+            if (!btn || !panel || !list) return;
+
+            function selectedCount() {
+                return Array.from(list.querySelectorAll('input[type="checkbox"][name="room_ids[]"]:checked') || []).length;
+            }
+
+            function renderCount() {
+                var c = selectedCount();
+                if (countEl) countEl.textContent = String(c);
+                if (labelEl) labelEl.textContent = c > 0 ? (c + ' selected') : 'Select rooms';
+            }
+
+            function close() {
+                panel.classList.add('hidden');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+
+            function open() {
+                panel.classList.remove('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                if (search) search.focus();
+            }
+
+            function toggle() {
+                if (panel.classList.contains('hidden')) {
+                    open();
+                    return;
+                }
+                close();
+            }
+
+            function applyFilter() {
+                if (!search) return;
+                var q = String(search.value || '').trim().toLowerCase();
+                var items = Array.from(list.querySelectorAll('[data-room-item="1"]') || []);
+                var visible = 0;
+                items.forEach(function (el) {
+                    var hay = String(el.getAttribute('data-search') || '').toLowerCase();
+                    var show = q === '' || hay.indexOf(q) !== -1;
+                    el.classList.toggle('hidden', !show);
+                    if (show) visible++;
+                });
+                if (empty) empty.classList.toggle('hidden', visible !== 0);
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                toggle();
+            });
+
+            document.addEventListener('click', function (e) {
+                if (panel.classList.contains('hidden')) return;
+                var target = e && e.target ? e.target : null;
+                if (!target) return;
+                if (panel.contains(target) || btn.contains(target)) return;
+                close();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (panel.classList.contains('hidden')) return;
+                if ((e && e.key) !== 'Escape') return;
+                close();
+            });
+
+            list.addEventListener('change', function (e) {
+                var t = e && e.target ? e.target : null;
+                if (!t || String(t.tagName || '').toLowerCase() !== 'input') return;
+                if (t.type !== 'checkbox' || t.name !== 'room_ids[]') return;
+                renderCount();
+            });
+
+            if (search) search.addEventListener('input', applyFilter);
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    Array.from(list.querySelectorAll('input[type="checkbox"][name="room_ids[]"]') || [])
+                        .forEach(function (cb) { cb.checked = false; });
+                    renderCount();
+                });
+            }
+
+            renderCount();
+            applyFilter();
+        }
+
+        document.addEventListener('DOMContentLoaded', initAssignRoomsDropdown);
+    })();
+</script>
+@endpush
+
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="lg:col-span-2">
@@ -140,12 +246,52 @@
                     @csrf
                     <div>
                         <label class="text-sm text-secondary-foreground">Available rooms for these dates</label>
-                        <select name="room_ids[]" multiple class="kt-input w-full" size="10">
-                            @foreach($availableRooms as $r)
-                                <option value="{{ $r->id }}">{{ $r->room_number }} ({{ $r->roomType->name ?? 'Type' }})</option>
-                            @endforeach
-                        </select>
-                        <div class="text-xs text-muted-foreground mt-1">Only rooms not booked and not blocked by other active blocks are shown.</div>
+
+                        <div class="mt-2 relative">
+                            <button
+                                id="rb_assign_rooms_btn"
+                                type="button"
+                                class="kt-input w-full flex items-center justify-between gap-3"
+                                aria-haspopup="listbox"
+                                aria-expanded="false"
+                            >
+                                <span id="rb_assign_rooms_label" class="truncate">Select rooms</span>
+                                <span class="text-muted-foreground">▾</span>
+                            </button>
+
+                            <div id="rb_assign_rooms_panel" class="hidden absolute z-20 mt-2 w-full rounded border border-input bg-background overflow-hidden">
+                                <div class="p-3 border-b border-border bg-muted/10">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-xs text-muted-foreground">Selected: <span id="rb_assign_rooms_count">0</span></div>
+                                        <button id="rb_assign_rooms_clear" class="kt-btn" type="button">Clear</button>
+                                    </div>
+                                    <div class="mt-2">
+                                        <input id="rb_assign_rooms_search" type="text" class="kt-input w-full" placeholder="Search room number, type..." autocomplete="off" />
+                                    </div>
+                                </div>
+
+                                <div id="rb_assign_rooms_list" class="max-h-[360px] overflow-auto">
+                                    @foreach($availableRooms as $r)
+                                        @php($typeName = $r->roomType->name ?? 'Type')
+                                        @php($search = strtolower(trim(($r->room_number ?? '') . ' ' . $typeName)))
+                                        <div data-room-item="1" data-search="{{ $search }}" class="px-3 py-2 border-b border-border last:border-b-0 hover:bg-accent/10">
+                                            <label class="flex items-center justify-between gap-3 cursor-pointer">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <input type="checkbox" name="room_ids[]" value="{{ $r->id }}" />
+                                                    <div class="min-w-0">
+                                                        <div class="text-sm font-medium text-foreground truncate">Room {{ $r->room_number }}</div>
+                                                        <div class="text-xs text-muted-foreground truncate">{{ $typeName }}</div>
+                                                    </div>
+                                                </div>
+                                                <span class="text-xs text-muted-foreground whitespace-nowrap">{{ ucfirst($r->status ?? 'available') }}</span>
+                                            </label>
+                                        </div>
+                                    @endforeach
+
+                                    <div id="rb_assign_rooms_empty" class="hidden px-3 py-6 text-center text-sm text-muted-foreground">No rooms match your search.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button class="kt-btn" type="submit">Assign Selected</button>
                 </form>

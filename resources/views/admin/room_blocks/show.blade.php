@@ -8,7 +8,9 @@
             <div class="kt-card-header flex items-center justify-between">
                 <h3 class="kt-card-title">Block #{{ $block->id }} — {{ $block->group_name }}</h3>
                 <div class="flex gap-2">
-                    <a class="kt-btn kt-btn-primary" href="{{ route('admin.room-blocks.convert', $block->id) }}">Create Reservations</a>
+                    @if(($block->status ?? null) === 'confirmed' && empty($block->released_at))
+                        <a class="kt-btn kt-btn-primary" href="{{ route('admin.room-blocks.convert', $block->id) }}">Create Reservations</a>
+                    @endif
                     <form method="POST" action="{{ route('admin.room-blocks.release', $block->id) }}">
                         @csrf
                         <button class="kt-btn" type="submit" onclick="return confirm('Release this block inventory?')">Release</button>

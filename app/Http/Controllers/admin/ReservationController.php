@@ -723,6 +723,9 @@ class ReservationController extends Controller
             }
 
             $noteParts = [];
+            if ($ignoreBlocks) {
+                $noteParts[] = 'Admin Override: Room Blocks ignored.';
+            }
             if (!empty($data['special_requests'])) {
                 $noteParts[] = 'Special Requests: ' . trim((string) $data['special_requests']);
             }

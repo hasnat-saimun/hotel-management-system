@@ -193,6 +193,18 @@ class RoomBlockService
     public function convertToReservations(RoomBlock $block, array $roomBlockRoomIds, array $assignments = []): array
     {
         return DB::transaction(function () use ($block, $roomBlockRoomIds, $assignments) {
+            if (($block->status ?? null) !== 'confirmed') {
+                throw ValidationException::withMessages([
+                    'room_block_room_ids' => 'This room block must be confirmed before converting to reservations.',
+                ]);
+            }
+
+            if (!empty($block->released_at)) {
+                throw ValidationException::withMessages([
+                    'room_block_room_ids' => 'This room block inventory has been released and cannot be converted.',
+                ]);
+            }
+
             $ids = collect($roomBlockRoomIds)->filter()->map(fn ($v) => (int) $v)->unique()->values();
             if ($ids->isEmpty()) {
                 throw ValidationException::withMessages([

@@ -176,6 +176,16 @@ class RoomBlockController extends Controller
     {
         $block = RoomBlock::findOrFail($id);
 
+        if (($block->status ?? null) !== 'confirmed') {
+            return redirect()->route('admin.room-blocks.show', $block->id)
+                ->withErrors(['status' => 'Confirm the room block before converting it to reservations.']);
+        }
+
+        if (!empty($block->released_at)) {
+            return redirect()->route('admin.room-blocks.show', $block->id)
+                ->withErrors(['status' => 'This room block was released and cannot be converted.']);
+        }
+
         $data = $request->validate([
             'room_block_room_ids' => 'required|array|min:1',
             'room_block_room_ids.*' => 'integer|exists:room_block_rooms,id',

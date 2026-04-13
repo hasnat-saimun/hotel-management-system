@@ -20,6 +20,12 @@
             <div class="mb-4 p-3 bg-success/10 text-success rounded">{{ session('success') }}</div>
         @endif
 
+        @if(($block->status ?? null) !== 'confirmed' || !empty($block->released_at))
+            <div class="mb-4 p-3 bg-danger/10 text-danger rounded">
+                This block must be <strong>confirmed</strong> and not released before converting to reservations.
+            </div>
+        @endif
+
         <div class="mb-4 p-3 rounded bg-muted/30">
             <div class="font-medium">Dates</div>
             <div class="text-sm">{{ $block->start_date->toDateString() }} → {{ $block->end_date->toDateString() }}</div>
@@ -91,7 +97,7 @@
             </div>
 
             <div class="flex gap-2">
-                <button class="kt-btn kt-btn-primary" type="submit">Convert Selected</button>
+                <button class="kt-btn kt-btn-primary" type="submit" {{ (($block->status ?? null) !== 'confirmed' || !empty($block->released_at)) ? 'disabled' : '' }}>Convert Selected</button>
                 <a class="kt-btn" href="{{ route('admin.room-blocks.show', $block->id) }}">Back</a>
             </div>
         </form>

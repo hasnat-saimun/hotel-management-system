@@ -72,7 +72,14 @@ class RoomBlockController extends Controller
     public function show(int $id)
     {
         $block = RoomBlock::query()
-            ->with(['roomBlockRooms.room.roomType', 'roomBlockRooms.assignedGuest'])
+            ->with([
+                'roomBlockRooms.room.roomType',
+                'roomBlockRooms.assignedGuest',
+                'reservations' => function ($q) {
+                    $q->with(['guest', 'rooms', 'reservationRooms'])
+                        ->orderByDesc('id');
+                },
+            ])
             ->findOrFail($id);
 
         $availableRooms = collect();

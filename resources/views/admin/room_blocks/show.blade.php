@@ -199,6 +199,65 @@
                         <a class="kt-btn" href="{{ route('admin.room-blocks.index') }}">Back</a>
                     </div>
                 </form>
+
+                <div class="mt-6">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <div class="font-medium">Block Reservations</div>
+                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.index') }}">All Reservations</a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="kt-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="text-left p-2">Reservation</th>
+                                    <th class="text-left p-2">Guest</th>
+                                    <th class="text-left p-2">Room</th>
+                                    <th class="text-left p-2">Check-in</th>
+                                    <th class="text-left p-2">Check-out</th>
+                                    <th class="text-left p-2">Status</th>
+                                    <th class="text-right p-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse(($block->reservations ?? collect()) as $res)
+                                    <tr class="border-t">
+                                        <td class="p-2">
+                                            <div class="font-medium">#{{ $res->id }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ $res->reservation_code ?? '—' }}</div>
+                                        </td>
+                                        <td class="p-2">
+                                            {{ $res->guest?->first_name ?? '—' }} {{ $res->guest?->last_name ?? '' }}
+                                            @if(!empty($res->guest?->email))
+                                                <div class="text-xs text-muted-foreground">{{ $res->guest->email }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="p-2">
+                                            @php($rooms = $res->rooms ?? collect())
+                                            @if($rooms->isNotEmpty())
+                                                @foreach($rooms as $room)
+                                                    <div class="text-xs">{{ $room->room_number ?? '—' }}</div>
+                                                @endforeach
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td class="p-2">{{ optional($res->check_in_date)->toDateString() ?? '—' }}</td>
+                                        <td class="p-2">{{ optional($res->check_out_date)->toDateString() ?? '—' }}</td>
+                                        <td class="p-2">{{ ucfirst(str_replace('_',' ', (string) ($res->status ?? 'pending'))) }}</td>
+                                        <td class="p-2 text-right">
+                                            <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $res->id) }}">Details</a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td class="p-3 text-center" colspan="7">No reservations created from this block yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

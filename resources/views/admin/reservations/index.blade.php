@@ -39,6 +39,7 @@
                             <th class="px-4 py-3 text-left">Room</th>
                             <th class="px-4 py-3 text-left">Check-in</th>
                             <th class="px-4 py-3 text-left">Check-out</th>
+                            <th class="px-4 py-3 text-left">Source</th>
                             <th class="px-4 py-3 text-left">Status</th>
                             <th class="px-4 py-3 text-left">Actions</th>
                         </tr>
@@ -59,7 +60,7 @@
                             </td>
                             <td class="px-4 py-3 align-top">{{ $r->check_in_date ? \Carbon\Carbon::parse($r->check_in_date)->format('M d, Y') : '-' }}</td>
                             <td class="px-4 py-3 align-top">{{ $r->check_out_date ? \Carbon\Carbon::parse($r->check_out_date)->format('M d, Y') : '-' }}</td>
-                            
+                            <td class="px-4 py-3 align-top">{{ $r->channel ?? '-' }}</td>
                             <td class="px-4 py-3 align-top">
                                 @php
                                     $status = strtolower($r->status ?? 'pending');
@@ -100,7 +101,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="7" class="p-6 text-center text-secondary-foreground">No reservations found.</td></tr>
+                        <tr><td colspan="8" class="p-6 text-center text-secondary-foreground">No reservations found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

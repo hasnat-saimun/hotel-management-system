@@ -14,6 +14,7 @@ use App\Models\ReservationRoom;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\RoomBlockRoom;
+use App\Models\RoomBlock;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -170,6 +171,25 @@ class ReservationController extends Controller
             $roomIds = $reservation->rooms->pluck('id')->filter()->values();
             if ($roomIds->isNotEmpty()) {
                 Room::whereIn('id', $roomIds)->update(['status' => 'available']);
+            }
+
+            // If this reservation was created by converting a room block, return inventory to the block (if still active).
+            $blockRoom = RoomBlockRoom::query()
+                ->where('reservation_id', $reservation->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($blockRoom) {
+                $block = RoomBlock::query()->whereKey($blockRoom->room_block_id)->lockForUpdate()->first();
+
+                $blockIsActive = $block
+                    && ($block->status ?? null) !== 'cancelled'
+                    && empty($block->released_at)
+                    && (empty($block->release_at) || $block->release_at->greaterThan(now()));
+
+                $blockRoom->reservation_id = null;
+                $blockRoom->status = $blockIsActive ? 'blocked' : 'released';
+                $blockRoom->save();
             }
         });
 

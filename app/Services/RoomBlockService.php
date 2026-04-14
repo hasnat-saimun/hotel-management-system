@@ -158,8 +158,20 @@ class RoomBlockService
     public function releaseBlock(RoomBlock $block): void
     {
         DB::transaction(function () use ($block) {
-            $block->released_at = now();
-            $block->save();
+            $block = RoomBlock::query()->whereKey($block->id)->lockForUpdate()->firstOrFail();
+
+            if (empty($block->released_at)) {
+                $block->released_at = now();
+                $block->save();
+            }
+
+            RoomBlockRoom::query()
+                ->where('room_block_id', $block->id)
+                ->where('status', 'blocked')
+                ->update([
+                    'status' => 'released',
+                    'reservation_id' => null,
+                ]);
         });
     }
 
@@ -321,6 +333,7 @@ class RoomBlockService
                 ]);
 
                 $blockRoom->assigned_guest_id = $guest->id;
+                $blockRoom->reservation_id = $reservation->id;
                 $blockRoom->status = 'converted';
                 $blockRoom->save();
 

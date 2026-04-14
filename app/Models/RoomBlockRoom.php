@@ -16,6 +16,7 @@ class RoomBlockRoom extends Model
         'room_id',
         'room_type_id',
         'assigned_guest_id',
+        'reservation_id',
         'status',
     ];
 
@@ -37,5 +38,10 @@ class RoomBlockRoom extends Model
     public function assignedGuest()
     {
         return $this->belongsTo(Guest::class, 'assigned_guest_id');
+    }
+
+    public function reservation()
+    {
+        return $this->belongsTo(Reservation::class, 'reservation_id');
     }
 }

@@ -20,9 +20,11 @@
             <div class="mb-4 p-3 bg-success/10 text-success rounded">{{ session('success') }}</div>
         @endif
 
-        @if(($block->status ?? null) !== 'confirmed' || !empty($block->released_at))
+        @php($blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now()))
+
+        @if(($block->status ?? null) !== 'confirmed' || !empty($block->released_at) || $blockExpired)
             <div class="mb-4 p-3 bg-danger/10 text-danger rounded">
-                This block must be <strong>confirmed</strong> and not released before converting to reservations.
+                This block must be <strong>confirmed</strong>, not released, and not expired (release deadline not passed) before converting to reservations.
             </div>
         @endif
 
@@ -97,7 +99,7 @@
             </div>
 
             <div class="flex gap-2">
-                <button class="kt-btn kt-btn-primary" type="submit" {{ (($block->status ?? null) !== 'confirmed' || !empty($block->released_at)) ? 'disabled' : '' }}>Convert Selected</button>
+                <button class="kt-btn kt-btn-primary" type="submit" {{ (($block->status ?? null) !== 'confirmed' || !empty($block->released_at) || $blockExpired) ? 'disabled' : '' }}>Convert Selected</button>
                 <a class="kt-btn" href="{{ route('admin.room-blocks.show', $block->id) }}">Back</a>
             </div>
         </form>

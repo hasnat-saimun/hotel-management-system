@@ -96,6 +96,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('{id}/release', [RoomBlockController::class, 'releaseBlock'])->name('release');
 
+            Route::post('{id}/checkin-all-confirmed', [RoomBlockController::class, 'checkinAllConfirmed'])->name('checkin-all-confirmed');
+            Route::post('{id}/checkin-selected', [RoomBlockController::class, 'checkinSelected'])->name('checkin-selected');
+
             Route::get('{id}/convert', [RoomBlockController::class, 'convert'])->name('convert');
             Route::post('{id}/convert', [RoomBlockController::class, 'convertToReservation'])->name('convert.store');
         });

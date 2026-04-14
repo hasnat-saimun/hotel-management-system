@@ -114,7 +114,9 @@
             <div class="kt-card-header flex items-center justify-between">
                 <h3 class="kt-card-title">Block #{{ $block->id }} — {{ $block->group_name }}</h3>
                 <div class="flex gap-2">
-                    @if(($block->status ?? null) === 'confirmed' && empty($block->released_at))
+                    @php($blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now()))
+
+                    @if(($block->status ?? null) === 'confirmed' && empty($block->released_at) && !$blockExpired)
                         <a class="kt-btn kt-btn-primary" href="{{ route('admin.room-blocks.convert', $block->id) }}">Create Reservations</a>
                     @endif
                     <form method="POST" action="{{ route('admin.room-blocks.release', $block->id) }}">
@@ -203,13 +205,22 @@
                 <div class="mt-6">
                     <div class="flex items-center justify-between gap-3 mb-2">
                         <div class="font-medium">Block Reservations</div>
-                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.index') }}">All Reservations</a>
+                        <div class="flex gap-2">
+                            <form method="POST" action="{{ route('admin.room-blocks.checkin-all-confirmed', $block->id) }}">
+                                @csrf
+                                <button class="kt-btn kt-btn-sm" type="submit" onclick="return confirm('Check-in all CONFIRMED reservations in this block?')">Check-in All Confirmed</button>
+                            </form>
+                            <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.index') }}">All Reservations</a>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="kt-table w-full">
+                        <form method="POST" action="{{ route('admin.room-blocks.checkin-selected', $block->id) }}">
+                            @csrf
+                            <table class="kt-table w-full">
                             <thead>
                                 <tr>
+                                    <th class="p-2"></th>
                                     <th class="text-left p-2">Reservation</th>
                                     <th class="text-left p-2">Guest</th>
                                     <th class="text-left p-2">Room</th>
@@ -222,6 +233,13 @@
                             <tbody>
                                 @forelse(($block->reservations ?? collect()) as $res)
                                     <tr class="border-t">
+                                        <td class="p-2">
+                                            @if(($res->status ?? null) === 'confirmed')
+                                                <input type="checkbox" name="reservation_ids[]" value="{{ $res->id }}" />
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
                                         <td class="p-2">
                                             <div class="font-medium">#{{ $res->id }}</div>
                                             <div class="text-xs text-muted-foreground">{{ $res->reservation_code ?? '—' }}</div>
@@ -255,7 +273,14 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-                        </table>
+                            </table>
+
+                            @if(($block->reservations ?? collect())->isNotEmpty())
+                                <div class="mt-3 flex gap-2">
+                                    <button class="kt-btn kt-btn-sm" type="submit" onclick="return confirm('Check-in selected CONFIRMED reservations?')">Check-in Selected</button>
+                                </div>
+                            @endif
+                        </form>
                     </div>
                 </div>
             </div>

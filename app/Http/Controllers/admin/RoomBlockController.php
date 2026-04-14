@@ -8,6 +8,8 @@ use App\Models\Room;
 use App\Models\RoomBlock;
 use App\Models\RoomBlockRoom;
 use App\Models\RoomType;
+use App\Models\Reservation;
+use App\Models\ReservationRoom;
 use App\Services\RoomAvailabilityService;
 use App\Services\RoomBlockService;
 use Illuminate\Http\Request;
@@ -189,6 +191,105 @@ class RoomBlockController extends Controller
             ->with('success', 'Room block released (inventory returned).');
     }
 
+    public function checkinAllConfirmed(int $id)
+    {
+        $block = RoomBlock::findOrFail($id);
+
+        $checkedIn = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($block, &$checkedIn, &$skipped) {
+            $reservationIds = Reservation::query()
+                ->where('room_block_id', $block->id)
+                ->orderBy('id')
+                ->pluck('id');
+
+            foreach ($reservationIds as $reservationId) {
+                $result = $this->checkinReservationById((int) $reservationId);
+                if ($result === 'checked_in') {
+                    $checkedIn++;
+                } else {
+                    $skipped++;
+                }
+            }
+        });
+
+        return redirect()->route('admin.room-blocks.show', $block->id)
+            ->with('success', "Checked in {$checkedIn} reservation(s). Skipped {$skipped}.");
+    }
+
+    public function checkinSelected(Request $request, int $id)
+    {
+        $block = RoomBlock::findOrFail($id);
+
+        $data = $request->validate([
+            'reservation_ids' => 'required|array|min:1',
+            'reservation_ids.*' => 'integer|exists:reservations,id',
+        ]);
+
+        $ids = collect($data['reservation_ids'])->map(fn ($v) => (int) $v)->unique()->values();
+
+        $allowedIds = Reservation::query()
+            ->where('room_block_id', $block->id)
+            ->whereIn('id', $ids)
+            ->pluck('id');
+
+        $checkedIn = 0;
+        $skipped = 0;
+
+        DB::transaction(function () use ($allowedIds, &$checkedIn, &$skipped) {
+            foreach ($allowedIds as $reservationId) {
+                $result = $this->checkinReservationById((int) $reservationId);
+                if ($result === 'checked_in') {
+                    $checkedIn++;
+                } else {
+                    $skipped++;
+                }
+            }
+        });
+
+        $missingCount = (int) ($ids->count() - $allowedIds->count());
+
+        $parts = ["Checked in {$checkedIn} reservation(s).", "Skipped {$skipped}. "];
+        if ($missingCount > 0) {
+            $parts[] = "Ignored {$missingCount} invalid selection(s).";
+        }
+
+        return redirect()->route('admin.room-blocks.show', $block->id)
+            ->with('success', trim(implode(' ', $parts)));
+    }
+
+    private function checkinReservationById(int $reservationId): string
+    {
+        $reservation = Reservation::query()->whereKey($reservationId)->lockForUpdate()->first();
+        if (!$reservation) {
+            return 'skipped';
+        }
+
+        if (($reservation->status ?? null) !== 'confirmed') {
+            return 'skipped';
+        }
+
+        $reservation->status = 'checked_in';
+        $reservation->save();
+
+        ReservationRoom::query()
+            ->where('reservation_id', $reservation->id)
+            ->update(['status' => 'occupied']);
+
+        $roomIds = ReservationRoom::query()
+            ->where('reservation_id', $reservation->id)
+            ->pluck('room_id')
+            ->filter()
+            ->values();
+
+        if ($roomIds->isNotEmpty()) {
+            Room::query()->whereIn('id', $roomIds)->update(['status' => 'occupied']);
+        }
+
+        return 'checked_in';
+    }
+
     public function convert(int $id)
     {
         $block = RoomBlock::query()
@@ -215,6 +316,11 @@ class RoomBlockController extends Controller
         if (!empty($block->released_at)) {
             return redirect()->route('admin.room-blocks.show', $block->id)
                 ->withErrors(['status' => 'This room block was released and cannot be converted.']);
+        }
+
+        if (!empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now())) {
+            return redirect()->route('admin.room-blocks.show', $block->id)
+                ->withErrors(['status' => 'This room block has expired (release deadline passed) and cannot be converted.']);
         }
 
         $data = $request->validate([

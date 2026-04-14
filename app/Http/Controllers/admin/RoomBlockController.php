@@ -112,6 +112,12 @@ class RoomBlockController extends Controller
         try {
             $availableRooms = Room::query()
                 ->with('roomType')
+                ->whereNotIn('rooms.id', function ($q) use ($block) {
+                    $q->select('room_id')
+                        ->from('room_block_rooms')
+                        ->where('room_block_id', $block->id)
+                        ->whereNotNull('room_id');
+                })
                 ->orderBy('room_number');
             $this->availability->constrainToAvailableRooms(
                 $availableRooms,
@@ -134,6 +140,12 @@ class RoomBlockController extends Controller
     public function assignRooms(Request $request, int $id)
     {
         $block = RoomBlock::findOrFail($id);
+
+        $blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now());
+        if (($block->status ?? null) === 'cancelled' || !empty($block->released_at) || $blockExpired) {
+            return redirect()->route('admin.room-blocks.show', $block->id)
+                ->withErrors(['room_ids' => 'This room block is cancelled/released/expired and cannot accept new room assignments.']);
+        }
 
         $data = $request->validate([
             'room_ids' => 'required|array|min:1',

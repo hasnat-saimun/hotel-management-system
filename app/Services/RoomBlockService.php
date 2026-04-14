@@ -79,6 +79,15 @@ class RoomBlockService
         $endDate = $block->end_date->toDateString();
 
         DB::transaction(function () use ($block, $roomIds, $startDate, $endDate) {
+            $block = RoomBlock::query()->whereKey($block->id)->lockForUpdate()->firstOrFail();
+
+            $blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now());
+            if (($block->status ?? null) === 'cancelled' || !empty($block->released_at) || $blockExpired) {
+                throw ValidationException::withMessages([
+                    'room_ids' => 'This room block is cancelled/released/expired and cannot accept new room assignments.',
+                ]);
+            }
+
             $roomIds = collect($roomIds)->filter()->map(fn ($v) => (int) $v)->unique()->values();
             if ($roomIds->isEmpty()) {
                 return;

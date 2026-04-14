@@ -162,6 +162,12 @@ class RoomBlockController extends Controller
     {
         $block = RoomBlock::findOrFail($id);
 
+        $blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now());
+        if (($block->status ?? null) === 'cancelled' || !empty($block->released_at) || $blockExpired) {
+            return redirect()->route('admin.room-blocks.show', $block->id)
+                ->withErrors(['room_block_room_ids' => 'This room block is cancelled/released/expired and cannot change room assignments.']);
+        }
+
         $data = $request->validate([
             'room_block_room_ids' => 'required|array|min:1',
             'room_block_room_ids.*' => 'integer|exists:room_block_rooms,id',

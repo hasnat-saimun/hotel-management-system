@@ -108,15 +108,16 @@
 @endpush
 
 @section('content')
+@php($blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now()))
+@php($inventoryLocked = (($block->status ?? null) === 'cancelled') || !empty($block->released_at) || $blockExpired)
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="lg:col-span-2">
         <div class="kt-card">
             <div class="kt-card-header flex items-center justify-between">
                 <h3 class="kt-card-title">Block #{{ $block->id }} — {{ $block->group_name }}</h3>
                 <div class="flex gap-2">
-                    @php($blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now()))
-
-                    @if(($block->status ?? null) === 'confirmed' && empty($block->released_at) && !$blockExpired)
+                    @if(($block->status ?? null) === 'confirmed' && !$inventoryLocked)
                         <a class="kt-btn kt-btn-primary" href="{{ route('admin.room-blocks.convert', $block->id) }}">Create Reservations</a>
                     @endif
                     <form method="POST" action="{{ route('admin.room-blocks.release', $block->id) }}">
@@ -155,6 +156,12 @@
                     <div class="font-medium">{{ $block->roomBlockRooms->where('status','blocked')->count() }} blocked, {{ $block->roomBlockRooms->where('status','converted')->count() }} converted</div>
                 </div>
 
+                @if($inventoryLocked)
+                    <div class="mb-4 p-3 bg-muted/30 text-sm text-muted-foreground rounded">
+                        This block is cancelled/released/expired. Room assignments are locked (read-only).
+                    </div>
+                @endif
+
                 <div class="font-medium mb-2">Assigned Rooms</div>
 
                 <form method="POST" action="{{ route('admin.room-blocks.unassign-rooms', $block->id) }}">
@@ -174,7 +181,7 @@
                                 @forelse($block->roomBlockRooms as $r)
                                     <tr class="border-t">
                                         <td class="p-2">
-                                            @if($r->status !== 'converted')
+                                            @if(!$inventoryLocked && $r->status !== 'converted')
                                                 <input type="checkbox" name="room_block_room_ids[]" value="{{ $r->id }}">
                                             @endif
                                         </td>
@@ -197,7 +204,7 @@
                     </div>
 
                     <div class="mt-3 flex gap-2">
-                        <button class="kt-btn" type="submit" onclick="return confirm('Unassign selected rooms?')">Unassign Selected</button>
+                        <button class="kt-btn" type="submit" onclick="return confirm('Unassign selected rooms?')" {{ $inventoryLocked ? 'disabled' : '' }}>Unassign Selected</button>
                         <a class="kt-btn" href="{{ route('admin.room-blocks.index') }}">Back</a>
                     </div>
                 </form>
@@ -321,6 +328,7 @@
             </div>
         </div>
 
+        @if(!$inventoryLocked)
         <div class="kt-card">
             <div class="kt-card-header">
                 <h3 class="kt-card-title">Assign More Rooms</h3>
@@ -381,6 +389,7 @@
                 </form>
             </div>
         </div>
+        @endif
     </div>
 </div>
 @endsection

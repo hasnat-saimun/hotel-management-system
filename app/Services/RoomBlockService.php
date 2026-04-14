@@ -137,6 +137,15 @@ class RoomBlockService
     public function unassignRooms(RoomBlock $block, array $roomBlockRoomIds): void
     {
         DB::transaction(function () use ($block, $roomBlockRoomIds) {
+            $block = RoomBlock::query()->whereKey($block->id)->lockForUpdate()->firstOrFail();
+
+            $blockExpired = !empty($block->release_at) && $block->release_at->lessThanOrEqualTo(now());
+            if (($block->status ?? null) === 'cancelled' || !empty($block->released_at) || $blockExpired) {
+                throw ValidationException::withMessages([
+                    'room_block_room_ids' => 'This room block is cancelled/released/expired and cannot change room assignments.',
+                ]);
+            }
+
             $ids = collect($roomBlockRoomIds)->filter()->map(fn ($v) => (int) $v)->unique()->values();
             if ($ids->isEmpty()) {
                 return;

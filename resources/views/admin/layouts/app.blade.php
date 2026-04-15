@@ -268,6 +268,54 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="kt-menu-item {{ (request()->routeIs('admin.guests.*') || request()->routeIs('admin.companies.*') || request()->routeIs('admin.travel-agents.*') || request()->routeIs('admin.loyalties.*') || request()->routeIs('admin.blacklists.*')) ? 'here show' : '' }}"
+                                data-kt-menu-item-toggle="accordion"
+                                data-kt-menu-item-trigger="click"
+                            >
+                                <div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]" tabindex="0">
+                                    <span class="kt-menu-icon items-start text-muted-foreground w-[20px]"><i class="ki-filled ki-user text-lg"></i></span>
+                                    <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">Guests &amp; CRM</span>
+                                    <span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]"><span class="inline-flex kt-menu-item-show:hidden"><i class="ki-filled ki-plus text-[11px]"></i></span><span class="hidden kt-menu-item-show:inline-flex"><i class="ki-filled ki-minus text-[11px]"></i></span></span>
+                                </div>
+
+                                <div class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.guests.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.guests.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Guests</span>
+                                        </a>
+                                    </div>
+
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.companies.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.companies.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Companies</span>
+                                        </a>
+                                    </div>
+
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.travel-agents.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.travel-agents.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Travel Agents</span>
+                                        </a>
+                                    </div>
+
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.loyalties.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.loyalties.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Loyalty Program</span>
+                                        </a>
+                                    </div>
+
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.blacklists.*') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.blacklists.index') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Blacklist</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                        
                         </div>
                     </div>
@@ -285,7 +333,8 @@
                         <div class="flex gap-2.5 lg:hidden items-center -ms-1">
                             <a class="shrink-0" href="index.html"
                                 ><img
-                                    class="max-h-[25px] w-full"
+                                    class="max-h-[25px] w-
+                                    [100px]"
                                     src="{{ asset('/public/hotel-management-admin/') }}/media/app/mini-logo.svg"
                             /></a>
                             <div class="flex items-center">

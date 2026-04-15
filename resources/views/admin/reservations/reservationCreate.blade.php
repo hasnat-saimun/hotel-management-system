@@ -148,7 +148,10 @@
                     </div>
 
                     <div class="lg:col-span-2">
-                        <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
+                            <button type="button" class="kt-btn kt-btn-sm" data-kt-modal-toggle="#quick_add_guest_modal">Quick Add Guest</button>
+                        </div>
                     </div>
 
                     <div>
@@ -226,4 +229,85 @@
         </div>
     </div>
 </div>
+
+@include('admin.guests._quick_add_modal')
+
+@push('scripts')
+<script>
+(function(){
+    var form = document.getElementById('quick_add_guest_form');
+    var errBox = document.getElementById('quick_add_guest_error');
+    if (!form) return;
+
+    function showError(html){
+        if (!errBox) return;
+        errBox.innerHTML = html;
+        errBox.style.display = 'block';
+    }
+
+    function clearError(){
+        if (!errBox) return;
+        errBox.innerHTML = '';
+        errBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        clearError();
+
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            var resp = await fetch(@json(route('admin.api.guests.store')), {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': @json(csrf_token()),
+                    'Accept': 'application/json'
+                },
+                body: new FormData(form)
+            });
+
+            var json = await resp.json().catch(function(){ return null; });
+
+            if (!resp.ok) {
+                if (json && json.errors) {
+                    var msgs = Object.values(json.errors).flat().map(function(m){ return '<div>' + m + '</div>'; }).join('');
+                    showError(msgs || 'Validation error');
+                } else {
+                    showError('Unable to create guest.');
+                }
+                return;
+            }
+
+            if (!json || !json.success || !json.guest) {
+                showError('Unexpected response from server.');
+                return;
+            }
+
+            var g = json.guest;
+            var setVal = function(name, val){
+                var el = document.querySelector('[name="' + name + '"]');
+                if (el) el.value = val || '';
+            };
+
+            setVal('guest_first_name', g.first_name);
+            setVal('guest_last_name', g.last_name);
+            setVal('guest_email', g.email);
+            setVal('guest_phone', g.phone);
+            setVal('guest_address', g.address);
+
+            // Close modal by triggering any dismiss button.
+            var dismiss = document.querySelector('#quick_add_guest_modal [data-kt-modal-dismiss="true"]');
+            if (dismiss) dismiss.click();
+            form.reset();
+        } catch (err) {
+            showError('Network error.');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+})();
+</script>
+@endpush
 @endsection

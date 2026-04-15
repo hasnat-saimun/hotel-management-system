@@ -5,6 +5,11 @@ use App\Http\Controllers\admin\loginController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\ReservationController;
 use App\Http\Controllers\admin\RoomBlockController;
+use App\Http\Controllers\admin\GuestController;
+use App\Http\Controllers\admin\CompanyController;
+use App\Http\Controllers\admin\TravelAgentController;
+use App\Http\Controllers\admin\LoyaltyController;
+use App\Http\Controllers\admin\BlacklistController;
 use Illuminate\Http\Request;
 
 
@@ -101,6 +106,57 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::get('{id}/convert', [RoomBlockController::class, 'convert'])->name('convert');
             Route::post('{id}/convert', [RoomBlockController::class, 'convertToReservation'])->name('convert.store');
+        });
+
+        // Guests & CRM
+        Route::prefix('guests')->name('guests.')->group(function () {
+            Route::get('/', [GuestController::class, 'index'])->name('index');
+            Route::get('create', [GuestController::class, 'create'])->name('create');
+            Route::post('/', [GuestController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [GuestController::class, 'edit'])->name('edit');
+            Route::put('{id}', [GuestController::class, 'update'])->name('update');
+            Route::delete('{id}', [GuestController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('companies')->name('companies.')->group(function () {
+            Route::get('/', [CompanyController::class, 'index'])->name('index');
+            Route::get('create', [CompanyController::class, 'create'])->name('create');
+            Route::post('/', [CompanyController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [CompanyController::class, 'edit'])->name('edit');
+            Route::put('{id}', [CompanyController::class, 'update'])->name('update');
+            Route::delete('{id}', [CompanyController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('travel-agents')->name('travel-agents.')->group(function () {
+            Route::get('/', [TravelAgentController::class, 'index'])->name('index');
+            Route::get('create', [TravelAgentController::class, 'create'])->name('create');
+            Route::post('/', [TravelAgentController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [TravelAgentController::class, 'edit'])->name('edit');
+            Route::put('{id}', [TravelAgentController::class, 'update'])->name('update');
+            Route::delete('{id}', [TravelAgentController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('loyalties')->name('loyalties.')->group(function () {
+            Route::get('/', [LoyaltyController::class, 'index'])->name('index');
+            Route::get('create', [LoyaltyController::class, 'create'])->name('create');
+            Route::post('/', [LoyaltyController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [LoyaltyController::class, 'edit'])->name('edit');
+            Route::put('{id}', [LoyaltyController::class, 'update'])->name('update');
+            Route::delete('{id}', [LoyaltyController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('blacklists')->name('blacklists.')->group(function () {
+            Route::get('/', [BlacklistController::class, 'index'])->name('index');
+            Route::get('create', [BlacklistController::class, 'create'])->name('create');
+            Route::post('/', [BlacklistController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [BlacklistController::class, 'edit'])->name('edit');
+            Route::put('{id}', [BlacklistController::class, 'update'])->name('update');
+            Route::delete('{id}', [BlacklistController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::get('guests/search', [GuestController::class, 'apiSearch'])->name('guests.search');
+            Route::post('guests', [GuestController::class, 'storeAjax'])->name('guests.store');
         });
 
     // });

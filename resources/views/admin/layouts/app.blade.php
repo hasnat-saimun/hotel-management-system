@@ -186,14 +186,14 @@
                                             <circle cx="16" cy="8" r="1" fill="currentColor" />
                                         </svg>
                                     </span>
-                                    <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">Front Desk</span>
+                                    <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">Reservation </span>
                                     <span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]"><span class="inline-flex kt-menu-item-show:hidden"><i class="ki-filled ki-plus text-[11px]"></i></span><span class="hidden kt-menu-item-show:inline-flex"><i class="ki-filled ki-minus text-[11px]"></i></span></span>
                                 </div>
                                     <div class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
                                     <div class="kt-menu-item {{ request()->routeIs('admin.reservations.index') || request()->routeIs('admin.reservations.show') || request()->routeIs('admin.reservations.checkin') || request()->routeIs('admin.reservations.checkout') ? 'active' : '' }}">
                                         <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.reservations.index') }}" tabindex="0">
                                             <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
-                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Reservations</span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground"> Reservations List</span>
                                         </a>
                                     </div>
                                     <div class="kt-menu-item {{ request()->routeIs('admin.reservations.calendar') ? 'active' : '' }}">

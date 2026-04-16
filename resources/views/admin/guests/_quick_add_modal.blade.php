@@ -36,6 +36,99 @@
                     <textarea class="kt-input w-full" name="address" rows="2"></textarea>
                 </div>
 
+                <div>
+                    <label class="text-sm text-secondary-foreground">Nationality</label>
+                    <input type="text" class="kt-input w-full" name="nationality" />
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">Date of birth</label>
+                    <input type="date" class="kt-input w-full" name="date_of_birth" />
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">Gender</label>
+                    <select class="kt-input w-full" name="gender">
+                        <option value="">Select</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">ID Type</label>
+                    <select class="kt-input w-full" name="id_type">
+                        <option value="">Select</option>
+                        <option value="passport">Passport</option>
+                        <option value="driver_license">Driver license</option>
+                        <option value="national_id">National ID</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">ID Number</label>
+                    <input type="text" class="kt-input w-full" name="id_number" />
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">Company</label>
+                    <select class="kt-input w-full" name="company_id">
+                        <option value="">None</option>
+                        @foreach(($companies ?? collect()) as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">Travel agent</label>
+                    <select class="kt-input w-full" name="travel_agent_id">
+                        <option value="">None</option>
+                        @foreach(($travelAgents ?? collect()) as $a)
+                            <option value="{{ $a->id }}">{{ $a->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary-foreground">Loyalty</label>
+                    <select class="kt-input w-full" name="loyalty_id">
+                        <option value="">None</option>
+                        @foreach(($loyalties ?? collect()) as $l)
+                            <option value="{{ $l->id }}">{{ $l->level_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="lg:col-span-2 flex items-center gap-6">
+                    <label class="inline-flex items-center gap-2 text-sm text-secondary-foreground">
+                        <input type="checkbox" name="vip" value="1" /> VIP
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm text-secondary-foreground">
+                        <input type="checkbox" id="quick_blacklisted_toggle" name="blacklisted" value="1" /> Blacklisted
+                    </label>
+                </div>
+
+                <div class="lg:col-span-2" id="quick_blacklist_fields" style="display:none;">
+                    <div class="grid gap-3 grid-cols-1 lg:grid-cols-2">
+                        <div class="lg:col-span-2">
+                            <label class="text-sm text-secondary-foreground required-label">Blacklist reason</label>
+                            <textarea class="kt-input w-full" name="blacklist_reason" rows="2"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-sm text-secondary-foreground">Blocked until</label>
+                            <input type="date" class="kt-input w-full" name="blacklist_blocked_until" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <label class="text-sm text-secondary-foreground">Notes</label>
+                    <textarea class="kt-input w-full" name="notes" rows="3"></textarea>
+                </div>
+
                 <div class="lg:col-span-2 flex gap-2 justify-end">
                     <button class="kt-btn" type="button" data-kt-modal-dismiss="true">Cancel</button>
                     <button class="kt-btn kt-btn-primary" type="submit">Create Guest</button>

@@ -10,6 +10,9 @@ use Carbon\Carbon;
 use App\Models\Room;
 use App\Models\Reservation;
 use App\Models\Guest;
+use App\Models\Company;
+use App\Models\TravelAgent;
+use App\Models\Loyalty;
 use App\Models\ReservationRoom;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -534,11 +537,24 @@ class ReservationController extends Controller
             })
             ->values();
 
+        $guests = Guest::query()
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get(['id', 'first_name', 'last_name', 'id_number', 'email', 'phone', 'id_type']);
+
+        $companies = Company::query()->orderBy('name')->get(['id', 'name']);
+        $travelAgents = TravelAgent::query()->orderBy('name')->get(['id', 'name']);
+        $loyalties = Loyalty::query()->orderBy('points_required')->get(['id', 'level_name']);
+
         return view('admin.reservations.reservationCreate', [
             'rooms' => $rooms,
             'roomId' => $roomId,
             'selectedDates' => $selectedDates,
             'dateSegments' => $dateSegments,
+            'guests' => $guests,
+            'companies' => $companies,
+            'travelAgents' => $travelAgents,
+            'loyalties' => $loyalties,
         ]);
     }
 
@@ -547,13 +563,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
             'dates' => ['required', 'string', 'max:20000'],
-            'guest_first_name' => ['required', 'string', 'max:255'],
-            'guest_last_name' => ['required', 'string', 'max:255'],
-            'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['nullable', 'string', 'max:50'],
-            'guest_address' => ['nullable', 'string', 'max:2000'],
-            'guest_id_type' => ['nullable', 'in:passport,driver_license,national_id,other'],
-            'guest_id_number' => ['nullable', 'string', 'max:255'],
+            'guest_id' => ['required', 'integer', 'exists:guests,id'],
             'adults' => ['nullable', 'integer', 'min:1'],
             'children' => ['nullable', 'integer', 'min:0'],
             'special_requests' => ['nullable', 'string', 'max:4000'],
@@ -562,6 +572,7 @@ class ReservationController extends Controller
         ]);
 
         $room = Room::query()->with(['roomType'])->findOrFail((int) $data['room_id']);
+        $guest = Guest::query()->findOrFail((int) $data['guest_id']);
         $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
 
         $segments = [];
@@ -676,7 +687,7 @@ class ReservationController extends Controller
         $ignoreBlocks = (bool) ($data['ignore_blocks'] ?? false);
 
         try {
-            $reservations = DB::transaction(function () use ($data, $room, $segments, $adults, $children, $nightlyRate, $ignoreBlocks, $activeReservationStatuses) {
+            $reservations = DB::transaction(function () use ($data, $room, $guest, $segments, $adults, $children, $nightlyRate, $ignoreBlocks, $activeReservationStatuses) {
                 // Lock the room row to serialize concurrent bookings for the same room
                 $lockedRoom = Room::query()->whereKey($room->id)->lockForUpdate()->first();
                 if (!$lockedRoom) {
@@ -721,38 +732,17 @@ class ReservationController extends Controller
                     }
                 }
 
-            $guest = Guest::query()->where('email', $data['guest_email'])->first();
-            if ($guest) {
-                $guest->first_name = $data['guest_first_name'];
-                $guest->last_name = $data['guest_last_name'];
-                $guest->phone = $data['guest_phone'] ?? $guest->phone;
-                $guest->address = array_key_exists('guest_address', $data) ? ($data['guest_address'] ?? null) : $guest->address;
-                $guest->id_type = array_key_exists('guest_id_type', $data) ? ($data['guest_id_type'] ?? null) : $guest->id_type;
-                $guest->id_number = array_key_exists('guest_id_number', $data) ? ($data['guest_id_number'] ?? null) : $guest->id_number;
-                $guest->save();
-            } else {
-                $guest = Guest::create([
-                    'first_name' => $data['guest_first_name'],
-                    'last_name' => $data['guest_last_name'],
-                    'email' => $data['guest_email'],
-                    'phone' => $data['guest_phone'] ?? null,
-                    'address' => $data['guest_address'] ?? null,
-                    'id_type' => $data['guest_id_type'] ?? null,
-                    'id_number' => $data['guest_id_number'] ?? null,
-                ]);
-            }
-
-            $noteParts = [];
-            if ($ignoreBlocks) {
-                $noteParts[] = 'Admin Override: Room Blocks ignored.';
-            }
-            if (!empty($data['special_requests'])) {
-                $noteParts[] = 'Special Requests: ' . trim((string) $data['special_requests']);
-            }
-            if (!empty($data['note'])) {
-                $noteParts[] = trim((string) $data['note']);
-            }
-            $finalNote = empty($noteParts) ? null : implode("\n\n", $noteParts);
+                $noteParts = [];
+                if ($ignoreBlocks) {
+                    $noteParts[] = 'Admin Override: Room Blocks ignored.';
+                }
+                if (!empty($data['special_requests'])) {
+                    $noteParts[] = 'Special Requests: ' . trim((string) $data['special_requests']);
+                }
+                if (!empty($data['note'])) {
+                    $noteParts[] = trim((string) $data['note']);
+                }
+                $finalNote = empty($noteParts) ? null : implode("\n\n", $noteParts);
 
             $created = [];
             foreach ($segments as $seg) {

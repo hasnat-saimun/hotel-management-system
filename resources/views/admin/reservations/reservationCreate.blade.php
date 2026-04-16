@@ -123,7 +123,7 @@
 
             <div class="rounded border border-input bg-background p-4 lg:col-span-2">
                 <div class="text-sm font-medium text-foreground">Guest Reservation Form</div>
-                <div class="text-xs text-secondary-foreground mt-0.5">Enter guest info and confirm reservation</div>
+                <div class="text-xs text-secondary-foreground mt-0.5">Select guest and confirm reservation</div>
 
                 @if($errors->any())
                     <div class="mt-4 p-3 bg-danger/10 text-danger rounded">
@@ -149,51 +149,37 @@
 
                     <div class="lg:col-span-2">
                         <div class="flex items-center justify-between gap-2">
-                            <div class="text-xs font-semibold text-secondary-foreground">Guest</div>
-                            <button type="button" class="kt-btn kt-btn-sm" data-kt-modal-toggle="#quick_add_guest_modal">Quick Add Guest</button>
+                            <label class="text-xs font-semibold text-secondary-foreground required-label">Guest</label>
+                            <button type="button" class="kt-btn kt-btn-sm" data-kt-modal-toggle="#quick_add_guest_modal">Quick Guest</button>
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="text-sm text-secondary-foreground required-label">First name</label>
-                        <input type="text" class="kt-input w-full" name="guest_first_name" value="{{ old('guest_first_name') }}" required placeholder="First name" />
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-secondary-foreground required-label">Last name</label>
-                        <input type="text" class="kt-input w-full" name="guest_last_name" value="{{ old('guest_last_name') }}" required placeholder="Last name" />
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-secondary-foreground required-label">Email</label>
-                        <input type="email" class="kt-input w-full" name="guest_email" value="{{ old('guest_email') }}" required placeholder="guest@example.com" />
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-secondary-foreground">Phone</label>
-                        <input type="text" class="kt-input w-full" name="guest_phone" value="{{ old('guest_phone') }}" placeholder="Phone number" />
-                    </div>
-
-                    <div class="lg:col-span-2">
-                        <label class="text-sm text-secondary-foreground">Address</label>
-                        <textarea class="kt-input w-full" name="guest_address" rows="2" placeholder="Street, city, country">{{ old('guest_address') }}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="text-sm text-secondary-foreground">ID Type</label>
-                        <select class="kt-input w-full" name="guest_id_type">
-                            <option value="">Select</option>
-                            @php($idType = old('guest_id_type'))
-                            <option value="passport" @selected($idType === 'passport')>Passport</option>
-                            <option value="driver_license" @selected($idType === 'driver_license')>Driver license</option>
-                            <option value="national_id" @selected($idType === 'national_id')>National ID</option>
-                            <option value="other" @selected($idType === 'other')>Other</option>
+                        @php($selectedGuestId = old('guest_id'))
+                        <select
+                            class="kt-select w-full"
+                            data-kt-select="true"
+                            data-kt-select-placeholder="Select guest"
+                            data-kt-select-enable-search="true"
+                            data-kt-select-search-placeholder="Search guests..."
+                            name="guest_id"
+                            id="guest_id_select"
+                        >
+                            <option value=""></option>
+                            @foreach(($guests ?? collect()) as $g)
+                                @php($labelName = trim(($g->first_name ?? '') . ' ' . ($g->last_name ?? '')))
+                                <option value="{{ $g->id }}" @selected((string)$selectedGuestId === (string)$g->id)>
+                                    {{ $labelName !== '' ? $labelName : ('Guest #' . $g->id) }} — {{ $g->id_number ?: '-' }}
+                                </option>
+                            @endforeach
                         </select>
-                    </div>
 
-                    <div>
-                        <label class="text-sm text-secondary-foreground">ID Number</label>
-                        <input type="text" class="kt-input w-full" name="guest_id_number" value="{{ old('guest_id_number') }}" placeholder="Document number" />
+                        <div id="guest_readonly_box" class="mt-2 rounded border border-input bg-background p-3 text-sm" style="display:none;">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                <div><span class="text-secondary-foreground">Email:</span> <span id="guest_ro_email"></span></div>
+                                <div><span class="text-secondary-foreground">Phone:</span> <span id="guest_ro_phone"></span></div>
+                                <div><span class="text-secondary-foreground">ID Type:</span> <span id="guest_ro_id_type"></span></div>
+                                <div><span class="text-secondary-foreground">ID Number:</span> <span id="guest_ro_id_number"></span></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="lg:col-span-2">
@@ -232,81 +218,198 @@
 
 @include('admin.guests._quick_add_modal')
 
+@php(
+    $guestsIndex = ($guests ?? collect())
+        ->mapWithKeys(function ($g) {
+            return [
+                (string) $g->id => [
+                    'email' => $g->email,
+                    'phone' => $g->phone,
+                    'id_type' => $g->id_type,
+                    'id_number' => $g->id_number,
+                ],
+            ];
+        })
+        ->toArray()
+)
+
 @push('scripts')
 <script>
 (function(){
-    var form = document.getElementById('quick_add_guest_form');
-    var errBox = document.getElementById('quick_add_guest_error');
-    if (!form) return;
+    var guestSelect = document.getElementById('guest_id_select');
 
-    function showError(html){
-        if (!errBox) return;
-        errBox.innerHTML = html;
-        errBox.style.display = 'block';
+    var roBox = document.getElementById('guest_readonly_box');
+    var roEmail = document.getElementById('guest_ro_email');
+    var roPhone = document.getElementById('guest_ro_phone');
+    var roIdType = document.getElementById('guest_ro_id_type');
+    var roIdNumber = document.getElementById('guest_ro_id_number');
+
+    var quickAddForm = document.getElementById('quick_add_guest_form');
+    var quickAddErrBox = document.getElementById('quick_add_guest_error');
+
+    var blacklistToggle = document.getElementById('quick_blacklisted_toggle');
+    var blacklistFields = document.getElementById('quick_blacklist_fields');
+
+    var guestsIndex = @json($guestsIndex ?? []);
+
+    function escapeHtml(s){
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
-    function clearError(){
-        if (!errBox) return;
-        errBox.innerHTML = '';
-        errBox.style.display = 'none';
+    function norm(v){
+        if (v === null || v === undefined) return '-';
+        var s = String(v).trim();
+        return s === '' ? '-' : s;
     }
 
-    form.addEventListener('submit', async function(e){
-        e.preventDefault();
-        clearError();
+    function updateReadonly(){
+        if (!guestSelect || !roBox) return;
 
-        var submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = true;
+        var id = String(guestSelect.value || '');
+        var g = guestsIndex && Object.prototype.hasOwnProperty.call(guestsIndex, id) ? guestsIndex[id] : null;
 
-        try {
-            var resp = await fetch(@json(route('admin.api.guests.store')), {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': @json(csrf_token()),
-                    'Accept': 'application/json'
-                },
-                body: new FormData(form)
-            });
-
-            var json = await resp.json().catch(function(){ return null; });
-
-            if (!resp.ok) {
-                if (json && json.errors) {
-                    var msgs = Object.values(json.errors).flat().map(function(m){ return '<div>' + m + '</div>'; }).join('');
-                    showError(msgs || 'Validation error');
-                } else {
-                    showError('Unable to create guest.');
-                }
-                return;
-            }
-
-            if (!json || !json.success || !json.guest) {
-                showError('Unexpected response from server.');
-                return;
-            }
-
-            var g = json.guest;
-            var setVal = function(name, val){
-                var el = document.querySelector('[name="' + name + '"]');
-                if (el) el.value = val || '';
-            };
-
-            setVal('guest_first_name', g.first_name);
-            setVal('guest_last_name', g.last_name);
-            setVal('guest_email', g.email);
-            setVal('guest_phone', g.phone);
-            setVal('guest_address', g.address);
-
-            // Close modal by triggering any dismiss button.
-            var dismiss = document.querySelector('#quick_add_guest_modal [data-kt-modal-dismiss="true"]');
-            if (dismiss) dismiss.click();
-            form.reset();
-        } catch (err) {
-            showError('Network error.');
-        } finally {
-            if (submitBtn) submitBtn.disabled = false;
+        if (!id || !g) {
+            roBox.style.display = 'none';
+            if (roEmail) roEmail.textContent = '';
+            if (roPhone) roPhone.textContent = '';
+            if (roIdType) roIdType.textContent = '';
+            if (roIdNumber) roIdNumber.textContent = '';
+            return;
         }
-    });
+
+        if (roEmail) roEmail.textContent = norm(g.email);
+        if (roPhone) roPhone.textContent = norm(g.phone);
+        if (roIdType) roIdType.textContent = norm(g.id_type);
+        if (roIdNumber) roIdNumber.textContent = norm(g.id_number);
+
+        roBox.style.display = 'block';
+    }
+
+    if (guestSelect) {
+        guestSelect.addEventListener('change', updateReadonly);
+        updateReadonly();
+    }
+
+    function syncBlacklistFields(){
+        if (!blacklistToggle || !blacklistFields) return;
+        blacklistFields.style.display = blacklistToggle.checked ? 'block' : 'none';
+    }
+
+    if (blacklistToggle) {
+        blacklistToggle.addEventListener('change', syncBlacklistFields);
+        syncBlacklistFields();
+    }
+
+    function showQuickAddError(messages){
+        if (!quickAddErrBox) return;
+        var msgs = Array.isArray(messages) ? messages : [messages];
+        quickAddErrBox.innerHTML = msgs.map(function(m){
+            return '<div>' + escapeHtml(m) + '</div>';
+        }).join('');
+        quickAddErrBox.style.display = 'block';
+    }
+
+    function clearQuickAddError(){
+        if (!quickAddErrBox) return;
+        quickAddErrBox.innerHTML = '';
+        quickAddErrBox.style.display = 'none';
+    }
+
+    function upsertGuestOption(id, label){
+        if (!guestSelect) return;
+
+        var idStr = String(id);
+        var existing = null;
+        Array.from(guestSelect.options || []).some(function(o){
+            if (o.value === idStr) {
+                existing = o;
+                return true;
+            }
+            return false;
+        });
+
+        if (existing) {
+            existing.textContent = label;
+            return;
+        }
+
+        var opt = document.createElement('option');
+        opt.value = idStr;
+        opt.textContent = label;
+        guestSelect.appendChild(opt);
+    }
+
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', async function(e){
+            e.preventDefault();
+            clearQuickAddError();
+
+            var submitBtn = quickAddForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                var resp = await fetch(@json(route('admin.api.guests.store')), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': @json(csrf_token()),
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(quickAddForm)
+                });
+
+                var json = await resp.json().catch(function(){ return null; });
+
+                if (!resp.ok) {
+                    if (json && json.errors) {
+                        var msgs = Object.values(json.errors).flat();
+                        showQuickAddError(msgs.length ? msgs : ['Validation error']);
+                    } else {
+                        showQuickAddError('Unable to create guest.');
+                    }
+                    return;
+                }
+
+                if (!json || !json.success || !json.guest) {
+                    showQuickAddError('Unexpected response from server.');
+                    return;
+                }
+
+                var g = json.guest;
+                var fullName = (g.full_name || ((g.first_name || '') + ' ' + (g.last_name || ''))).trim();
+                var idNumber = (g.id_number || '').trim();
+
+                guestsIndex[String(g.id)] = {
+                    email: g.email || null,
+                    phone: g.phone || null,
+                    id_type: g.id_type || null,
+                    id_number: g.id_number || null,
+                };
+
+                var label = (fullName || ('Guest #' + g.id)) + ' — ' + (idNumber !== '' ? idNumber : '-');
+                upsertGuestOption(g.id, label);
+
+                if (guestSelect) {
+                    guestSelect.value = String(g.id);
+                    guestSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
+                var dismiss = document.querySelector('#quick_add_guest_modal [data-kt-modal-dismiss="true"]');
+                if (dismiss) dismiss.click();
+
+                quickAddForm.reset();
+                syncBlacklistFields();
+            } catch (err) {
+                showQuickAddError('Network error.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
 })();
 </script>
 @endpush

@@ -160,9 +160,11 @@ class GuestController extends Controller
                 'id' => $guest->id,
                 'first_name' => $guest->first_name,
                 'last_name' => $guest->last_name,
+                'full_name' => trim(($guest->first_name ?? '') . ' ' . ($guest->last_name ?? '')),
                 'email' => $guest->email,
                 'phone' => $guest->phone,
-                'address' => $guest->address,
+                'id_type' => $guest->id_type,
+                'id_number' => $guest->id_number,
             ],
         ]);
     }
@@ -183,6 +185,8 @@ class GuestController extends Controller
             'nationality' => ['nullable', 'string', 'max:191'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
+            'id_type' => ['nullable', Rule::in(['passport', 'driver_license', 'national_id', 'other'])],
+            'id_number' => ['nullable', 'string', 'max:255'],
             'company_id' => ['nullable', 'integer', 'exists:companies,id'],
             'travel_agent_id' => ['nullable', 'integer', 'exists:travel_agents,id'],
             'loyalty_id' => ['nullable', 'integer', 'exists:loyalties,id'],

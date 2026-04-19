@@ -18,9 +18,9 @@ class ReservationSeeder extends Seeder
         $records = [
             ['code' => 'RSV-20260314-001', 'guest_email' => 'john.carter@example.com', 'room_number' => '101', 'channel' => 'Walk-in', 'status' => 'confirmed', 'payment_status' => 'partial', 'check_in_date' => Carbon::now()->subDay()->toDateString(), 'check_out_date' => Carbon::now()->addDay()->toDateString(), 'adults' => 1, 'children' => 0, 'rate' => 50, 'extras' => ['Late Checkout'], 'note' => null],
             ['code' => 'RSV-20260314-002', 'guest_email' => 'emma.stone@example.com', 'room_number' => '201', 'channel' => 'Website', 'status' => 'booked', 'payment_status' => 'unpaid', 'check_in_date' => Carbon::now()->addDays(2)->toDateString(), 'check_out_date' => Carbon::now()->addDays(5)->toDateString(), 'adults' => 2, 'children' => 1, 'rate' => 85, 'extras' => ['Breakfast Buffet'], 'note' => 'Early check-in requested.'],
-            ['code' => 'RSV-20260314-003', 'guest_email' => 'liam.nguyen@example.com', 'room_number' => '301', 'channel' => 'OTA', 'status' => 'checked_in', 'payment_status' => 'paid', 'check_in_date' => Carbon::now()->subDays(1)->toDateString(), 'check_out_date' => Carbon::now()->addDays(3)->toDateString(), 'adults' => 2, 'children' => 0, 'rate' => 200, 'extras' => ['Airport Pickup'], 'note' => null],
-            ['code' => 'RSV-20260314-004', 'guest_email' => 'olivia.brown@example.com', 'room_number' => '302', 'channel' => 'Corporate', 'status' => 'pending', 'payment_status' => 'unpaid', 'check_in_date' => Carbon::now()->addDays(7)->toDateString(), 'check_out_date' => Carbon::now()->addDays(9)->toDateString(), 'adults' => 2, 'children' => 0, 'rate' => 200, 'extras' => ['Laundry Service'], 'note' => 'Company invoice needed.'],
-            ['code' => 'RSV-20260314-005', 'guest_email' => 'noah.silva@example.com', 'room_number' => '103', 'channel' => 'Phone', 'status' => 'checked_out', 'payment_status' => 'paid', 'check_in_date' => Carbon::now()->subDays(6)->toDateString(), 'check_out_date' => Carbon::now()->subDays(2)->toDateString(), 'adults' => 1, 'children' => 0, 'rate' => 85, 'extras' => [], 'note' => null],
+            ['code' => 'RSV-20260314-003', 'guest_email' => 'liam.nguyen@example.com', 'room_number' => '301', 'channel' => 'OTA', 'status' => 'confirmed', 'payment_status' => 'paid', 'check_in_date' => Carbon::now()->subDays(1)->toDateString(), 'check_out_date' => Carbon::now()->addDays(3)->toDateString(), 'adults' => 2, 'children' => 0, 'rate' => 200, 'extras' => ['Airport Pickup'], 'note' => null],
+            ['code' => 'RSV-20260314-004', 'guest_email' => 'olivia.brown@example.com', 'room_number' => '302', 'channel' => 'Corporate', 'status' => 'booked', 'payment_status' => 'unpaid', 'check_in_date' => Carbon::now()->addDays(7)->toDateString(), 'check_out_date' => Carbon::now()->addDays(9)->toDateString(), 'adults' => 2, 'children' => 0, 'rate' => 200, 'extras' => ['Laundry Service'], 'note' => 'Company invoice needed.'],
+            ['code' => 'RSV-20260314-005', 'guest_email' => 'noah.silva@example.com', 'room_number' => '103', 'channel' => 'Phone', 'status' => 'confirmed', 'payment_status' => 'paid', 'check_in_date' => Carbon::now()->subDays(6)->toDateString(), 'check_out_date' => Carbon::now()->subDays(2)->toDateString(), 'adults' => 1, 'children' => 0, 'rate' => 85, 'extras' => [], 'note' => null],
             ['code' => 'RSV-20260314-006', 'guest_email' => 'sophia.khan@example.com', 'room_number' => '202', 'channel' => 'Website', 'status' => 'cancelled', 'payment_status' => 'refunded', 'check_in_date' => Carbon::now()->subDays(4)->toDateString(), 'check_out_date' => Carbon::now()->subDay()->toDateString(), 'adults' => 2, 'children' => 1, 'rate' => 125, 'extras' => ['Extra Bed'], 'note' => null, 'cancel_note' => 'Flight cancellation by guest.'],
         ];
 
@@ -62,6 +62,16 @@ class ReservationSeeder extends Seeder
             $tax = round(($record['rate'] * $nights - $discount) * 0.10, 2);
             $total = round(($record['rate'] * $nights) - $discount + $tax, 2);
 
+            $today = Carbon::now()->toDateString();
+            $reservationRoomStatus = 'reserved';
+            if (in_array($record['status'], ['cancelled', 'no_show'], true)) {
+                $reservationRoomStatus = 'released';
+            } elseif ($record['check_out_date'] <= $today) {
+                $reservationRoomStatus = 'released';
+            } elseif ($record['check_in_date'] <= $today && $today < $record['check_out_date'] && $record['status'] === 'confirmed') {
+                $reservationRoomStatus = 'occupied';
+            }
+
             DB::table('reservation_rooms')->updateOrInsert(
                 [
                     'reservation_id' => $reservationId,
@@ -74,7 +84,7 @@ class ReservationSeeder extends Seeder
                     'discount_amount' => $discount,
                     'tax_amount' => $tax,
                     'total_amount' => $total,
-                    'status' => in_array($record['status'], ['checked_in', 'checked_out'], true) ? 'occupied' : 'reserved',
+                    'status' => $reservationRoomStatus,
                     'updated_at' => $now,
                     'created_at' => $now,
                 ]

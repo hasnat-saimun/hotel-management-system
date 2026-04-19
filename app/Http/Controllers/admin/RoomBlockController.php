@@ -288,9 +288,6 @@ class RoomBlockController extends Controller
             return 'skipped';
         }
 
-        $reservation->status = 'checked_in';
-        $reservation->save();
-
         ReservationRoom::query()
             ->where('reservation_id', $reservation->id)
             ->update(['status' => 'occupied']);

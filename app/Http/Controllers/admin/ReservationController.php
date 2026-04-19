@@ -105,9 +105,6 @@ class ReservationController extends Controller
         }
 
         DB::transaction(function () use ($reservation) {
-            $reservation->status = 'checked_in';
-            $reservation->save();
-
             ReservationRoom::where('reservation_id', $reservation->id)
                 ->update(['status' => 'occupied']);
 
@@ -125,14 +122,14 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);
 
-        if (($reservation->status ?? null) !== 'checked_in') {
+        $isCheckedIn = $reservation->reservationRooms
+            && $reservation->reservationRooms->contains(fn ($rr) => ($rr->status ?? null) === 'occupied');
+
+        if (!$isCheckedIn) {
             return redirect()->back()->with('error', 'Only checked-in reservations can be checked out.');
         }
 
         DB::transaction(function () use ($reservation) {
-            $reservation->status = 'checked_out';
-            $reservation->save();
-
             ReservationRoom::where('reservation_id', $reservation->id)
                 ->update(['status' => 'released']);
 
@@ -155,8 +152,11 @@ class ReservationController extends Controller
         ]);
 
         $currentStatus = strtolower((string) ($reservation->status ?? ''));
-        if (in_array($currentStatus, ['checked_in', 'checked-in', 'checkedin', 'checked_out', 'checked-out', 'checkedout'], true)) {
-            return redirect()->back()->with('error', 'Checked-in/out reservations cannot be cancelled.');
+        $hasOccupiedRooms = $reservation->reservationRooms
+            && $reservation->reservationRooms->contains(fn ($rr) => ($rr->status ?? null) === 'occupied');
+
+        if ($hasOccupiedRooms) {
+            return redirect()->back()->with('error', 'Checked-in reservations cannot be cancelled.');
         }
 
         if ($currentStatus === 'cancelled') {
@@ -573,7 +573,7 @@ class ReservationController extends Controller
 
         $room = Room::query()->with(['roomType'])->findOrFail((int) $data['room_id']);
         $guest = Guest::query()->findOrFail((int) $data['guest_id']);
-        $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
+        $activeReservationStatuses = ['booked', 'confirmed'];
 
         $segments = [];
         $datesRaw = (string) ($data['dates'] ?? '');
@@ -863,7 +863,7 @@ class ReservationController extends Controller
             ]);
         }
 
-        $activeReservationStatuses = ['pending', 'confirmed', 'checked_in', 'booked'];
+        $activeReservationStatuses = ['booked', 'confirmed'];
         $excludedRoomStatuses = ['maintenance', 'out_of_service'];
 
         $ignoreBlocks = (bool) $request->boolean('ignore_blocks');

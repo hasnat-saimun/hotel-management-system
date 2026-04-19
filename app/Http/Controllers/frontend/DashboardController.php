@@ -70,7 +70,7 @@ class DashboardController extends Controller
     private function reservationOverlaps($reservationQuery, string $fromDate, string $toDate): void
     {
         $reservationQuery
-            ->whereIn('reservations.status', ['pending', 'confirmed', 'checked_in', 'booked'])
+            ->whereIn('reservations.status', ['booked', 'confirmed'])
             ->where('reservations.check_in_date', '<', $toDate)
             ->where('reservations.check_out_date', '>', $fromDate);
     }
@@ -136,7 +136,7 @@ class DashboardController extends Controller
                 'guest_id' => $guest->id,
                 'check_in_date' => $data['check_in_date'],
                 'check_out_date' => $data['check_out_date'],
-                'status' => 'pending',
+                'status' => 'booked',
                 'payment_status' => 'unpaid',
                 'note' => $data['note'] ?? null,
                 'adults' => $data['adults'],
@@ -161,7 +161,7 @@ class DashboardController extends Controller
 
             // Update statuses after successful reservation creation
             $room->update(['status' => 'reserved']);
-            $reservation->update(['status' => 'pending']);
+            $reservation->update(['status' => 'booked']);
 
             DB::commit();
 

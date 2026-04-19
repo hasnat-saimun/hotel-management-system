@@ -30,7 +30,7 @@ class RoomAvailabilityService
             ->where('status', 'available')
             ->whereDoesntHave('reservations', function ($reservationQuery) use ($from, $to) {
                 $reservationQuery
-                    ->whereIn('reservations.status', ['pending', 'confirmed', 'checked_in', 'booked'])
+                    ->whereIn('reservations.status', ['booked', 'confirmed'])
                     ->where('reservations.check_in_date', '<', $to)
                     ->where('reservations.check_out_date', '>', $from);
             });

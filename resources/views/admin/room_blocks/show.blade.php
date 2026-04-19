@@ -269,7 +269,7 @@
                                         </td>
                                         <td class="p-2">{{ optional($res->check_in_date)->toDateString() ?? '—' }}</td>
                                         <td class="p-2">{{ optional($res->check_out_date)->toDateString() ?? '—' }}</td>
-                                        <td class="p-2">{{ ucfirst(str_replace('_',' ', (string) ($res->status ?? 'pending'))) }}</td>
+                                        <td class="p-2">{{ ucfirst(str_replace('_',' ', (string) ($res->status ?? 'booked'))) }}</td>
                                         <td class="p-2 text-right">
                                             <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $res->id) }}">Details</a>
                                         </td>

@@ -15,7 +15,7 @@ return new class extends Migration
 
             $table->string('reservation_code')->nullable()->unique();
             $table->string('channel')->nullable();
-            $table->enum('status', ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled', 'no_show', 'booked'])->default('booked');
+            $table->enum('status', ['booked', 'confirmed', 'cancelled', 'no_show'])->default('booked');
             $table->enum('payment_status', ['unpaid', 'partial', 'paid', 'refunded'])->default('unpaid');
 
             $table->date('check_in_date');

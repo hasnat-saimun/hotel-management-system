@@ -20,11 +20,10 @@
                     <input name="q" id="reservations-search-input" type="text" class="kt-input" placeholder="Search guest or room" value="{{ request('q') }}" />
                     <select class="kt-select" name="status">
                     <option value="">All statuses</option>
-                    <option>Pending</option>
+                    <option>Booked</option>
                     <option>Confirmed</option>
-                    <option>Checked-in</option>
-                    <option>Checked-out</option>
                     <option>Cancelled</option>
+                    <option>No-show</option>
                     </select>
                 </form>
             </div>
@@ -63,31 +62,25 @@
                             <td class="px-4 py-3 align-top">{{ $r->channel ?? '-' }}</td>
                             <td class="px-4 py-3 align-top">
                                 @php
-                                    $status = strtolower($r->status ?? 'pending');
+                                    $status = strtolower($r->status ?? 'booked');
                                 @endphp
                                 @if($status == 'confirmed')
                                 <span class="kt-badge kt-badge-outline kt-badge-success">Confirmed</span>
-                                @elseif($status == 'pending')
-                                    <span class="kt-badge kt-badge-outline kt-badge-info">Pending</span>
-                                @elseif($status == 'checked-in' || $status == 'checkedin' || $status == 'checked_in')
-                                    <span class="kt-badge kt-badge-outline kt-badge-primary">Checked-in</span>
-                                    @elseif($status == 'checked-out' || $status == 'checkedout' || $status == 'checked_out')
-                                    <span class="kt-badge kt-badge-outline kt-badge-secondary">Checked-out</span>
                                 @elseif($status == 'cancelled')
                                     <span class="kt-badge kt-badge-outline kt-badge-destructive">Cancelled</span>
-                                
-                                @elseif($status == 'no-show' || $status == 'noshow')
+
+                                @elseif($status == 'no_show' || $status == 'no-show' || $status == 'noshow')
                                     <span class="kt-badge kt-badge-outline kt-badge-warning">No-show</span>
                                 @elseif($status == 'booked' )
                                     <span class="kt-badge kt-badge-outline kt-badge-info">Booked</span>
                                 @else
-                                    <span class="kt-badge kt-badge-outline kt-badge-info">{{ ucfirst($r->reservation?->status ?? 'Pending') }}</span>
+                                    <span class="kt-badge kt-badge-outline kt-badge-info">{{ ucfirst($r->status ?? 'Booked') }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 align-top">
                                 <div class="flex items-center gap-2">
                                     <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $r->id) }}">Details</a>
-                                    @if(!in_array(($status ?? ''), ['cancelled', 'checked-in', 'checkedin', 'checked_in', 'checked-out', 'checkedout', 'checked_out'], true))
+                                    @if(!in_array(($status ?? ''), ['cancelled', 'no_show', 'no-show', 'noshow'], true))
                                         <button
                                             type="button"
                                             class="kt-btn kt-btn-destructive kt-btn-sm"

@@ -25,30 +25,23 @@
                 $reservationRoom = $reservation->reservationRooms->first();
                 $roomType = $reservationRoom?->roomType ?? ($room?->roomType ?? null);
 
-                $rawStatus = strtolower($reservation->status ?? 'pending');
+                $rawStatus = strtolower($reservation->status ?? 'booked');
+                $isCheckedIn = ($reservation->reservationRooms ?? collect())
+                    ->contains(fn ($rr) => strtolower((string) ($rr->status ?? '')) === 'occupied');
                 if ($rawStatus === 'confirmed') {
                     $statusLabel = 'Confirmed';
                     $statusBadgeClass = 'kt-badge-outline kt-badge-success';
-                } elseif ($rawStatus === 'pending') {
-                    $statusLabel = 'Pending';
-                    $statusBadgeClass = 'kt-badge-outline kt-badge-info';
-                } elseif (in_array($rawStatus, ['checked-in', 'checkedin', 'checked_in'], true)) {
-                    $statusLabel = 'Checked-in';
-                    $statusBadgeClass = 'kt-badge-outline kt-badge-primary';
-                } elseif (in_array($rawStatus, ['checked-out', 'checkedout', 'checked_out'], true)) {
-                    $statusLabel = 'Checked-out';
-                    $statusBadgeClass = 'kt-badge-outline kt-badge-secondary';
                 } elseif ($rawStatus === 'cancelled') {
                     $statusLabel = 'Cancelled';
                     $statusBadgeClass = 'kt-badge-outline kt-badge-destructive';
-                } elseif (in_array($rawStatus, ['no-show', 'noshow'], true)) {
+                } elseif (in_array($rawStatus, ['no_show', 'no-show', 'noshow'], true)) {
                     $statusLabel = 'No-show';
                     $statusBadgeClass = 'kt-badge-outline kt-badge-warning';
                 } elseif ($rawStatus === 'booked') {
                     $statusLabel = 'Booked';
                     $statusBadgeClass = 'kt-badge-outline kt-badge-info';
                 } else {
-                    $statusLabel = ucfirst($reservation->status ?? 'Pending');
+                    $statusLabel = ucfirst($reservation->status ?? 'Booked');
                     $statusBadgeClass = 'kt-badge-outline kt-badge-info';
                 }
 
@@ -165,7 +158,7 @@
             <div class="mt-4 flex gap-2">
                 @if($rawStatus === 'confirmed')
                     <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
-                @elseif(in_array($rawStatus, ['checked-in', 'checkedin', 'checked_in'], true))
+                @elseif($isCheckedIn)
                     <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
                 @endif
 

@@ -84,4 +84,9 @@ class Reservation extends Model
     {
         return $this->hasMany(ReservationRoom::class);
     }
+
+    public function stays()
+    {
+        return $this->hasMany(Stay::class);
+    }
 }

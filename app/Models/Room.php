@@ -63,4 +63,9 @@ class Room extends Model
             ->withPivot(['room_type_id', 'assigned_guest_id', 'status'])
             ->withTimestamps();
     }
+
+    public function stays()
+    {
+        return $this->hasMany(Stay::class);
+    }
 }

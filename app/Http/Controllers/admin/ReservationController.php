@@ -96,6 +96,67 @@ class ReservationController extends Controller
         return view('admin.reservations.show', compact('reservation'));
     }
 
+    public function edit($id)
+    {
+        $reservation = Reservation::with(['guest', 'rooms', 'reservationRooms'])->findOrFail($id);
+        $guests = Guest::orderBy('first_name')->orderBy('last_name')->get();
+
+        $prefill = null;
+        $datesRaw = (string) request('dates', '');
+        if ($datesRaw !== '') {
+            $selectedDates = collect(array_filter(array_map('trim', explode(',', $datesRaw))))
+                ->filter(fn ($value) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value))
+                ->unique()
+                ->sort()
+                ->values();
+
+            if ($selectedDates->isNotEmpty()) {
+                try {
+                    $checkIn = Carbon::parse($selectedDates->first())->toDateString();
+                    $checkOut = Carbon::parse($selectedDates->last())->addDay()->toDateString();
+                    $prefill = [
+                        'check_in_date' => $checkIn,
+                        'check_out_date' => $checkOut,
+                        'dates' => $selectedDates->implode(','),
+                    ];
+                } catch (\Throwable $e) {
+                    $prefill = null;
+                }
+            }
+        }
+
+        return view('admin.reservations.edit', compact('reservation', 'guests', 'prefill'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);
+
+        $hasOccupiedRooms = $reservation->reservationRooms
+            && $reservation->reservationRooms->contains(fn ($rr) => ($rr->status ?? null) === 'occupied');
+
+        if ($hasOccupiedRooms) {
+            return redirect()->back()->with('error', 'Checked-in reservations cannot be edited.');
+        }
+
+        $data = $request->validate([
+            'guest_id' => 'nullable|exists:guests,id',
+            'channel' => 'nullable|string|max:100',
+            'status' => 'required|in:booked,confirmed,cancelled,no_show',
+            'check_in_date' => 'required|date',
+            'check_out_date' => 'required|date|after:check_in_date',
+            'adults' => 'required|integer|min:1',
+            'children' => 'required|integer|min:0',
+            'note' => 'nullable|string|max:2000',
+        ]);
+
+        $reservation->fill($data);
+        $reservation->save();
+
+        return redirect()->route('admin.reservations.show', $reservation->id)
+            ->with('success', 'Reservation updated successfully.');
+    }
+
     public function checkin($id)
     {
         $reservation = Reservation::with(['rooms', 'reservationRooms'])->findOrFail($id);

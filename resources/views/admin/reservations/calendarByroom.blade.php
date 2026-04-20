@@ -89,10 +89,12 @@
 			var events = @json($roomCalendarEvents ?? $calendarEvents ?? []);
 			var initialDate = @json($initialDate ?? null);
 			var reservationShowUrlTemplate = @json(route('admin.reservations.show', ['id' => '__ID__']));
+			var reservationEditUrlTemplate = @json(route('admin.reservations.edit', ['id' => '__ID__']));
 			var roomBlockShowUrlTemplate = @json(route('admin.room-blocks.show', ['id' => '__ID__']));
 			var reservationCreateUrl = @json(route('admin.reservations.create'));
 			var selectedRoomId = @json(old('room_id', request('room_id')));
 			var preselectedDatesRaw = @json(old('dates', request('dates')));
+			var editingReservationId = @json(request('edit_reservation_id'));
 
 			function toIsoDate(dateObj) {
 				var y = dateObj.getFullYear();
@@ -198,6 +200,18 @@
 			var bookedDateToReservationId = buildBookedDateToReservationIdMap(reservationEvents);
 			var selectedDates = new Set(parseDateList(preselectedDatesRaw));
 
+			function isReservedByEditingReservation(iso) {
+				if (!editingReservationId) return false;
+				var rid = bookedDateToReservationId ? bookedDateToReservationId[iso] : null;
+				return rid !== null && rid !== undefined && String(rid) === String(editingReservationId);
+			}
+
+			function isLockedDate(iso) {
+				if (blockedDates && blockedDates.has(iso)) return true;
+				if (bookedReservationDates && bookedReservationDates.has(iso) && !isReservedByEditingReservation(iso)) return true;
+				return false;
+			}
+
 			function sanitizeSelectedDates() {
 				if (!selectedDates || selectedDates.size === 0) return;
 				var today = new Date();
@@ -213,7 +227,7 @@
 						selectedDates.delete(iso);
 						return;
 					}
-					if (bookedDates && bookedDates.has(iso)) {
+					if (isLockedDate(iso)) {
 						selectedDates.delete(iso);
 						return;
 					}
@@ -234,10 +248,22 @@
 					return;
 				}
 
-				var url = reservationCreateUrl
-					+ '?dates=' + encodeURIComponent(arr.join(','));
-				if (selectedRoomId !== null && selectedRoomId !== '') {
-					url += '&room_id=' + encodeURIComponent(String(selectedRoomId));
+				var url;
+				if (editingReservationId) {
+					url = reservationEditUrlTemplate.replace('__ID__', String(editingReservationId))
+						+ '?dates=' + encodeURIComponent(arr.join(','));
+					if (selectedRoomId !== null && selectedRoomId !== '') {
+						url += '&room_id=' + encodeURIComponent(String(selectedRoomId));
+					}
+					url += '&edit_reservation_id=' + encodeURIComponent(String(editingReservationId));
+					bookingBtn.textContent = 'Apply Dates';
+				} else {
+					url = reservationCreateUrl
+						+ '?dates=' + encodeURIComponent(arr.join(','));
+					if (selectedRoomId !== null && selectedRoomId !== '') {
+						url += '&room_id=' + encodeURIComponent(String(selectedRoomId));
+					}
+					bookingBtn.textContent = 'Booking';
 				}
 
 				bookingBtn.setAttribute('href', url);
@@ -270,7 +296,7 @@
 					if (selectedDates && selectedDates.has(iso) && info.el && info.el.classList) {
 						info.el.classList.add('room-multi-selected');
 					}
-					if ((!bookedReservationDates || !bookedReservationDates.has(iso)) && (!blockedDates || !blockedDates.has(iso))) return;
+					if (!isLockedDate(iso)) return;
 
 					if (info.el && info.el.classList) {
 						info.el.classList.add('room-booked-day');
@@ -305,7 +331,7 @@
 
 					// Guard: booked dates are disabled (no click action)
 					var iso = toIsoDate(clicked);
-					if (bookedDates && bookedDates.has(iso)) return;
+					if (isLockedDate(iso)) return;
 
 					// Multi-select future, unbooked dates (month view)
 					if (info && info.view && info.view.type === 'dayGridMonth') {

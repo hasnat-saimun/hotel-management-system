@@ -82,7 +82,7 @@
                                     <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $r->id) }}">Details</a>
                                     <a
                                         class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
-                                        href="{{ route('admin.reservations.show', $r->id) }}"
+                                        href="{{ route('admin.reservations.edit', $r->id) }}"
                                         aria-label="Edit reservation"
                                         title="Edit"
                                     >

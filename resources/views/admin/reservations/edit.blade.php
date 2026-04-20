@@ -194,6 +194,11 @@
                         />
                     </div>
 
+                    <div class="lg:col-span-2">
+                        <label class="text-sm text-secondary-foreground">Reason (optional)</label>
+                        <textarea class="kt-input w-full" name="reason" rows="2" placeholder="Reason for changing dates...">{{ old('reason') }}</textarea>
+                    </div>
+
                     <div>
                         <label class="text-sm text-secondary-foreground">Adults</label>
                         <input type="number" min="1" class="kt-input w-full" name="adults" value="{{ old('adults', $reservation->adults ?? 1) }}" />

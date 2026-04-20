@@ -148,10 +148,32 @@ class ReservationController extends Controller
             'adults' => 'required|integer|min:1',
             'children' => 'required|integer|min:0',
             'note' => 'nullable|string|max:2000',
+            'reason' => 'nullable|string|max:2000',
         ]);
 
-        $reservation->fill($data);
-        $reservation->save();
+        $oldCheckIn = optional($reservation->check_in_date)->toDateString();
+        $oldCheckOut = optional($reservation->check_out_date)->toDateString();
+        $newCheckIn = Carbon::parse($data['check_in_date'])->toDateString();
+        $newCheckOut = Carbon::parse($data['check_out_date'])->toDateString();
+
+        $datesChanged = ($oldCheckIn !== $newCheckIn) || ($oldCheckOut !== $newCheckOut);
+
+        DB::transaction(function () use ($reservation, $data, $datesChanged, $oldCheckIn, $oldCheckOut, $newCheckIn, $newCheckOut) {
+            $reservation->fill(collect($data)->except(['reason'])->all());
+            $reservation->save();
+
+            if ($datesChanged) {
+                DB::table('reservation_date_changes')->insert([
+                    'reservation_id' => $reservation->id,
+                    'old_check_in' => $oldCheckIn,
+                    'old_check_out' => $oldCheckOut,
+                    'new_check_in' => $newCheckIn,
+                    'new_check_out' => $newCheckOut,
+                    'changed_by' => auth()->id(),
+                    'reason' => $data['reason'] ?? null,
+                ]);
+            }
+        });
 
         return redirect()->route('admin.reservations.show', $reservation->id)
             ->with('success', 'Reservation updated successfully.');

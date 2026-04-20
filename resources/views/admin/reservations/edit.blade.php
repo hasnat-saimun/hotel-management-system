@@ -105,15 +105,62 @@
 
                     <div>
                         <div class="text-xs font-semibold text-secondary-foreground">Stay</div>
-                        <div class="mt-2 grid grid-cols-2 gap-3">
-                            <div>
-                                <div class="text-xs font-semibold text-secondary-foreground">Check-in</div>
-                                <div class="text-sm text-foreground mt-1">{{ $checkInDisplay }}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs font-semibold text-secondary-foreground">Check-out</div>
-                                <div class="text-sm text-foreground mt-1">{{ $checkOutDisplay }}</div>
-                            </div>
+                        @php
+                            $segments = ($dateSegments ?? collect());
+                            $hasSegments = $segments instanceof \Illuminate\Support\Collection ? $segments->isNotEmpty() : !empty($segments);
+                            $segList = $segments instanceof \Illuminate\Support\Collection ? $segments->values() : collect($segments)->values();
+                            $ordinal = function ($n) {
+                                $n = (int) $n;
+                                $mod100 = $n % 100;
+                                if ($mod100 >= 11 && $mod100 <= 13) return $n . 'th';
+                                return match ($n % 10) {
+                                    1 => $n . 'st',
+                                    2 => $n . 'nd',
+                                    3 => $n . 'rd',
+                                    default => $n . 'th',
+                                };
+                            };
+                        @endphp
+
+                        @if(($hasMultipleSegments ?? false) === true)
+                            <div class="text-xs text-secondary-foreground mt-1">Multiple stays selected (date gaps).</div>
+                        @endif
+
+                        <div class="mt-2 space-y-2">
+                            @if($hasSegments)
+                                @foreach($segList as $idx => $seg)
+                                    @php
+                                        $segIn = $seg['check_in'] ?? null;
+                                        $segOut = $seg['check_out'] ?? null;
+                                        $segInDisplay = $segIn ? \Carbon\Carbon::parse($segIn)->format('M d, Y') : '-';
+                                        $segOutDisplay = $segOut ? \Carbon\Carbon::parse($segOut)->format('M d, Y') : '-';
+                                    @endphp
+                                    <div class="rounded border border-input p-3">
+                                        <div class="text-xs font-semibold text-secondary-foreground">Stay {{ $ordinal($idx + 1) }}</div>
+                                        <div class="mt-2 grid grid-cols-2 gap-3">
+                                            <div>
+                                                <div class="text-xs font-semibold text-secondary-foreground">Check-in</div>
+                                                <div class="text-sm text-foreground mt-1">{{ $segInDisplay }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-semibold text-secondary-foreground">Check-out</div>
+                                                <div class="text-sm text-foreground mt-1">{{ $segOutDisplay }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="mt-2 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div class="text-xs font-semibold text-secondary-foreground">Check-in</div>
+                                        <div class="text-sm text-foreground mt-1">{{ $checkInDisplay }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-semibold text-secondary-foreground">Check-out</div>
+                                        <div class="text-sm text-foreground mt-1">{{ $checkOutDisplay }}</div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -150,6 +197,8 @@
                 <form method="POST" action="{{ route('admin.reservations.update', $reservation->id) }}" class="mt-4 grid gap-3 grid-cols-1 lg:grid-cols-2">
                     @csrf
                     @method('PUT')
+
+                    <input type="hidden" name="dates" value="{{ old('dates', $prefill['dates'] ?? '') }}" />
 
                     <div class="lg:col-span-2">
                         <label class="text-xs font-semibold text-secondary-foreground">Guest</label>
@@ -222,7 +271,7 @@
 
                     <div>
                         <label class="text-sm text-secondary-foreground">Source</label>
-                        <input class="kt-input w-full" name="channel" value="{{ old('channel', $reservation->channel) }}" placeholder="Walk-in, OTA, phone..." />
+                        <input class="kt-input w-full" name="channel" value="{{ old('channel', $reservation->channel) }}" placeholder="Walk-in, OTA, phone..." readonly aria-readonly="true" />
                     </div>
 
                     <div class="lg:col-span-2">

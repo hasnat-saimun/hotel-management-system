@@ -103,6 +103,10 @@ class ReservationController extends Controller
 
         $prefill = null;
         $datesRaw = (string) request('dates', '');
+        $selectedDates = collect();
+        $dateSegments = collect();
+        $hasMultipleSegments = false;
+
         if ($datesRaw !== '') {
             $selectedDates = collect(array_filter(array_map('trim', explode(',', $datesRaw))))
                 ->filter(fn ($value) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value))
@@ -125,7 +129,80 @@ class ReservationController extends Controller
             }
         }
 
-        return view('admin.reservations.edit', compact('reservation', 'guests', 'prefill'));
+        if ($selectedDates->isNotEmpty()) {
+            $rawSegments = [];
+            $segment = null;
+            $prev = null;
+
+            foreach ($selectedDates as $dateStr) {
+                try {
+                    $cur = Carbon::parse($dateStr)->startOfDay();
+                } catch (\Throwable $e) {
+                    continue;
+                }
+
+                if (!$segment) {
+                    $segment = ['start' => $cur, 'end' => $cur];
+                    $prev = $cur;
+                    continue;
+                }
+
+                $expectedNext = $prev->copy()->addDay();
+                if ($cur->equalTo($expectedNext)) {
+                    $segment['end'] = $cur;
+                } else {
+                    $rawSegments[] = $segment;
+                    $segment = ['start' => $cur, 'end' => $cur];
+                }
+
+                $prev = $cur;
+            }
+
+            if ($segment) {
+                $rawSegments[] = $segment;
+            }
+
+            $dateSegments = collect($rawSegments)
+                ->map(function ($seg) {
+                    $start = $seg['start'];
+                    $end = $seg['end'];
+
+                    $checkIn = $start->toDateString();
+                    $checkOut = $end->copy()->addDay()->toDateString();
+                    $nights = max(1, $end->diffInDays($start) + 1);
+
+                    $dates = [];
+                    $days = $end->diffInDays($start);
+                    for ($i = 0; $i <= $days; $i++) {
+                        $dates[] = $start->copy()->addDays($i)->toDateString();
+                    }
+
+                    return [
+                        'check_in' => $checkIn,
+                        'check_out' => $checkOut,
+                        'nights' => $nights,
+                        'dates' => $dates,
+                    ];
+                })
+                ->values();
+
+            $hasMultipleSegments = $dateSegments->count() > 1;
+        } else {
+            $in = optional($reservation->check_in_date)->toDateString();
+            $out = optional($reservation->check_out_date)->toDateString();
+            if ($in && $out) {
+                $dateSegments = collect([
+                    [
+                        'check_in' => $in,
+                        'check_out' => $out,
+                        'nights' => max(1, Carbon::parse($out)->diffInDays(Carbon::parse($in))),
+                        'dates' => [],
+                    ],
+                ]);
+            }
+        }
+
+        return view('admin.reservations.edit', compact('reservation', 'guests', 'prefill', 'selectedDates', 'dateSegments', 'hasMultipleSegments'));
     }
 
     public function update(Request $request, $id)
@@ -149,18 +226,127 @@ class ReservationController extends Controller
             'children' => 'required|integer|min:0',
             'note' => 'nullable|string|max:2000',
             'reason' => 'nullable|string|max:2000',
+            'dates' => 'nullable|string|max:20000',
         ]);
+
+        $room = $reservation->rooms->first();
+        if (!$room) {
+            return redirect()->back()->with('error', 'This reservation has no room assigned.');
+        }
+
+        $room = Room::query()->with(['roomType'])->findOrFail((int) $room->id);
+        $activeReservationStatuses = ['booked', 'confirmed'];
+
+        $segments = [];
+        $datesRaw = (string) ($data['dates'] ?? '');
+        if ($datesRaw !== '') {
+            $selectedDates = collect(array_filter(array_map('trim', explode(',', $datesRaw))))
+                ->filter(fn ($value) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $value))
+                ->unique()
+                ->sort()
+                ->values();
+
+            $rawSegments = [];
+            $segment = null;
+            $prev = null;
+            foreach ($selectedDates as $dateStr) {
+                try {
+                    $cur = Carbon::parse($dateStr)->startOfDay();
+                } catch (\Throwable $e) {
+                    continue;
+                }
+
+                if (!$segment) {
+                    $segment = ['start' => $cur, 'end' => $cur];
+                    $prev = $cur;
+                    continue;
+                }
+
+                $expectedNext = $prev->copy()->addDay();
+                if ($cur->equalTo($expectedNext)) {
+                    $segment['end'] = $cur;
+                } else {
+                    $rawSegments[] = $segment;
+                    $segment = ['start' => $cur, 'end' => $cur];
+                }
+
+                $prev = $cur;
+            }
+
+            if ($segment) {
+                $rawSegments[] = $segment;
+            }
+
+            $segments = collect($rawSegments)
+                ->map(function ($seg) {
+                    $start = $seg['start'];
+                    $end = $seg['end'];
+                    return [
+                        'check_in' => $start->toDateString(),
+                        'check_out' => $end->copy()->addDay()->toDateString(),
+                        'nights' => max(1, $end->diffInDays($start) + 1),
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        if (empty($segments)) {
+            $segments = [[
+                'check_in' => Carbon::parse($data['check_in_date'])->toDateString(),
+                'check_out' => Carbon::parse($data['check_out_date'])->toDateString(),
+                'nights' => max(1, Carbon::parse($data['check_out_date'])->diffInDays(Carbon::parse($data['check_in_date']))),
+            ]];
+        }
+
+        // Overlap check per segment (exclude current reservation).
+        foreach ($segments as $seg) {
+            $segIn = $seg['check_in'];
+            $segOut = $seg['check_out'];
+
+            $overlaps = Reservation::query()
+                ->where('id', '!=', $reservation->id)
+                ->whereIn('status', $activeReservationStatuses)
+                ->where('check_in_date', '<', $segOut)
+                ->where('check_out_date', '>', $segIn)
+                ->whereHas('rooms', function ($q) use ($room) {
+                    $q->where('rooms.id', $room->id);
+                })
+                ->exists();
+
+            if ($overlaps) {
+                return back()->withErrors([
+                    'check_in_date' => 'Selected dates overlap another reservation for this room.',
+                ])->withInput();
+            }
+        }
 
         $oldCheckIn = optional($reservation->check_in_date)->toDateString();
         $oldCheckOut = optional($reservation->check_out_date)->toDateString();
-        $newCheckIn = Carbon::parse($data['check_in_date'])->toDateString();
-        $newCheckOut = Carbon::parse($data['check_out_date'])->toDateString();
+        $newCheckIn = Carbon::parse($segments[0]['check_in'])->toDateString();
+        $newCheckOut = Carbon::parse($segments[0]['check_out'])->toDateString();
 
         $datesChanged = ($oldCheckIn !== $newCheckIn) || ($oldCheckOut !== $newCheckOut);
 
-        DB::transaction(function () use ($reservation, $data, $datesChanged, $oldCheckIn, $oldCheckOut, $newCheckIn, $newCheckOut) {
-            $reservation->fill(collect($data)->except(['reason'])->all());
+        $nightlyRate = (float) ($room->roomType?->base_price ?? 0);
+
+        $createdExtra = 0;
+        DB::transaction(function () use ($reservation, $data, $segments, $datesChanged, $oldCheckIn, $oldCheckOut, $newCheckIn, $newCheckOut, $nightlyRate, $room, &$createdExtra) {
+            $first = $segments[0];
+            $totalAmount = $nightlyRate * (int) ($first['nights'] ?? 1);
+
+            $reservation->fill(collect($data)->except(['reason', 'dates', 'channel'])->all());
+            $reservation->check_in_date = $first['check_in'];
+            $reservation->check_out_date = $first['check_out'];
+            $reservation->rate = $totalAmount;
             $reservation->save();
+
+            $reservationRoom = $reservation->reservationRooms ? $reservation->reservationRooms->first() : null;
+            if ($reservationRoom) {
+                $reservationRoom->nightly_rate = $nightlyRate;
+                $reservationRoom->total_amount = $totalAmount;
+                $reservationRoom->save();
+            }
 
             if ($datesChanged) {
                 DB::table('reservation_date_changes')->insert([
@@ -173,10 +359,58 @@ class ReservationController extends Controller
                     'reason' => $data['reason'] ?? null,
                 ]);
             }
+
+            if (count($segments) > 1) {
+                for ($s = 1; $s < count($segments); $s++) {
+                    $seg = $segments[$s];
+
+                    $reservationCode = null;
+                    for ($i = 0; $i < 5; $i++) {
+                        $candidate = 'RSV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+                        if (!Reservation::where('reservation_code', $candidate)->exists()) {
+                            $reservationCode = $candidate;
+                            break;
+                        }
+                    }
+
+                    $segTotal = $nightlyRate * (int) ($seg['nights'] ?? 1);
+
+                    $newReservation = Reservation::create([
+                        'guest_id' => $reservation->guest_id,
+                        'reservation_code' => $reservationCode,
+                        'channel' => $reservation->channel,
+                        'status' => $reservation->status,
+                        'payment_status' => $reservation->payment_status ?? 'unpaid',
+                        'check_in_date' => $seg['check_in'],
+                        'check_out_date' => $seg['check_out'],
+                        'adults' => $reservation->adults ?? 1,
+                        'children' => $reservation->children ?? 0,
+                        'rate' => $segTotal,
+                        'note' => $reservation->note,
+                    ]);
+
+                    ReservationRoom::create([
+                        'reservation_id' => $newReservation->id,
+                        'room_id' => $room->id,
+                        'room_type_id' => (int) $room->room_type_id,
+                        'nightly_rate' => $nightlyRate,
+                        'discount_amount' => 0,
+                        'tax_amount' => 0,
+                        'total_amount' => $segTotal,
+                        'status' => 'reserved',
+                    ]);
+
+                    $createdExtra++;
+                }
+            }
         });
 
+        $msg = $createdExtra > 0
+            ? ('Reservation updated and created ' . $createdExtra . ' additional reservation(s) for date gaps.')
+            : 'Reservation updated successfully.';
+
         return redirect()->route('admin.reservations.show', $reservation->id)
-            ->with('success', 'Reservation updated successfully.');
+            ->with('success', $msg);
     }
 
     public function checkin($id)

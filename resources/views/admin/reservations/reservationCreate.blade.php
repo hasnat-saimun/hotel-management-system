@@ -35,7 +35,10 @@
     <div class="kt-card-content p-4">
         <div class="grid gap-4 grid-cols-1 lg:grid-cols-3">
             <div class="rounded border border-input bg-background p-4 lg:col-span-1">
-                <div class="text-sm font-medium text-foreground">Reservation Summary</div>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="text-sm font-medium text-foreground">Reservation Summary</div>
+                    <a class="kt-btn kt-btn-sm" href="{{ route('admin.reservations.calendar-by-room', array_filter(['room_id' => $roomId, 'month' => $backMonth, 'dates' => $backDates], fn ($v) => $v !== null && $v !== '')) }}">Re-edit</a>
+                </div>
                 <div class="text-xs text-secondary-foreground mt-0.5">Review selection from calendar</div>
 
                 <div class="mt-4 space-y-3">

@@ -202,10 +202,10 @@
                                             <span class="kt-menu-title text-2sm font-normal text-foreground">Booking Calendar</span>
                                         </a>
                                     </div>
-                                    <div class="kt-menu-item {{ request()->routeIs('admin.reservations.walkin') ? 'active' : '' }}">
-                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.reservations.walkin') }}" tabindex="0">
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.reservations.reservation') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ route('admin.reservations.reservation') }}" tabindex="0">
                                             <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
-                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Walk-in Booking</span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Reservation</span>
                                         </a>
                                     </div>
                                 </div>

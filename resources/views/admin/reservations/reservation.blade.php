@@ -2,14 +2,14 @@
 @section('content')
 <div class="kt-card">
     <div class="kt-card-header">
-        <h3 class="kt-card-title">Walk-in Booking</h3>
-        <div class="text-sm text-secondary-foreground">Quick create reservation for walk-in guests</div>
+        <h3 class="kt-card-title">Reservation</h3>
+        <div class="text-sm text-secondary-foreground">Find available rooms and create a reservation</div>
     </div>
     <div class="kt-card-content p-4">
         <div class="mb-4">
             <h5 class="text-md font-semibold">Find Available Rooms</h5>
         </div>
-        <form id="walkin-search-form" method="GET" action="{{ route('admin.reservations.walkin') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
+        <form id="walkin-search-form" method="GET" action="{{ route('admin.reservations.reservation') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-2">
             <div>
                 <label class="text-sm text-secondary-foreground">Check-in</label>
                 <input

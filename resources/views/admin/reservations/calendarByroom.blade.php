@@ -376,7 +376,7 @@
 		</div>
 
 		<div class="flex gap-2">
-			<a class="kt-btn" href="{{ route('admin.reservations.walkin') }}">Walk-in</a>
+			<a class="kt-btn" href="{{ route('admin.reservations.reservation') }}">Reservation</a>
 			<a class="kt-btn" href="{{ route('admin.reservations.calendar') }}">All Calendar</a>
 		</div>
 	</div>

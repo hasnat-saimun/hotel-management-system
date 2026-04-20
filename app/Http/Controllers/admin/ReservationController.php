@@ -762,7 +762,7 @@ class ReservationController extends Controller
                     'guest_id' => $guest->id,
                     'reservation_code' => $reservationCode,
                     'channel' => 'admin-calendar',
-                    'status' => 'booked',
+                    'status' => 'confirmed',
                     'payment_status' => 'unpaid',
                     'check_in_date' => $seg['check_in'],
                     'check_out_date' => $seg['check_out'],
@@ -804,7 +804,7 @@ class ReservationController extends Controller
             ->with('success', 'Created ' . count($reservations) . ' reservations successfully.');
     }
 
-    public function walkin(Request $request)
+    public function reservation(Request $request)
     {
         $checkInDateRaw = $request->input('check_in_date');
         $checkOutDateRaw = $request->input('check_out_date');
@@ -818,7 +818,7 @@ class ReservationController extends Controller
  
         if (!$hasAnyInput) {
             $missingMessage = 'Please select check-in and check-out dates, then click Search.';
-            return view('admin.reservations.walkin', [
+            return view('admin.reservations.reservation', [
                 'availableRooms' => $availableRooms,
                 'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
@@ -829,7 +829,7 @@ class ReservationController extends Controller
 
         if (empty($checkInDateRaw) || empty($checkOutDateRaw)) {
             $missingMessage = 'Missing check-in or check-out date.';
-            return view('admin.reservations.walkin', [
+            return view('admin.reservations.reservation', [
                 'availableRooms' => $availableRooms,
                 'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
@@ -843,7 +843,7 @@ class ReservationController extends Controller
             $checkOutDate = Carbon::parse($checkOutDateRaw)->toDateString();
         } catch (\Throwable $e) {
             $missingMessage = 'Invalid date value.';
-            return view('admin.reservations.walkin', [
+            return view('admin.reservations.reservation', [
                 'availableRooms' => $availableRooms,
                 'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
@@ -854,7 +854,7 @@ class ReservationController extends Controller
 
         if ($checkOutDate < $checkInDate) {
             $missingMessage = 'Check-out date must be the same as or after check-in date.';
-            return view('admin.reservations.walkin', [
+            return view('admin.reservations.reservation', [
                 'availableRooms' => $availableRooms,
                 'partiallyAvailableRooms' => $partiallyAvailableRooms,
                 'missingMessage' => $missingMessage,
@@ -933,12 +933,41 @@ class ReservationController extends Controller
             $missingMessage = 'No rooms available within the selected period.';
         }
 
-        return view('admin.reservations.walkin', [
+        return view('admin.reservations.reservation', [
             'availableRooms' => $availableRooms,
             'partiallyAvailableRooms' => $partiallyAvailableRooms,
             'missingMessage' => $missingMessage,
             'checkInDate' => $checkInDate,
             'checkOutDate' => $checkOutDate,
+        ]);
+    }
+
+    public function storeReservation(Request $request)
+    {
+        $data = $request->validate([
+            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'check_in_date' => ['required', 'date'],
+            'check_out_date' => ['required', 'date', 'after:check_in_date'],
+            'ignore_blocks' => ['nullable', 'boolean'],
+        ]);
+
+        $start = Carbon::parse($data['check_in_date'])->startOfDay();
+        $end = Carbon::parse($data['check_out_date'])->startOfDay();
+
+        $dates = [];
+        $cursor = $start->copy();
+        while ($cursor->lessThan($end)) {
+            $dates[] = $cursor->toDateString();
+            $cursor->addDay();
+        }
+
+        if (empty($dates)) {
+            return back()->withErrors(['check_out_date' => 'Check-out must be at least 1 day after check-in.'])->withInput();
+        }
+
+        return redirect()->route('admin.reservations.create', [
+            'room_id' => (int) $data['room_id'],
+            'dates' => implode(',', $dates),
         ]);
     }
 }

@@ -80,14 +80,24 @@
                             <td class="px-4 py-3 align-top">
                                 <div class="flex items-center gap-2">
                                     <a class="kt-btn kt-btn-sm kt-btn-ghost" href="{{ route('admin.reservations.show', $r->id) }}">Details</a>
+                                    <a
+                                        class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
+                                        href="{{ route('admin.reservations.show', $r->id) }}"
+                                        aria-label="Edit reservation"
+                                        title="Edit"
+                                    >
+                                        <i class="ki-filled ki-pencil"></i>
+                                    </a>
                                     @if(!in_array(($status ?? ''), ['cancelled', 'no_show', 'no-show', 'noshow'], true))
                                         <button
                                             type="button"
-                                            class="kt-btn kt-btn-destructive kt-btn-sm"
+                                            class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
                                             data-kt-modal-toggle="#cancel_reservation_modal"
                                             data-cancel-action="{{ route('admin.reservations.cancel', $r->id) }}"
+                                            aria-label="Delete reservation"
+                                            title="Delete"
                                         >
-                                            Cancel
+                                            <i class="ki-filled ki-trash"></i>
                                         </button>
                                     @endif
                                 </div>

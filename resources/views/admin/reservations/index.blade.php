@@ -94,12 +94,29 @@
                                             class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
                                             data-kt-modal-toggle="#cancel_reservation_modal"
                                             data-cancel-action="{{ route('admin.reservations.cancel', $r->id) }}"
+                                            aria-label="Cancel reservation"
+                                            title="Cancel"
+                                        >
+                                            <i class="ki-filled ki-cross"></i>
+                                        </button>
+                                    @endif
+
+                                    <form
+                                        method="POST"
+                                        action="{{ route('admin.reservations.destroy', $r->id) }}"
+                                        onsubmit="return confirm('Are you sure you want to delete this reservation?')"
+                                    >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button
+                                            type="submit"
+                                            class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost"
                                             aria-label="Delete reservation"
                                             title="Delete"
                                         >
                                             <i class="ki-filled ki-trash"></i>
                                         </button>
-                                    @endif
+                                    </form>
                                 </div>
                             </td>
                         </tr>

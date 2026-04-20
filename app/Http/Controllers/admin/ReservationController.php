@@ -199,6 +199,22 @@ class ReservationController extends Controller
         return redirect()->route('admin.reservations.index')->with('success', 'Reservation cancelled successfully.');
     }
 
+    public function destroy($id)
+    {
+        $reservation = Reservation::with(['reservationRooms'])->findOrFail($id);
+
+        $hasOccupiedRooms = $reservation->reservationRooms
+            && $reservation->reservationRooms->contains(fn ($rr) => ($rr->status ?? null) === 'occupied');
+
+        if ($hasOccupiedRooms) {
+            return redirect()->back()->with('error', 'Checked-in reservations cannot be deleted.');
+        }
+
+        $reservation->delete();
+
+        return redirect()->route('admin.reservations.index')->with('success', 'Reservation deleted successfully.');
+    }
+
     public function calendar()
     {
         $reservations = Reservation::with(['guest', 'rooms.floor'])->get();

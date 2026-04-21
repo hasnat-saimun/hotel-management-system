@@ -211,6 +211,66 @@
                                 </div>
                             </div>
 
+                            <div
+                                class="kt-menu-item {{ request()->routeIs('admin.front-desk.*') ? 'here show' : '' }}"
+                                data-kt-menu-item-toggle="accordion"
+                                data-kt-menu-item-trigger="click"
+                            >
+                                <div
+                                    class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
+                                    tabindex="0"
+                                >
+                                    <span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="inline-block">
+                                            <path d="M7 10h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                                            <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" stroke="currentColor" stroke-width="1.2" />
+                                            <path d="M9 10V8.5a3 3 0 0 1 6 0V10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                                            <circle cx="12" cy="8" r="1" fill="currentColor" />
+                                        </svg>
+                                    </span>
+                                    <span class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">Front Desk</span>
+                                    <span class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]"><span class="inline-flex kt-menu-item-show:hidden"><i class="ki-filled ki-plus text-[11px]"></i></span><span class="hidden kt-menu-item-show:inline-flex"><i class="ki-filled ki-minus text-[11px]"></i></span></span>
+                                </div>
+                                <div class="kt-menu-accordion gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.arrivals') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/arrivals') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Arrivals</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.departures') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/departures') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Departures</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.in-house') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/in-house') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">In-House Guests</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.room-rack') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/room-rack') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Room Rack</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.walk-in') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/walk-in') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Walk-In</span>
+                                        </a>
+                                    </div>
+                                    <div class="kt-menu-item {{ request()->routeIs('admin.front-desk.guest-requests') ? 'active' : '' }}">
+                                        <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]" href="{{ url('admin/front-desk/guest-requests') }}" tabindex="0">
+                                            <span class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                            <span class="kt-menu-title text-2sm font-normal text-foreground">Guest Requests</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="kt-menu-item {{ (request()->routeIs('admin.rooms.*') || request()->routeIs('admin.room-blocks.*')) ? 'here show' : '' }}"
                                 data-kt-menu-item-toggle="accordion"
                                 data-kt-menu-item-trigger="click"

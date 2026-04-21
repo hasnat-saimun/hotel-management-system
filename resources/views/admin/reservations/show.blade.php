@@ -26,8 +26,6 @@
                 $roomType = $reservationRoom?->roomType ?? ($room?->roomType ?? null);
 
                 $rawStatus = strtolower($reservation->status ?? 'booked');
-                $isCheckedIn = ($reservation->reservationRooms ?? collect())
-                    ->contains(fn ($rr) => strtolower((string) ($rr->status ?? '')) === 'occupied');
                 if ($rawStatus === 'confirmed') {
                     $statusLabel = 'Confirmed';
                     $statusBadgeClass = 'kt-badge-outline kt-badge-success';
@@ -153,15 +151,6 @@
                         </dl>
                     </div>
                 </div>
-            </div>
-
-            <div class="mt-4 flex gap-2">
-                @if($rawStatus === 'confirmed')
-                    <a class="kt-btn kt-btn-primary" href="{{ route('admin.reservations.checkin', $reservation->id) }}">Check-in</a>
-                @elseif($isCheckedIn)
-                    <a class="kt-btn kt-btn-destructive" onclick="return confirm('Are you sure you want to check out this reservation?')" href="{{ route('admin.reservations.checkout', $reservation->id) }}">Check-out</a>
-                @endif
-
             </div>
             @else
             <div>No reservation found.</div>

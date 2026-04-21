@@ -96,6 +96,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('arrivals/{reservation}/check-in', [FrontDeskController::class, 'showCheckIn'])->name('arrivals.check-in');
             Route::post('arrivals/{reservation}/check-in', [FrontDeskController::class, 'storeCheckIn'])->name('arrivals.check-in.store');
             Route::get('departures', [FrontDeskController::class, 'departures'])->name('departures');
+            Route::get('departures/{stay}/check-out', [FrontDeskController::class, 'showCheckOut'])->name('departures.check-out');
+            Route::post('departures/{stay}/check-out', [FrontDeskController::class, 'storeCheckOut'])->name('departures.check-out.store');
             Route::get('in-house', [FrontDeskController::class, 'inHouse'])->name('in-house');
             Route::get('room-rack', [FrontDeskController::class, 'roomRack'])->name('room-rack');
             Route::get('walk-in', [FrontDeskController::class, 'walkIn'])->name('walk-in');

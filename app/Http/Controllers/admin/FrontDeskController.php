@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\DB;
 
 class FrontDeskController extends Controller
 {
-    public function arrivals()
+    public function arrivals(Request $request)
     {
         $today = Carbon::today();
+
+        $q = trim((string) $request->query('q', ''));
 
         $reservations = Reservation::query()
             ->with([
@@ -24,6 +26,22 @@ class FrontDeskController extends Controller
             ])
             ->whereDate('check_in_date', $today)
             ->whereIn('status', ['booked', 'confirmed'])
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner
+                        ->where('reservation_code', 'like', '%' . $q . '%')
+                        ->orWhere('id', $q)
+                        ->orWhereHas('guest', function ($guestQuery) use ($q) {
+                            $guestQuery
+                                ->where('first_name', 'like', '%' . $q . '%')
+                                ->orWhere('last_name', 'like', '%' . $q . '%')
+                                ->orWhere('phone', 'like', '%' . $q . '%');
+                        })
+                        ->orWhereHas('reservationRooms.room', function ($roomQuery) use ($q) {
+                            $roomQuery->where('room_number', 'like', '%' . $q . '%');
+                        });
+                });
+            })
             ->orderBy('check_in_date')
             ->orderBy('id', 'desc')
             ->get();
@@ -127,9 +145,141 @@ class FrontDeskController extends Controller
         return redirect()->route('admin.front-desk.arrivals')->with('success', 'Guest checked in successfully.');
     }
 
-    public function departures()
+    public function departures(Request $request)
     {
-        return view('admin.frontDesk.departures');
+        $today = Carbon::today();
+
+        $view = (string) $request->query('view', 'due');
+        if (!in_array($view, ['due', 'checked_out'], true)) {
+            $view = 'due';
+        }
+
+        $q = trim((string) $request->query('q', ''));
+        $includeOverdue = $view === 'due' ? (bool) $request->boolean('include_overdue') : false;
+
+        $staysQuery = Stay::query()
+            ->select('stays.*')
+            ->join('reservations', 'reservations.id', '=', 'stays.reservation_id')
+            ->join('rooms', 'rooms.id', '=', 'stays.room_id')
+            ->with([
+                'reservation:id,guest_id,reservation_code,check_in_date,check_out_date',
+                'reservation.guest:id,first_name,last_name,phone',
+                'room:id,room_number,status',
+            ])
+            ->when($view === 'due', function ($query) use ($includeOverdue, $today) {
+                $query
+                    ->where('stays.status', 'in_house')
+                    ->whereNull('stays.check_out_time')
+                    ->when(
+                        $includeOverdue,
+                        fn ($inner) => $inner->whereDate('reservations.check_out_date', '<=', $today),
+                        fn ($inner) => $inner->whereDate('reservations.check_out_date', $today)
+                    );
+            })
+            ->when($view === 'checked_out', function ($query) use ($today) {
+                $query
+                    ->where('stays.status', 'checked_out')
+                    ->whereNotNull('stays.check_out_time')
+                    ->whereDate('stays.check_out_time', $today);
+            })
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner
+                        ->where('reservations.reservation_code', 'like', '%' . $q . '%')
+                        ->orWhere('reservations.id', $q)
+                        ->orWhereHas('reservation.guest', function ($guestQuery) use ($q) {
+                            $guestQuery
+                                ->where('first_name', 'like', '%' . $q . '%')
+                                ->orWhere('last_name', 'like', '%' . $q . '%')
+                                ->orWhere('phone', 'like', '%' . $q . '%');
+                        })
+                        ->orWhereHas('room', function ($roomQuery) use ($q) {
+                            $roomQuery->where('room_number', 'like', '%' . $q . '%');
+                        });
+                });
+            });
+
+        if ($view === 'checked_out') {
+            $staysQuery
+                ->orderBy('stays.check_out_time', 'desc')
+                ->orderBy('rooms.room_number');
+        } else {
+            $staysQuery
+                ->orderBy('reservations.check_out_date')
+                ->orderBy('rooms.room_number')
+                ->orderBy('stays.id', 'desc');
+        }
+
+        $stays = $staysQuery
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.frontDesk.departures', [
+            'today' => $today,
+            'view' => $view,
+            'q' => $q,
+            'includeOverdue' => $includeOverdue,
+            'stays' => $stays,
+        ]);
+    }
+
+    public function showCheckOut(Stay $stay)
+    {
+        $stay->load([
+            'reservation.guest',
+            'reservation.reservationRooms.room.floor',
+            'reservation.reservationRooms.roomType',
+            'room.floor',
+            'room.roomType',
+        ]);
+
+        if (($stay->status ?? null) !== 'in_house' || $stay->check_out_time !== null) {
+            return redirect()->route('admin.front-desk.departures')->with('error', 'Only in-house stays can be checked out.');
+        }
+
+        return view('admin.frontDesk.checkout', [
+            'stay' => $stay,
+        ]);
+    }
+
+    public function storeCheckOut(Request $request, Stay $stay)
+    {
+        $request->validate([
+            'confirm' => ['required', 'in:1'],
+        ]);
+
+        try {
+            DB::transaction(function () use ($stay) {
+                $lockedStay = Stay::query()
+                    ->whereKey($stay->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (($lockedStay->status ?? null) !== 'in_house' || $lockedStay->check_out_time !== null) {
+                    throw new \RuntimeException('This stay is already checked out.');
+                }
+
+                $lockedStay->check_out_time = now();
+                $lockedStay->status = 'checked_out';
+                $lockedStay->save();
+
+                ReservationRoom::query()
+                    ->where('reservation_id', $lockedStay->reservation_id)
+                    ->where('room_id', $lockedStay->room_id)
+                    ->lockForUpdate()
+                    ->update(['status' => 'released']);
+
+                // Mark room as dirty for housekeeping after check-out.
+                Room::query()
+                    ->whereKey($lockedStay->room_id)
+                    ->update(['status' => 'dirty']);
+            });
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.front-desk.departures', ['view' => 'checked_out'])
+            ->with('success', 'Guest checked out successfully. Room marked as dirty.');
     }
 
     public function inHouse()

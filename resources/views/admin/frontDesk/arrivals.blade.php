@@ -8,7 +8,33 @@
                 Today's arrivals ({{ $today->format('M d, Y') }})
             </div>
         </div>
+        <div class="flex items-center gap-2">
+            <form id="arrivals-search-form" method="GET" action="{{ route('admin.front-desk.arrivals') }}" class="flex items-center gap-2">
+                <input id="arrivals-search" type="text" name="q" class="kt-input" placeholder="Search guest / phone / room" value="{{ request('q') }}" autocomplete="off" />
+            </form>
+            @if(request('q'))
+                <a class="kt-btn kt-btn-outline" href="{{ route('admin.front-desk.arrivals') }}">Clear</a>
+            @endif
+        </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('arrivals-search-form');
+                const input = document.getElementById('arrivals-search');
+                if (!form || !input) return;
+
+                let debounceId;
+                input.addEventListener('input', function () {
+                    window.clearTimeout(debounceId);
+                    debounceId = window.setTimeout(function () {
+                        form.submit();
+                    }, 350);
+                });
+            });
+        </script>
+    @endpush
 
     <div class="grid gap-5">
         <div class="kt-card">

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\loginController;
 use App\Http\Controllers\admin\DashboardController;
 use App\Http\Controllers\admin\ReservationController;
+use App\Http\Controllers\admin\FrontDeskController;
 use App\Http\Controllers\admin\RoomBlockController;
 use App\Http\Controllers\admin\GuestController;
 use App\Http\Controllers\admin\CompanyController;
@@ -88,6 +89,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('{id}', [ReservationController::class, 'update'])->name('update');
             Route::delete('{id}', [ReservationController::class, 'destroy'])->name('destroy');
             Route::get('{id}', [ReservationController::class, 'show'])->name('show');
+        });
+
+        Route::prefix('front-desk')->name('front-desk.')->group(function () {
+            Route::get('arrivals', [FrontDeskController::class, 'arrivals'])->name('arrivals');
+            Route::get('departures', [FrontDeskController::class, 'departures'])->name('departures');
+            Route::get('in-house', [FrontDeskController::class, 'inHouse'])->name('in-house');
+            Route::get('room-rack', [FrontDeskController::class, 'roomRack'])->name('room-rack');
+            Route::get('walk-in', [FrontDeskController::class, 'walkIn'])->name('walk-in');
+            Route::get('guest-requests', [FrontDeskController::class, 'guestRequests'])->name('guest-requests');
         });
 
         // Room Blocks (Group bookings)

@@ -38,7 +38,8 @@ class FrontDeskController extends Controller
     {
         $reservation->load([
             'guest',
-            'reservationRooms.room',
+            'reservationRooms.room.floor',
+            'reservationRooms.roomType',
         ]);
 
         return view('admin.frontDesk.checkin', [

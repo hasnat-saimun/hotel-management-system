@@ -16,6 +16,7 @@ class FrontDeskController extends Controller
     public function inHouse(Request $request)
     {
         $today = Carbon::today();
+        $now = now();
 
         $q = trim((string) $request->query('q', ''));
         $roomTypeId = $request->filled('room_type_id') ? (int) $request->query('room_type_id') : null;
@@ -48,8 +49,30 @@ class FrontDeskController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $stays->getCollection()->transform(function (Stay $stay) use ($now, $today) {
+            $checkIn = $stay->check_in_time ? Carbon::parse($stay->check_in_time) : null;
+            $nightsStayed = $checkIn
+                ? $checkIn->copy()->startOfDay()->diffInDays($now->copy()->startOfDay())
+                : 0;
+
+            $expectedCheckOut = $stay->reservation?->check_out_date
+                ? Carbon::parse($stay->reservation->check_out_date)->startOfDay()
+                : null;
+            $isOverstay = $expectedCheckOut ? $today->copy()->startOfDay()->gt($expectedCheckOut) : false;
+
+            $isVip = (bool) ($stay->reservation?->guest?->vip ?? false);
+
+            $stay->setAttribute('nights_stayed', $nightsStayed);
+            $stay->setAttribute('expected_check_out_date', $expectedCheckOut);
+            $stay->setAttribute('is_overstay', $isOverstay);
+            $stay->setAttribute('is_vip', $isVip);
+
+            return $stay;
+        });
+
         return view('admin.frontDesk.in-house', [
             'today' => $today,
+            'now' => $now,
             'filters' => [
                 'q' => $q,
                 'room_type_id' => $roomTypeId,

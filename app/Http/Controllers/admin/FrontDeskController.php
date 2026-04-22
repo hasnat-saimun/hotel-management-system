@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\ReservationRoom;
 use App\Models\Room;
+use App\Models\RoomType;
 use App\Models\Stay;
+use App\Models\Floor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +23,19 @@ class FrontDeskController extends Controller
         $q = trim((string) $request->query('q', ''));
         $roomTypeId = $request->filled('room_type_id') ? (int) $request->query('room_type_id') : null;
         $floorId = $request->filled('floor_id') ? (int) $request->query('floor_id') : null;
+        $status = (string) $request->query('status', 'all');
+        if (!in_array($status, ['all', 'overstay', 'vip'], true)) {
+            $status = 'all';
+        }
 
         $staysQuery = Stay::query()
             ->where('stays.status', 'in_house')
             ->with([
-                'reservation.guest',
-                'room',
+                'reservation:id,guest_id,check_out_date',
+                'reservation.guest:id,first_name,last_name,phone,vip',
+                'room:id,room_number,room_type_id,floor_id,status',
+                'room.roomType:id,name',
+                'room.floor:id,name,level_number',
             ])
             ->when($q !== '', function ($query) use ($q) {
                 $query->whereHas('reservation.guest', function ($guestQuery) use ($q) {
@@ -41,6 +50,12 @@ class FrontDeskController extends Controller
             })
             ->when($floorId, function ($query) use ($floorId) {
                 $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_id', $floorId));
+            })
+            ->when($status === 'vip', function ($query) {
+                $query->whereHas('reservation.guest', fn ($guestQuery) => $guestQuery->where('vip', true));
+            })
+            ->when($status === 'overstay', function ($query) use ($today) {
+                $query->whereHas('reservation', fn ($reservationQuery) => $reservationQuery->whereDate('check_out_date', '<', $today));
             })
             ->orderByDesc('stays.check_in_time')
             ->orderByDesc('stays.id');
@@ -70,6 +85,18 @@ class FrontDeskController extends Controller
             return $stay;
         });
 
+        $roomTypes = RoomType::query()
+            ->select(['id', 'name'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $floors = Floor::query()
+            ->select(['id', 'name', 'level_number'])
+            ->orderBy('level_number')
+            ->orderBy('name')
+            ->get();
+
         return view('admin.frontDesk.in-house', [
             'today' => $today,
             'now' => $now,
@@ -77,7 +104,10 @@ class FrontDeskController extends Controller
                 'q' => $q,
                 'room_type_id' => $roomTypeId,
                 'floor_id' => $floorId,
+                'status' => $status,
             ],
+            'roomTypes' => $roomTypes,
+            'floors' => $floors,
             'stays' => $stays,
         ]);
     }

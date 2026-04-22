@@ -13,6 +13,57 @@ use Illuminate\Support\Facades\DB;
 
 class FrontDeskController extends Controller
 {
+    public function inHouse(Request $request)
+    {
+        $today = Carbon::today();
+
+        $q = trim((string) $request->query('q', ''));
+        $roomTypeId = $request->filled('room_type_id') ? (int) $request->query('room_type_id') : null;
+        $floorId = $request->filled('floor_id') ? (int) $request->query('floor_id') : null;
+
+        $staysQuery = Stay::query()
+            ->where('stays.status', 'in_house')
+            ->with([
+                'reservation.guest',
+                'room',
+            ])
+            ->when($q !== '', function ($query) use ($q) {
+                $query->whereHas('reservation.guest', function ($guestQuery) use ($q) {
+                    $guestQuery
+                        ->where('first_name', 'like', '%' . $q . '%')
+                        ->orWhere('last_name', 'like', '%' . $q . '%')
+                        ->orWhere('phone', 'like', '%' . $q . '%');
+                });
+            })
+            ->when($roomTypeId, function ($query) use ($roomTypeId) {
+                $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('room_type_id', $roomTypeId));
+            })
+            ->when($floorId, function ($query) use ($floorId) {
+                $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_id', $floorId));
+            })
+            ->orderByDesc('stays.check_in_time')
+            ->orderByDesc('stays.id');
+
+        $stays = $staysQuery
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.frontDesk.in-house', [
+            'today' => $today,
+            'filters' => [
+                'q' => $q,
+                'room_type_id' => $roomTypeId,
+                'floor_id' => $floorId,
+            ],
+            'stays' => $stays,
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        return $this->inHouse($request);
+    }
+
     public function arrivals(Request $request)
     {
         $today = Carbon::today();
@@ -280,11 +331,6 @@ class FrontDeskController extends Controller
 
         return redirect()->route('admin.front-desk.departures', ['view' => 'checked_out'])
             ->with('success', 'Guest checked out successfully. Room marked as dirty.');
-    }
-
-    public function inHouse()
-    {
-        return view('admin.frontDesk.in-house');
     }
 
     public function roomRack()

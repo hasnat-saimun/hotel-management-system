@@ -9,9 +9,11 @@ use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\Stay;
 use App\Models\Floor;
+use App\Services\RoomAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class FrontDeskController extends Controller
 {
@@ -110,6 +112,307 @@ class FrontDeskController extends Controller
             'floors' => $floors,
             'stays' => $stays,
         ]);
+    }
+
+    public function showInHouse(Stay $stay, RoomAvailabilityService $availability)
+    {
+        $stay->load([
+            'reservation:id,guest_id,reservation_code,check_in_date,check_out_date,status,channel,adults,children',
+            'reservation.guest:id,first_name,last_name,phone,email,address,vip,notes',
+            'room:id,room_number,room_type_id,floor_id,status',
+            'room.roomType:id,name,capacity_adults,capacity_children,base_price',
+            'room.floor:id,name,level_number',
+        ]);
+
+        $today = Carbon::today();
+        $now = now();
+
+        $checkIn = $stay->check_in_time ? Carbon::parse($stay->check_in_time) : null;
+        $nightsStayed = $checkIn
+            ? $checkIn->copy()->startOfDay()->diffInDays($now->copy()->startOfDay())
+            : 0;
+
+        $expectedCheckOut = $stay->reservation?->check_out_date
+            ? Carbon::parse($stay->reservation->check_out_date)->startOfDay()
+            : null;
+        $isOverstay = $expectedCheckOut ? $today->copy()->startOfDay()->gt($expectedCheckOut) : false;
+
+        $isVip = (bool) ($stay->reservation?->guest?->vip ?? false);
+
+        $rangeFromCarbon = Carbon::today()->startOfDay();
+        $rangeToCarbon = $stay->reservation?->check_out_date
+            ? Carbon::parse($stay->reservation->check_out_date)->startOfDay()
+            : $rangeFromCarbon->copy()->addDay();
+
+        if ($rangeToCarbon->lte($rangeFromCarbon)) {
+            $rangeToCarbon = $rangeFromCarbon->copy()->addDay();
+        }
+
+        $rangeFrom = $rangeFromCarbon->toDateString();
+        $rangeTo = $rangeToCarbon->toDateString();
+
+        $availableRoomsQuery = Room::query()
+            ->select(['rooms.id', 'rooms.room_number', 'rooms.room_type_id', 'rooms.floor_id', 'rooms.status'])
+            ->with([
+                'roomType:id,name',
+                'floor:id,name,level_number',
+            ]);
+
+        $availability->constrainToAvailableRooms($availableRoomsQuery, $rangeFrom, $rangeTo);
+
+        $availableRooms = $availableRoomsQuery
+            ->orderBy('room_number')
+            ->limit(300)
+            ->get();
+
+        return view('admin.frontDesk.in-house-show', [
+            'stay' => $stay,
+            'today' => $today,
+            'nightsStayed' => $nightsStayed,
+            'expectedCheckOut' => $expectedCheckOut,
+            'isOverstay' => $isOverstay,
+            'isVip' => $isVip,
+            'availableRooms' => $availableRooms,
+        ]);
+    }
+
+    public function checkOutInHouse(Request $request, Stay $stay)
+    {
+        $request->validate([
+            'confirm' => ['required', 'in:1'],
+        ]);
+
+        try {
+            DB::transaction(function () use ($stay) {
+                $lockedStay = Stay::query()
+                    ->whereKey($stay->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (($lockedStay->status ?? null) !== 'in_house' || $lockedStay->check_out_time !== null) {
+                    throw new \RuntimeException('Only in-house stays can be checked out.');
+                }
+
+                $lockedStay->check_out_time = now();
+                $lockedStay->status = 'checked_out';
+                $lockedStay->save();
+
+                ReservationRoom::query()
+                    ->where('reservation_id', $lockedStay->reservation_id)
+                    ->where('room_id', $lockedStay->room_id)
+                    ->lockForUpdate()
+                    ->update(['status' => 'released']);
+
+                Room::query()
+                    ->whereKey($lockedStay->room_id)
+                    ->update(['status' => 'dirty']);
+            });
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.front-desk.in-house')
+            ->with('success', 'Guest checked out successfully. Room marked as dirty.');
+    }
+
+    public function extendInHouse(Request $request, Stay $stay)
+    {
+        $validated = $request->validate([
+            'check_out_date' => ['required', 'date'],
+        ]);
+
+        $newCheckOut = Carbon::parse($validated['check_out_date'])->startOfDay();
+        $today = Carbon::today();
+        if ($newCheckOut->lt($today)) {
+            return redirect()->back()->with('error', 'Check-out date cannot be in the past.');
+        }
+
+        try {
+            DB::transaction(function () use ($stay, $newCheckOut) {
+                $lockedStay = Stay::query()
+                    ->whereKey($stay->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (($lockedStay->status ?? null) !== 'in_house' || $lockedStay->check_out_time !== null) {
+                    throw new \RuntimeException('Only in-house stays can be extended.');
+                }
+
+                $reservation = Reservation::query()
+                    ->whereKey($lockedStay->reservation_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($reservation->check_in_date) {
+                    $checkInDate = Carbon::parse($reservation->check_in_date)->startOfDay();
+                    if ($newCheckOut->lt($checkInDate)) {
+                        throw new \RuntimeException('Check-out date must be on or after the reservation check-in date.');
+                    }
+                }
+
+                $reservation->check_out_date = $newCheckOut;
+                $reservation->save();
+            });
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Stay extended successfully.');
+    }
+
+    public function changeRoomInHouse(Request $request, Stay $stay, RoomAvailabilityService $availability)
+    {
+        $validated = $request->validate([
+            'new_room_id' => ['required', 'integer', 'min:1', Rule::exists('rooms', 'id')],
+            'confirm' => ['required', 'in:1'],
+        ]);
+
+        $newRoomId = (int) $validated['new_room_id'];
+
+        try {
+            DB::transaction(function () use ($stay, $newRoomId, $availability) {
+                $lockedStay = Stay::query()
+                    ->whereKey($stay->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (($lockedStay->status ?? null) !== 'in_house' || $lockedStay->check_out_time !== null) {
+                    throw new \RuntimeException('Only in-house stays can change rooms.');
+                }
+
+                if ((int) $lockedStay->room_id === $newRoomId) {
+                    throw new \RuntimeException('Guest is already assigned to this room.');
+                }
+
+                $oldRoomId = (int) $lockedStay->room_id;
+
+                $oldRoom = Room::query()->whereKey($oldRoomId)->lockForUpdate()->first();
+
+                $reservation = Reservation::query()
+                    ->whereKey($lockedStay->reservation_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $rangeFromCarbon = Carbon::today()->startOfDay();
+                $rangeToCarbon = $reservation->check_out_date
+                    ? Carbon::parse($reservation->check_out_date)->startOfDay()
+                    : $rangeFromCarbon->copy()->addDay();
+
+                if ($rangeToCarbon->lte($rangeFromCarbon)) {
+                    $rangeToCarbon = $rangeFromCarbon->copy()->addDay();
+                }
+
+                $rangeFrom = $rangeFromCarbon->toDateString();
+                $rangeTo = $rangeToCarbon->toDateString();
+
+                $availabilityCheckQuery = Room::query()->whereKey($newRoomId);
+                $availability->constrainToAvailableRooms($availabilityCheckQuery, $rangeFrom, $rangeTo);
+                $isAvailableForRange = $availabilityCheckQuery->exists();
+                if (!$isAvailableForRange) {
+                    throw new \RuntimeException('Selected room is not available for the current stay dates.');
+                }
+
+                $newRoom = Room::query()->whereKey($newRoomId)->lockForUpdate()->firstOrFail();
+
+                $newRoomHasActiveStay = Stay::query()
+                    ->where('room_id', $newRoomId)
+                    ->where('status', 'in_house')
+                    ->whereNull('check_out_time')
+                    ->lockForUpdate()
+                    ->exists();
+                if ($newRoomHasActiveStay) {
+                    throw new \RuntimeException('Selected room is currently occupied.');
+                }
+
+                // Release old reservation-room link for this stay.
+                ReservationRoom::query()
+                    ->where('reservation_id', $lockedStay->reservation_id)
+                    ->where('room_id', $oldRoomId)
+                    ->lockForUpdate()
+                    ->update(['status' => 'released']);
+
+                // Ensure a reservation-room record exists for the new room.
+                $reservationRoom = ReservationRoom::query()
+                    ->where('reservation_id', $lockedStay->reservation_id)
+                    ->where('room_id', $newRoomId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$reservationRoom) {
+                    ReservationRoom::create([
+                        'reservation_id' => $lockedStay->reservation_id,
+                        'room_id' => $newRoomId,
+                        'room_type_id' => $newRoom->room_type_id,
+                        'status' => 'occupied',
+                    ]);
+                } else {
+                    $reservationRoom->room_type_id = $reservationRoom->room_type_id ?: $newRoom->room_type_id;
+                    $reservationRoom->status = 'occupied';
+                    $reservationRoom->save();
+                }
+
+                // Move the stay.
+                $lockedStay->room_id = $newRoomId;
+                $lockedStay->save();
+
+                // Update room statuses.
+                if ($oldRoom) {
+                    $oldRoom->status = 'dirty';
+                    $oldRoom->save();
+                }
+                $newRoom->status = 'occupied';
+                $newRoom->save();
+            });
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Room changed successfully. Old room marked as dirty.');
+    }
+
+    public function addNoteInHouse(Request $request, Stay $stay)
+    {
+        $validated = $request->validate([
+            'note' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $note = trim($validated['note']);
+        if ($note === '') {
+            return redirect()->back()->with('error', 'Note cannot be empty.');
+        }
+
+        try {
+            DB::transaction(function () use ($stay, $note) {
+                $lockedStay = Stay::query()
+                    ->whereKey($stay->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $reservation = Reservation::query()
+                    ->whereKey($lockedStay->reservation_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $guest = $reservation->guest()
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$guest) {
+                    throw new \RuntimeException('Guest record not found.');
+                }
+
+                $timestamp = now()->format('Y-m-d H:i');
+                $entry = '[' . $timestamp . '] ' . $note;
+                $existing = (string) ($guest->notes ?? '');
+
+                $guest->notes = trim($existing === '' ? $entry : ($existing . "\n\n" . $entry));
+                $guest->save();
+            });
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Note added to guest profile.');
     }
 
     public function index(Request $request)

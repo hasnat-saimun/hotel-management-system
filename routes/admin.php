@@ -99,6 +99,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('departures/{stay}/check-out', [FrontDeskController::class, 'showCheckOut'])->name('departures.check-out');
             Route::post('departures/{stay}/check-out', [FrontDeskController::class, 'storeCheckOut'])->name('departures.check-out.store');
             Route::get('in-house', [FrontDeskController::class, 'inHouse'])->name('in-house');
+            Route::get('in-house/{stay}', [FrontDeskController::class, 'showInHouse'])->name('in-house.show');
+            Route::post('in-house/{stay}/check-out', [FrontDeskController::class, 'checkOutInHouse'])->name('in-house.check-out');
+            Route::post('in-house/{stay}/extend', [FrontDeskController::class, 'extendInHouse'])->name('in-house.extend');
+            Route::post('in-house/{stay}/change-room', [FrontDeskController::class, 'changeRoomInHouse'])->name('in-house.change-room');
+            Route::post('in-house/{stay}/note', [FrontDeskController::class, 'addNoteInHouse'])->name('in-house.note');
             Route::get('room-rack', [FrontDeskController::class, 'roomRack'])->name('room-rack');
             Route::get('walk-in', [FrontDeskController::class, 'walkIn'])->name('walk-in');
             Route::get('guest-requests', [FrontDeskController::class, 'guestRequests'])->name('guest-requests');

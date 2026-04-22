@@ -121,6 +121,7 @@
                             <th class="p-2">Nights</th>
                             <th class="p-2">Expected check-out</th>
                             <th class="p-2">Status</th>
+                            <th class="p-2 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -170,10 +171,25 @@
                                         @endif
                                     </div>
                                 </td>
+                                <td class="p-2">
+                                    <div class="flex flex-wrap items-center justify-end gap-2">
+                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.front-desk.in-house.show', $stay) }}">View Details</a>
+
+                                        <form method="POST" action="{{ route('admin.front-desk.in-house.check-out', $stay) }}">
+                                            @csrf
+                                            <input type="hidden" name="confirm" value="1" />
+                                            <button type="submit" class="kt-btn kt-btn-sm kt-btn-destructive" onclick="return confirm('Check out this guest?');">Check-Out</button>
+                                        </form>
+
+                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.front-desk.in-house.show', $stay) }}#extend">Extend Stay</a>
+                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.front-desk.in-house.show', $stay) }}#change-room">Change Room</a>
+                                        <a class="kt-btn kt-btn-sm" href="{{ route('admin.front-desk.in-house.show', $stay) }}#add-note">Add Note</a>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="p-6 text-center text-secondary-foreground">No in-house guests found.</td>
+                                <td colspan="8" class="p-6 text-center text-secondary-foreground">No in-house guests found.</td>
                             </tr>
                         @endforelse
                     </tbody>

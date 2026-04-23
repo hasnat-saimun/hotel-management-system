@@ -107,6 +107,27 @@ class RoomRackTest extends TestCase
         $response->assertSee('Dirty');
     }
 
+    public function test_clean_filter_only_returns_clean_rooms(): void
+    {
+        $user = User::factory()->create();
+
+        $cleanRoom = Room::factory()->create([
+            'room_number' => 'CLEAN-101',
+            'status' => 'clean',
+        ]);
+        $availableRoom = Room::factory()->create([
+            'room_number' => 'AVAIL-202',
+            'status' => 'available',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.front-desk.room-rack', ['status' => 'clean']));
+
+        $response->assertOk();
+        $response->assertSee((string) $cleanRoom->room_number);
+        $response->assertSee('Clean');
+        $response->assertDontSee((string) $availableRoom->room_number);
+    }
+
     public function test_out_of_order_when_room_status_is_out_of_service(): void
     {
         $user = User::factory()->create();

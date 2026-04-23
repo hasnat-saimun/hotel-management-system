@@ -25,7 +25,7 @@ class RoomRackService
         $roomTypeId = $request->filled('room_type_id') ? (int) $request->query('room_type_id') : null;
         $status = (string) $request->query('status', 'all');
 
-        if (!in_array($status, ['all', 'available', 'occupied', 'reserved', 'dirty', 'out_of_order'], true)) {
+        if (!in_array($status, ['all', 'available', 'occupied', 'reserved', 'clean', 'dirty', 'maintenance', 'out_of_order'], true)) {
             $status = 'all';
         }
 
@@ -43,14 +43,15 @@ class RoomRackService
      * Business priority order:
      * - Occupied: any stay with status = in_house
      * - Reserved: reservation check_in_date = today, and no active stay
-     * - Dirty: room.status = dirty OR open housekeeping task
-     * - Out of Order: room.status = out_of_service
+    * - Maintenance: room.status = maintenance
+    * - Dirty: room.status = dirty OR open housekeeping task
+    * - Clean: room.status = clean
+    * - Out of Order: room.status = out_of_service
      * - Available: fallback
      */
     public function build(Carbon $date, array $filters = []): array
     {
         $rackDate = $date->copy()->startOfDay();
-        $today = Carbon::today()->startOfDay();
         $search = trim((string) ($filters['q'] ?? ''));
         $floorId = $filters['floor_id'] ?? null;
         $roomTypeId = $filters['room_type_id'] ?? null;
@@ -58,6 +59,7 @@ class RoomRackService
 
         $rooms = Room::query()
             ->select(['rooms.id', 'rooms.room_number', 'rooms.room_type_id', 'rooms.floor_id', 'rooms.status', 'rooms.is_active'])
+            ->leftJoin('floors as floor_sort', 'floor_sort.id', '=', 'rooms.floor_id')
             ->with([
                 'roomType:id,name',
                 'floor:id,name,level_number',
@@ -73,7 +75,7 @@ class RoomRackService
                         ->orderByDesc('stays.check_in_time')
                         ->orderByDesc('stays.id');
                 },
-                'reservations' => function ($query) use ($today) {
+                'reservations' => function ($query) use ($rackDate) {
                     $query
                         ->select([
                             'reservations.id',
@@ -82,9 +84,10 @@ class RoomRackService
                             'reservations.check_in_date',
                             'reservations.check_out_date',
                             'reservations.status',
+                            'reservations.channel',
                         ])
                         ->whereIn('reservations.status', ['booked', 'confirmed'])
-                        ->whereDate('reservations.check_in_date', '=', $today)
+                        ->whereDate('reservations.check_in_date', '=', $rackDate)
                         ->with([
                             'guest:id,first_name,last_name,vip,phone',
                         ])
@@ -111,8 +114,9 @@ class RoomRackService
             ->when($statusFilter !== 'all', function (Builder $query) use ($statusFilter, $rackDate) {
                 $this->applyStatusFilter($query, $statusFilter, $rackDate);
             })
-            ->orderByRaw('CAST((SELECT level_number FROM floors WHERE floors.id = rooms.floor_id) AS INTEGER) asc')
+            ->orderByRaw('COALESCE(floor_sort.level_number, 9999) asc')
             ->orderBy('rooms.room_number')
+            ->orderBy('rooms.id')
             ->get();
 
         $floors = $rooms
@@ -218,7 +222,9 @@ class RoomRackService
             'available' => 0,
             'occupied' => 0,
             'reserved' => 0,
+            'clean' => 0,
             'dirty' => 0,
+            'maintenance' => 0,
             'out_of_order' => 0,
             'other' => 0,
         ];
@@ -289,7 +295,9 @@ class RoomRackService
     private function deriveStatus(Room $room, ?Stay $activeStay, ?Reservation $reservation, ?HousekeepingTask $housekeeping): array
     {
         $raw = strtolower((string) ($room->status ?? ''));
+        $isMaintenance = $raw === 'maintenance';
         $isDirty = $raw === 'dirty' || $housekeeping !== null;
+        $isClean = $raw === 'clean';
         $isOutOfOrder = $raw === 'out_of_service';
 
         // Highest priority: active in-house stay.
@@ -302,8 +310,16 @@ class RoomRackService
             return ['status' => 'reserved', 'label' => 'Reserved', 'badge_class' => 'kt-badge-outline kt-badge-info'];
         }
 
+        if ($isMaintenance) {
+            return ['status' => 'maintenance', 'label' => 'Maintenance', 'badge_class' => 'kt-badge-outline kt-badge-warning'];
+        }
+
         if ($isDirty) {
             return ['status' => 'dirty', 'label' => 'Dirty', 'badge_class' => 'kt-badge-destructive'];
+        }
+
+        if ($isClean) {
+            return ['status' => 'clean', 'label' => 'Clean', 'badge_class' => 'kt-badge-success'];
         }
 
         if ($isOutOfOrder) {
@@ -355,6 +371,35 @@ class RoomRackService
             return;
         }
 
+        if ($statusFilter === 'clean') {
+            $query->whereDoesntHave('stays', $this->currentStayConstraint())
+                ->whereDoesntHave('reservations', function (Builder $reservationQuery) use ($rackDate) {
+                    $reservationQuery
+                        ->whereIn('reservations.status', ['booked', 'confirmed'])
+                        ->whereDate('reservations.check_in_date', '=', $rackDate);
+                })
+                ->whereDoesntHave('housekeepingTasks', function (Builder $taskQuery) use ($rackDate) {
+                    $taskQuery
+                        ->whereIn('status', ['pending', 'in_progress'])
+                        ->whereBetween('task_date', [$rackDate->copy()->startOfDay(), $rackDate->copy()->endOfDay()]);
+                })
+                ->where('rooms.status', 'clean');
+
+            return;
+        }
+
+        if ($statusFilter === 'maintenance') {
+            $query->whereDoesntHave('stays', $this->currentStayConstraint())
+                ->whereDoesntHave('reservations', function (Builder $reservationQuery) use ($rackDate) {
+                    $reservationQuery
+                        ->whereIn('reservations.status', ['booked', 'confirmed'])
+                        ->whereDate('reservations.check_in_date', '=', $rackDate);
+                })
+                ->where('rooms.status', 'maintenance');
+
+            return;
+        }
+
         if ($statusFilter === 'out_of_order') {
             $query->whereDoesntHave('stays', $this->currentStayConstraint())
                 ->whereDoesntHave('reservations', function (Builder $reservationQuery) use ($rackDate) {
@@ -369,8 +414,11 @@ class RoomRackService
 
         if ($statusFilter === 'available') {
             $query->where('rooms.status', '!=', 'out_of_service')
+                ->where('rooms.status', 'available')
                 ->where('rooms.status', '!=', 'dirty')
                 ->where('rooms.status', '!=', 'occupied')
+                ->where('rooms.status', '!=', 'clean')
+                ->where('rooms.status', '!=', 'maintenance')
                 ->whereDoesntHave('stays', $this->currentStayConstraint())
                 ->whereDoesntHave('reservations', function (Builder $reservationQuery) use ($rackDate) {
                     $reservationQuery

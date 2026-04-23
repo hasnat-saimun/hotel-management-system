@@ -21,7 +21,9 @@
             'available' => ['label' => 'Available', 'dot' => '#22c55e'],
             'occupied' => ['label' => 'Occupied', 'dot' => '#ef4444'],
             'reserved' => ['label' => 'Reserved', 'dot' => '#0ea5e9'],
+            'clean' => ['label' => 'Clean', 'dot' => '#10b981'],
             'dirty' => ['label' => 'Dirty', 'dot' => '#f59e0b'],
+            'maintenance' => ['label' => 'Maintenance', 'dot' => '#f97316'],
             'out_of_order' => ['label' => 'Out of Order', 'dot' => '#94a3b8'],
         ];
     @endphp
@@ -89,7 +91,9 @@
                                 <option value="available" {{ $status === 'available' ? 'selected' : '' }}>Available</option>
                                 <option value="occupied" {{ $status === 'occupied' ? 'selected' : '' }}>Occupied</option>
                                 <option value="reserved" {{ $status === 'reserved' ? 'selected' : '' }}>Reserved</option>
+                                <option value="clean" {{ $status === 'clean' ? 'selected' : '' }}>Clean</option>
                                 <option value="dirty" {{ $status === 'dirty' ? 'selected' : '' }}>Dirty</option>
+                                <option value="maintenance" {{ $status === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
                                 <option value="out_of_order" {{ $status === 'out_of_order' ? 'selected' : '' }}>Out of Order</option>
                             </select>
                         </div>
@@ -106,7 +110,9 @@
                 <span class="kt-badge border" style="background-color:#dcfce7;color:#166534;border-color:#bbf7d0;">Available: {{ (int) ($counts['available'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;">Occupied: {{ (int) ($counts['occupied'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;">Reserved: {{ (int) ($counts['reserved'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#d1fae5;color:#047857;border-color:#a7f3d0;">Clean: {{ (int) ($counts['clean'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#fef3c7;color:#92400e;border-color:#fde68a;">Dirty: {{ (int) ($counts['dirty'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#ffedd5;color:#c2410c;border-color:#fed7aa;">Maintenance: {{ (int) ($counts['maintenance'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;">Out of Order: {{ (int) ($counts['out_of_order'] ?? 0) }}</span>
             </div>
 
@@ -192,10 +198,20 @@
                                                 'card_style' => 'border-color:#bae6fd;background-color:#f0f9ff;',
                                                 'bar_style' => 'background-color:#0ea5e9;',
                                             ],
+                                            'clean' => [
+                                                'badge_style' => 'background-color:#d1fae5;color:#047857;border-color:#a7f3d0;',
+                                                'card_style' => 'border-color:#a7f3d0;background-color:#f0fdf4;',
+                                                'bar_style' => 'background-color:#10b981;',
+                                            ],
                                             'dirty' => [
                                                 'badge_style' => 'background-color:#fef3c7;color:#92400e;border-color:#fde68a;',
                                                 'card_style' => 'border-color:#fde68a;background-color:#fffbeb;',
                                                 'bar_style' => 'background-color:#f59e0b;',
+                                            ],
+                                            'maintenance' => [
+                                                'badge_style' => 'background-color:#ffedd5;color:#c2410c;border-color:#fed7aa;',
+                                                'card_style' => 'border-color:#fed7aa;background-color:#fff7ed;',
+                                                'bar_style' => 'background-color:#f97316;',
                                             ],
                                             'out_of_order' => [
                                                 'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
@@ -324,6 +340,8 @@
                             <button class="kt-btn kt-btn-sm kt-btn-primary" data-room-action="check-out" type="button">Check-Out</button>
                             <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-dirty" type="button">Mark Dirty</button>
                             <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-clean" type="button">Mark Clean</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-available" type="button">Mark Available</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-maintenance" type="button">Mark Maintenance</button>
                             <button class="kt-btn kt-btn-sm kt-btn-outline kt-btn-destructive" data-room-action="block" type="button">Block Room</button>
                             <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="unblock" type="button">Unblock Room</button>
                         </div>
@@ -412,6 +430,8 @@
                         if (action === 'check-out') can = !!currentActions.can_check_out;
                         if (action === 'mark-dirty') can = !!currentActions.can_mark_dirty;
                         if (action === 'mark-clean') can = !!currentActions.can_mark_clean;
+                        if (action === 'mark-available') can = !!currentActions.can_mark_available;
+                        if (action === 'mark-maintenance') can = !!currentActions.can_mark_maintenance;
                         if (action === 'block') can = !!currentActions.can_block;
                         if (action === 'unblock') can = !!currentActions.can_unblock;
                         btn.classList.toggle('hidden', !can);
@@ -517,6 +537,12 @@
                     } else if (action === 'mark-clean') {
                         url = makeUrl(housekeepingUrlTemplate, currentRoom.room_id);
                         payload.state = 'clean';
+                    } else if (action === 'mark-available') {
+                        url = makeUrl(housekeepingUrlTemplate, currentRoom.room_id);
+                        payload.state = 'available';
+                    } else if (action === 'mark-maintenance') {
+                        url = makeUrl(housekeepingUrlTemplate, currentRoom.room_id);
+                        payload.state = 'maintenance';
                     } else if (action === 'block') {
                         url = makeUrl(blockUrlTemplate, currentRoom.room_id);
                     } else if (action === 'unblock') {

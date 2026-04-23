@@ -9,6 +9,7 @@ use App\Models\Room;
 use App\Models\Stay;
 use App\Services\InHouseGuestsService;
 use App\Services\RoomAvailabilityService;
+use App\Services\RoomRackService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -612,9 +613,15 @@ class FrontDeskController extends Controller
             ->with('success', 'Guest checked out successfully. Room marked as dirty.');
     }
 
-    public function roomRack()
+    public function roomRack(Request $request, RoomRackService $roomRack)
     {
-        return view('admin.frontDesk.room-rack');
+        $date = $request->filled('date')
+            ? Carbon::parse((string) $request->query('date'))->startOfDay()
+            : Carbon::today();
+
+        $rack = $roomRack->build($date);
+
+        return view('admin.frontDesk.room-rack', $rack);
     }
 
     public function walkIn()

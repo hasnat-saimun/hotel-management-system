@@ -620,9 +620,12 @@ class FrontDeskController extends Controller
             ? Carbon::parse((string) $request->query('date'))->startOfDay()
             : Carbon::today();
 
-        $rack = $roomRack->build($date);
+        $filters = $roomRack->filtersFromRequest($request);
+        $rack = $roomRack->build($date, $filters);
 
-        return view('admin.frontDesk.room-rack', $rack);
+        return view('admin.frontDesk.room-rack', array_merge($rack, [
+            'filters' => $filters,
+        ]));
     }
 
     public function roomRackRoomDetails(Request $request, Room $room)

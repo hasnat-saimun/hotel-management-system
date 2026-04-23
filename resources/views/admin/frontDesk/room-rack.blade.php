@@ -6,6 +6,14 @@
         $generatedAt = $generatedAt ?? now();
         $counts = $counts ?? [];
         $floors = $floors ?? [];
+        $filters = $filters ?? [];
+        $roomTypes = $roomTypes ?? [];
+        $floorOptions = $floorsList ?? [];
+
+        $search = (string) ($filters['q'] ?? request('q', ''));
+        $floorId = $filters['floor_id'] ?? request('floor_id');
+        $roomTypeId = $filters['room_type_id'] ?? request('room_type_id');
+        $status = (string) ($filters['status'] ?? request('status', 'all'));
 
         $totalRooms = array_sum($counts);
 
@@ -32,8 +40,69 @@
         </div>
 
         <div class="kt-card-content p-4">
+            <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur border-b border-input/70 mb-4">
+                <form id="room-rack-filter-form" method="GET" action="{{ route('admin.front-desk.room-rack') }}" class="grid gap-3 grid-cols-1 lg:grid-cols-5 items-end">
+                    <input type="hidden" name="date" value="{{ $rackDate->toDateString() }}" />
+
+                    <div class="lg:col-span-2">
+                        <label class="text-sm text-secondary-foreground">Search room number</label>
+                        <input id="room-rack-search" type="text" name="q" class="kt-input w-full" placeholder="e.g. 101, 2A" value="{{ $search }}" autocomplete="off" />
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-secondary-foreground">Floor</label>
+                        <select id="room-rack-floor" name="floor_id" class="kt-input w-full">
+                            <option value="">All floors</option>
+                            @foreach($floorOptions as $floor)
+                                @php
+                                    $floorLabel = trim((string) ($floor->name ?? ''));
+                                    if ($floorLabel === '') {
+                                        $floorLabel = $floor->level_number ? ('Floor ' . $floor->level_number) : ('Floor #' . $floor->id);
+                                    } elseif ($floor->level_number) {
+                                        $floorLabel = $floorLabel . ' (L' . $floor->level_number . ')';
+                                    }
+                                @endphp
+                                <option value="{{ $floor->id }}" {{ (string) $floorId === (string) $floor->id ? 'selected' : '' }}>
+                                    {{ $floorLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-secondary-foreground">Room type</label>
+                        <select id="room-rack-room-type" name="room_type_id" class="kt-input w-full">
+                            <option value="">All types</option>
+                            @foreach($roomTypes as $type)
+                                <option value="{{ $type->id }}" {{ (string) $roomTypeId === (string) $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <label class="text-sm text-secondary-foreground">Status</label>
+                            <select id="room-rack-status" name="status" class="kt-input w-full">
+                                <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All statuses</option>
+                                <option value="available" {{ $status === 'available' ? 'selected' : '' }}>Available</option>
+                                <option value="occupied" {{ $status === 'occupied' ? 'selected' : '' }}>Occupied</option>
+                                <option value="reserved" {{ $status === 'reserved' ? 'selected' : '' }}>Reserved</option>
+                                <option value="dirty" {{ $status === 'dirty' ? 'selected' : '' }}>Dirty</option>
+                                <option value="out_of_order" {{ $status === 'out_of_order' ? 'selected' : '' }}>Out of Order</option>
+                            </select>
+                        </div>
+
+                        @if($search !== '' || $floorId || $roomTypeId || $status !== 'all')
+                            <a class="kt-btn" href="{{ route('admin.front-desk.room-rack', ['date' => $rackDate->toDateString()]) }}">Reset</a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
             <div class="flex flex-wrap items-center gap-2 mb-3">
-                <span class="kt-badge kt-badge-outline kt-badge-info">Total: {{ $totalRooms }}</span>
+                <span class="kt-badge kt-badge-outline kt-badge-info">Matching: {{ $totalRooms }}</span>
                 <span class="kt-badge border" style="background-color:#dcfce7;color:#166534;border-color:#bbf7d0;">Available: {{ (int) ($counts['available'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;">Occupied: {{ (int) ($counts['occupied'] ?? 0) }}</span>
                 <span class="kt-badge border" style="background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;">Reserved: {{ (int) ($counts['reserved'] ?? 0) }}</span>
@@ -268,6 +337,11 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+                    var filterForm = document.getElementById('room-rack-filter-form');
+                    var searchInput = document.getElementById('room-rack-search');
+                    var floorSelect = document.getElementById('room-rack-floor');
+                    var roomTypeSelect = document.getElementById('room-rack-room-type');
+                    var statusSelect = document.getElementById('room-rack-status');
                 var rackDate = @json($rackDate->toDateString());
                 var csrfToken = @json(csrf_token());
                 var detailsUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.details', ['room' => '__ROOM__']));
@@ -497,6 +571,26 @@
                         }
 
                         fetchRoomDetails(roomId);
+                    });
+                });
+
+                if (filterForm && searchInput) {
+                    var searchTimer;
+                    searchInput.addEventListener('input', function () {
+                        window.clearTimeout(searchTimer);
+                        searchTimer = window.setTimeout(function () {
+                            filterForm.submit();
+                        }, 350);
+                    });
+                }
+
+                [floorSelect, roomTypeSelect, statusSelect].forEach(function (selectEl) {
+                    if (!selectEl) {
+                        return;
+                    }
+
+                    selectEl.addEventListener('change', function () {
+                        filterForm.submit();
                     });
                 });
 

@@ -140,7 +140,13 @@
                                         ];
                                     @endphp
 
-                                    <div class="relative overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:shadow-sm" style="{{ $statusTone['card_style'] }}">
+                                    <button
+                                        type="button"
+                                        class="relative w-full text-left overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        style="{{ $statusTone['card_style'] }}"
+                                        data-room-card="true"
+                                        data-room-id="{{ $room['id'] }}"
+                                    >
                                         <span class="absolute left-0 top-0 h-full w-1" style="{{ $statusTone['bar_style'] }}"></span>
                                         <div class="flex items-start justify-between gap-2">
                                             <div class="min-w-0 pl-1">
@@ -181,21 +187,326 @@
                                                 <div class="truncate">HK: {{ str_replace('_', ' ', $hkStatus) }}{{ $hkPriority ? ' • ' . $hkPriority : '' }}</div>
                                             @endif
                                         </div>
-                                    </div>
+                                    </button>
                                 @endforeach
                             </div>
                         </div>
                     @endforeach
                 </div>
             @endif
+
+            <button id="room_rack_modal_toggle" class="hidden" type="button" data-kt-modal-toggle="#room_rack_modal"></button>
+
+            <div class="kt-modal" data-kt-modal="true" id="room_rack_modal">
+                <div class="kt-modal-content w-full max-w-[760px] top-5 lg:top-[8%]">
+                    <div class="kt-modal-header">
+                        <h3 class="kt-modal-title" id="room_rack_modal_title">Room Details</h3>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true" type="button">
+                            <i class="ki-filled ki-cross"></i>
+                        </button>
+                    </div>
+
+                    <div class="kt-modal-body grid gap-4 max-h-[75vh] overflow-auto" id="room_rack_modal_body">
+                        <div id="room_rack_modal_message" class="hidden rounded-md border px-3 py-2 text-xs"></div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="rounded-lg border border-input/70 bg-muted/20 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-secondary-foreground mb-1">Room</div>
+                                <div class="text-sm font-semibold" id="modal_room_number">-</div>
+                                <div class="text-xs text-secondary-foreground" id="modal_room_type">-</div>
+                                <div class="text-xs text-secondary-foreground" id="modal_room_floor">-</div>
+                                <div class="mt-2">
+                                    <span class="kt-badge kt-badge-sm border" id="modal_room_status_badge">-</span>
+                                </div>
+                            </div>
+
+                            <div class="rounded-lg border border-input/70 bg-muted/20 px-3 py-2">
+                                <div class="text-[11px] uppercase tracking-wide text-secondary-foreground mb-1">Current Guest</div>
+                                <div class="text-sm font-medium" id="modal_guest_name">-</div>
+                                <div class="text-xs text-secondary-foreground" id="modal_guest_phone">-</div>
+                                <div class="mt-2" id="modal_guest_vip"></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-input/70 px-3 py-2">
+                            <div class="text-[11px] uppercase tracking-wide text-secondary-foreground mb-1">Reservation Info</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-secondary-foreground">Code:</span> <span id="modal_res_code">-</span></div>
+                                <div><span class="text-secondary-foreground">Status:</span> <span id="modal_res_status">-</span></div>
+                                <div><span class="text-secondary-foreground">Channel:</span> <span id="modal_res_channel">-</span></div>
+                                <div><span class="text-secondary-foreground">Dates:</span> <span id="modal_res_dates">-</span></div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-input/70 px-3 py-2">
+                            <div class="text-[11px] uppercase tracking-wide text-secondary-foreground mb-1">Stay Info</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                <div><span class="text-secondary-foreground">Stay #:</span> <span id="modal_stay_id">-</span></div>
+                                <div><span class="text-secondary-foreground">Status:</span> <span id="modal_stay_status">-</span></div>
+                                <div><span class="text-secondary-foreground">Check-in:</span> <span id="modal_stay_check_in">-</span></div>
+                                <div><span class="text-secondary-foreground">Nights:</span> <span id="modal_stay_nights">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kt-modal-footer justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button class="kt-btn kt-btn-sm kt-btn-primary" data-room-action="check-in" type="button">Check-In</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-primary" data-room-action="check-out" type="button">Check-Out</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-dirty" type="button">Mark Dirty</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="mark-clean" type="button">Mark Clean</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline kt-btn-destructive" data-room-action="block" type="button">Block Room</button>
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" data-room-action="unblock" type="button">Unblock Room</button>
+                        </div>
+                        <button class="kt-btn" data-kt-modal-dismiss="true" type="button">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     @push('scripts')
         <script>
-            // Lightweight auto-refresh to behave like a live control dashboard.
-            // Keeps UX minimal while reflecting live DB changes.
             document.addEventListener('DOMContentLoaded', function () {
+                var rackDate = @json($rackDate->toDateString());
+                var csrfToken = @json(csrf_token());
+                var detailsUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.details', ['room' => '__ROOM__']));
+                var checkInUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.check-in', ['room' => '__ROOM__']));
+                var checkOutUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.check-out', ['room' => '__ROOM__']));
+                var housekeepingUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.housekeeping', ['room' => '__ROOM__']));
+                var blockUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.block', ['room' => '__ROOM__']));
+                var unblockUrlTemplate = @json(route('admin.front-desk.room-rack.rooms.unblock', ['room' => '__ROOM__']));
+
+                var currentRoom = null;
+                var currentActions = {};
+
+                var modalToggle = document.getElementById('room_rack_modal_toggle');
+                var modalTitle = document.getElementById('room_rack_modal_title');
+                var messageEl = document.getElementById('room_rack_modal_message');
+
+                var actionButtons = Array.prototype.slice.call(document.querySelectorAll('[data-room-action]'));
+
+                function makeUrl(template, roomId) {
+                    return template.replace('__ROOM__', String(roomId));
+                }
+
+                function toDisplay(value) {
+                    if (value === null || value === undefined || value === '') {
+                        return '-';
+                    }
+                    return String(value);
+                }
+
+                function formatDate(value) {
+                    if (!value) {
+                        return '-';
+                    }
+
+                    var dt = new Date(value);
+                    if (Number.isNaN(dt.getTime())) {
+                        return String(value);
+                    }
+
+                    return dt.toLocaleString();
+                }
+
+                function showMessage(type, text) {
+                    if (!messageEl) {
+                        return;
+                    }
+
+                    messageEl.classList.remove('hidden', 'border-success/30', 'bg-success/10', 'text-success', 'border-destructive/30', 'bg-destructive/10', 'text-destructive');
+                    if (type === 'error') {
+                        messageEl.classList.add('border-destructive/30', 'bg-destructive/10', 'text-destructive');
+                    } else {
+                        messageEl.classList.add('border-success/30', 'bg-success/10', 'text-success');
+                    }
+                    messageEl.textContent = text;
+                }
+
+                function setActionState(isBusy) {
+                    actionButtons.forEach(function (btn) {
+                        btn.disabled = isBusy;
+                    });
+                }
+
+                function setButtonVisibility() {
+                    actionButtons.forEach(function (btn) {
+                        var action = btn.getAttribute('data-room-action');
+                        var can = false;
+                        if (action === 'check-in') can = !!currentActions.can_check_in;
+                        if (action === 'check-out') can = !!currentActions.can_check_out;
+                        if (action === 'mark-dirty') can = !!currentActions.can_mark_dirty;
+                        if (action === 'mark-clean') can = !!currentActions.can_mark_clean;
+                        if (action === 'block') can = !!currentActions.can_block;
+                        if (action === 'unblock') can = !!currentActions.can_unblock;
+                        btn.classList.toggle('hidden', !can);
+                    });
+                }
+
+                function setText(id, value) {
+                    var el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = toDisplay(value);
+                    }
+                }
+
+                function hydrateModal(room) {
+                    currentRoom = room;
+                    currentActions = room.actions || {};
+
+                    if (modalTitle) {
+                        modalTitle.textContent = 'Room ' + toDisplay(room.room_number) + ' Details';
+                    }
+
+                    setText('modal_room_number', room.room_number);
+                    setText('modal_room_type', room.room_type);
+                    setText('modal_room_floor', room.floor_name);
+
+                    var statusBadge = document.getElementById('modal_room_status_badge');
+                    if (statusBadge) {
+                        statusBadge.textContent = toDisplay(room.rack_status_label);
+                    }
+
+                    setText('modal_guest_name', room.guest && room.guest.name);
+                    setText('modal_guest_phone', room.guest && room.guest.phone);
+
+                    var vipEl = document.getElementById('modal_guest_vip');
+                    if (vipEl) {
+                        vipEl.innerHTML = (room.guest && room.guest.vip)
+                            ? '<span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">VIP</span>'
+                            : '';
+                    }
+
+                    setText('modal_res_code', room.reservation && room.reservation.code);
+                    setText('modal_res_status', room.reservation && room.reservation.status);
+                    setText('modal_res_channel', room.reservation && room.reservation.channel);
+
+                    var resDates = '-';
+                    if (room.reservation && (room.reservation.check_in_date || room.reservation.check_out_date)) {
+                        resDates = toDisplay(room.reservation.check_in_date) + ' to ' + toDisplay(room.reservation.check_out_date);
+                    }
+                    setText('modal_res_dates', resDates);
+
+                    setText('modal_stay_id', room.stay && room.stay.id);
+                    setText('modal_stay_status', room.stay && room.stay.status);
+                    setText('modal_stay_check_in', room.stay ? formatDate(room.stay.check_in_time) : '-');
+                    setText('modal_stay_nights', room.stay && room.stay.nights !== null && room.stay.nights !== undefined ? room.stay.nights : '-');
+
+                    setButtonVisibility();
+                }
+
+                function fetchRoomDetails(roomId) {
+                    setActionState(true);
+                    showMessage('success', 'Loading room details...');
+
+                    fetch(makeUrl(detailsUrlTemplate, roomId) + '?rack_date=' + encodeURIComponent(rackDate), {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(function (res) {
+                            return res.json().then(function (payload) {
+                                if (!res.ok || !payload || payload.ok !== true) {
+                                    throw new Error(payload && payload.message ? payload.message : 'Unable to load room details.');
+                                }
+                                return payload;
+                            });
+                        })
+                        .then(function (payload) {
+                            hydrateModal(payload.room || {});
+                            messageEl.classList.add('hidden');
+                        })
+                        .catch(function (error) {
+                            showMessage('error', error.message || 'Unable to load room details.');
+                        })
+                        .finally(function () {
+                            setActionState(false);
+                        });
+                }
+
+                function runAction(action) {
+                    if (!currentRoom || !currentRoom.room_id) {
+                        return;
+                    }
+
+                    var url = null;
+                    var payload = { rack_date: rackDate };
+
+                    if (action === 'check-in') {
+                        url = makeUrl(checkInUrlTemplate, currentRoom.room_id);
+                    } else if (action === 'check-out') {
+                        url = makeUrl(checkOutUrlTemplate, currentRoom.room_id);
+                    } else if (action === 'mark-dirty') {
+                        url = makeUrl(housekeepingUrlTemplate, currentRoom.room_id);
+                        payload.state = 'dirty';
+                    } else if (action === 'mark-clean') {
+                        url = makeUrl(housekeepingUrlTemplate, currentRoom.room_id);
+                        payload.state = 'clean';
+                    } else if (action === 'block') {
+                        url = makeUrl(blockUrlTemplate, currentRoom.room_id);
+                    } else if (action === 'unblock') {
+                        url = makeUrl(unblockUrlTemplate, currentRoom.room_id);
+                    }
+
+                    if (!url) {
+                        return;
+                    }
+
+                    setActionState(true);
+                    showMessage('success', 'Processing action...');
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(function (res) {
+                            return res.json().then(function (responsePayload) {
+                                if (!res.ok || !responsePayload || responsePayload.ok !== true) {
+                                    throw new Error(responsePayload && responsePayload.message ? responsePayload.message : 'Action failed.');
+                                }
+                                return responsePayload;
+                            });
+                        })
+                        .then(function (responsePayload) {
+                            showMessage('success', responsePayload.message || 'Action completed.');
+                            window.setTimeout(function () {
+                                window.location.reload();
+                            }, 500);
+                        })
+                        .catch(function (error) {
+                            showMessage('error', error.message || 'Action failed.');
+                            setActionState(false);
+                        });
+                }
+
+                document.querySelectorAll('[data-room-card="true"]').forEach(function (card) {
+                    card.addEventListener('click', function () {
+                        var roomId = card.getAttribute('data-room-id');
+                        if (!roomId) {
+                            return;
+                        }
+
+                        if (modalToggle) {
+                            modalToggle.click();
+                        }
+
+                        fetchRoomDetails(roomId);
+                    });
+                });
+
+                actionButtons.forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        runAction(btn.getAttribute('data-room-action'));
+                    });
+                });
+
+                // Lightweight auto-refresh to behave like a live control dashboard.
                 window.setTimeout(function () {
                     window.location.reload();
                 }, 60000);

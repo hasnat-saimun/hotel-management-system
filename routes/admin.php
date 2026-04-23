@@ -105,6 +105,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('in-house/{stay}/change-room', [FrontDeskController::class, 'changeRoomInHouse'])->name('in-house.change-room');
             Route::post('in-house/{stay}/note', [FrontDeskController::class, 'addNoteInHouse'])->name('in-house.note');
             Route::get('room-rack', [FrontDeskController::class, 'roomRack'])->name('room-rack');
+            Route::get('room-rack/rooms/{room}/details', [FrontDeskController::class, 'roomRackRoomDetails'])->name('room-rack.rooms.details');
+            Route::post('room-rack/rooms/{room}/check-in', [FrontDeskController::class, 'roomRackCheckIn'])->name('room-rack.rooms.check-in');
+            Route::post('room-rack/rooms/{room}/check-out', [FrontDeskController::class, 'roomRackCheckOut'])->name('room-rack.rooms.check-out');
+            Route::post('room-rack/rooms/{room}/housekeeping', [FrontDeskController::class, 'roomRackUpdateHousekeeping'])->name('room-rack.rooms.housekeeping');
+            Route::post('room-rack/rooms/{room}/block', [FrontDeskController::class, 'roomRackBlock'])->name('room-rack.rooms.block');
+            Route::post('room-rack/rooms/{room}/unblock', [FrontDeskController::class, 'roomRackUnblock'])->name('room-rack.rooms.unblock');
             Route::get('walk-in', [FrontDeskController::class, 'walkIn'])->name('walk-in');
             Route::get('guest-requests', [FrontDeskController::class, 'guestRequests'])->name('guest-requests');
         });

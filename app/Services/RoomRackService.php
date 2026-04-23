@@ -97,6 +97,7 @@ class RoomRackService
                             $derived = $this->deriveStatus($room, $activeStay, $reservation, $hk);
 
                             $guestName = null;
+                            $guestPhone = null;
                             $reservationCode = null;
                             $checkInDate = null;
                             $checkOutDate = null;
@@ -110,6 +111,7 @@ class RoomRackService
                                 $guest = $activeStay->reservation->guest;
                                 if ($guest) {
                                     $guestName = trim(($guest->first_name ?? '') . ' ' . ($guest->last_name ?? '')) ?: null;
+                                    $guestPhone = $guest->phone ?? null;
                                     $isVip = (bool) ($guest->vip ?? false);
                                 }
 
@@ -123,6 +125,7 @@ class RoomRackService
                                 $guest = $reservation->guest;
                                 if ($guest) {
                                     $guestName = trim(($guest->first_name ?? '') . ' ' . ($guest->last_name ?? '')) ?: null;
+                                    $guestPhone = $guest->phone ?? null;
                                     $isVip = (bool) ($guest->vip ?? false);
                                 }
                             }
@@ -139,9 +142,19 @@ class RoomRackService
                                 'rack_badge_class' => $derived['badge_class'],
 
                                 'guest_name' => $guestName,
+                                'guest_phone' => $guestPhone,
                                 'reservation_code' => $reservationCode,
                                 'check_in_date' => $checkInDate,
                                 'check_out_date' => $checkOutDate,
+
+                                'reservation_id' => $reservation?->id,
+                                'reservation_status' => $reservation?->status,
+                                'reservation_channel' => $reservation?->channel,
+
+                                'stay_id' => $activeStay?->id,
+                                'stay_status' => $activeStay?->status,
+                                'stay_check_in_time' => $activeStay?->check_in_time,
+                                'stay_check_out_time' => $activeStay?->check_out_time,
 
                                 'housekeeping_status' => $hk?->status,
                                 'housekeeping_priority' => $hk?->priority,

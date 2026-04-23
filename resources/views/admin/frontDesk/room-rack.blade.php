@@ -147,78 +147,20 @@
                             <div class="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7">
                                 @foreach($rooms as $room)
                                     @php
-                                        $statusKey = $room['rack_status'] ?? 'available';
                                         $roomNumber = $room['room_number'] ?? '-';
                                         $roomType = $room['room_type'] ?? '-';
                                         $statusLabel = $room['rack_status_label'] ?? '-';
 
                                         $guestName = $room['guest_name'] ?? null;
                                         $reservationCode = $room['reservation_code'] ?? null;
-                                        $checkInDate = $room['check_in_date'] ?? null;
-                                        $checkOutDate = $room['check_out_date'] ?? null;
+                                        $datesLine = $room['dates_line'] ?? null;
+                                        $stayDuration = $room['stay_duration'] ?? null;
+                                        $housekeepingLine = $room['housekeeping_line'] ?? null;
 
                                         $isVip = (bool) ($room['is_vip'] ?? false);
                                         $isOverstay = (bool) ($room['is_overstay'] ?? false);
 
-                                        $hkStatus = $room['housekeeping_status'] ?? null;
-                                        $hkPriority = $room['housekeeping_priority'] ?? null;
-
-                                        $datesLine = null;
-                                        if ($checkOutDate) {
-                                            try {
-                                                $datesLine = 'Check-out: ' . \Carbon\Carbon::parse($checkOutDate)->format('M d');
-                                            } catch (\Throwable $e) {
-                                                $datesLine = null;
-                                            }
-                                        }
-
-                                        $stayDuration = null;
-                                        if ($statusKey === 'occupied' && $checkInDate) {
-                                            try {
-                                                $nights = \Carbon\Carbon::parse($checkInDate)->startOfDay()->diffInDays(now()->startOfDay());
-                                                $stayDuration = $nights . ' night' . ($nights === 1 ? '' : 's');
-                                            } catch (\Throwable $e) {
-                                                $stayDuration = null;
-                                            }
-                                        }
-
-                                        $statusTone = [
-                                            'available' => [
-                                                'badge_style' => 'background-color:#dcfce7;color:#166534;border-color:#bbf7d0;',
-                                                'card_style' => 'border-color:#bbf7d0;background-color:#f0fdf4;',
-                                                'bar_style' => 'background-color:#22c55e;',
-                                            ],
-                                            'occupied' => [
-                                                'badge_style' => 'background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;',
-                                                'card_style' => 'border-color:#fecaca;background-color:#fef2f2;',
-                                                'bar_style' => 'background-color:#ef4444;',
-                                            ],
-                                            'reserved' => [
-                                                'badge_style' => 'background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;',
-                                                'card_style' => 'border-color:#bae6fd;background-color:#f0f9ff;',
-                                                'bar_style' => 'background-color:#0ea5e9;',
-                                            ],
-                                            'clean' => [
-                                                'badge_style' => 'background-color:#d1fae5;color:#047857;border-color:#a7f3d0;',
-                                                'card_style' => 'border-color:#a7f3d0;background-color:#f0fdf4;',
-                                                'bar_style' => 'background-color:#10b981;',
-                                            ],
-                                            'dirty' => [
-                                                'badge_style' => 'background-color:#fef3c7;color:#92400e;border-color:#fde68a;',
-                                                'card_style' => 'border-color:#fde68a;background-color:#fffbeb;',
-                                                'bar_style' => 'background-color:#f59e0b;',
-                                            ],
-                                            'maintenance' => [
-                                                'badge_style' => 'background-color:#ffedd5;color:#c2410c;border-color:#fed7aa;',
-                                                'card_style' => 'border-color:#fed7aa;background-color:#fff7ed;',
-                                                'bar_style' => 'background-color:#f97316;',
-                                            ],
-                                            'out_of_order' => [
-                                                'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
-                                                'card_style' => 'border-color:#cbd5e1;background-color:#f8fafc;',
-                                                'bar_style' => 'background-color:#94a3b8;',
-                                            ],
-                                        ][$statusKey] ?? [
+                                        $statusTone = $room['status_tone'] ?? [
                                             'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
                                             'card_style' => 'border-color:#e2e8f0;background-color:#ffffff;',
                                             'bar_style' => 'background-color:#94a3b8;',
@@ -268,8 +210,8 @@
                                             @if($stayDuration)
                                                 <div class="truncate">Stay: {{ $stayDuration }}</div>
                                             @endif
-                                            @if($hkStatus)
-                                                <div class="truncate">HK: {{ str_replace('_', ' ', $hkStatus) }}{{ $hkPriority ? ' • ' . $hkPriority : '' }}</div>
+                                            @if($housekeepingLine)
+                                                <div class="truncate">{{ $housekeepingLine }}</div>
                                             @endif
                                         </div>
                                     </button>

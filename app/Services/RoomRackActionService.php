@@ -203,6 +203,8 @@ class RoomRackActionService
             }
         });
 
+        app(RoomRackService::class)->bustSnapshotCache();
+
         return 'Guest checked in successfully.';
     }
 
@@ -237,6 +239,8 @@ class RoomRackActionService
                 $lockedRoom->save();
             }
         });
+
+        app(RoomRackService::class)->bustSnapshotCache();
 
         return 'Guest checked out successfully. Room marked as dirty.';
     }
@@ -294,6 +298,8 @@ class RoomRackActionService
                 ]);
         });
 
+        app(RoomRackService::class)->bustSnapshotCache();
+
         if ($state === 'dirty') {
             return 'Room marked dirty.';
         }
@@ -329,6 +335,8 @@ class RoomRackActionService
             $lockedRoom->save();
         });
 
+        app(RoomRackService::class)->bustSnapshotCache();
+
         return 'Room blocked and marked out of order.';
     }
 
@@ -355,6 +363,8 @@ class RoomRackActionService
             $lockedRoom->status = 'available';
             $lockedRoom->save();
         });
+
+        app(RoomRackService::class)->bustSnapshotCache();
 
         return 'Room unblocked and available for sale.';
     }

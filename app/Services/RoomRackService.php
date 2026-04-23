@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class RoomRackService
 {
@@ -52,6 +53,26 @@ class RoomRackService
     public function build(Carbon $date, array $filters = []): array
     {
         $rackDate = $date->copy()->startOfDay();
+        $normalizedFilters = [
+            'q' => trim((string) ($filters['q'] ?? '')),
+            'floor_id' => $filters['floor_id'] ?? null,
+            'room_type_id' => $filters['room_type_id'] ?? null,
+            'status' => (string) ($filters['status'] ?? 'all'),
+        ];
+
+        $version = (int) Cache::get('room_rack_snapshot_version', 1);
+        $cacheKey = 'room_rack_snapshot:'
+            . $version
+            . ':' . $rackDate->toDateString()
+            . ':' . md5(json_encode($normalizedFilters));
+
+        return Cache::remember($cacheKey, now()->addSeconds(30), function () use ($rackDate, $normalizedFilters) {
+            return $this->buildSnapshot($rackDate, $normalizedFilters);
+        });
+    }
+
+    private function buildSnapshot(Carbon $rackDate, array $filters): array
+    {
         $search = trim((string) ($filters['q'] ?? ''));
         $floorId = $filters['floor_id'] ?? null;
         $roomTypeId = $filters['room_type_id'] ?? null;
@@ -177,6 +198,35 @@ class RoomRackService
                                 }
                             }
 
+                            $datesLine = null;
+                            if ($checkOutDate) {
+                                try {
+                                    $datesLine = 'Check-out: ' . Carbon::parse($checkOutDate)->format('M d');
+                                } catch (\Throwable $e) {
+                                    $datesLine = null;
+                                }
+                            }
+
+                            $stayDuration = null;
+                            if ($derived['status'] === 'occupied' && $checkInDate) {
+                                try {
+                                    $nights = Carbon::parse($checkInDate)->startOfDay()->diffInDays(now()->startOfDay());
+                                    $stayDuration = $nights . ' night' . ($nights === 1 ? '' : 's');
+                                } catch (\Throwable $e) {
+                                    $stayDuration = null;
+                                }
+                            }
+
+                            $housekeepingLine = null;
+                            if ($hk?->status) {
+                                $housekeepingLine = 'HK: ' . str_replace('_', ' ', (string) $hk->status);
+                                if ($hk?->priority) {
+                                    $housekeepingLine .= ' • ' . $hk->priority;
+                                }
+                            }
+
+                            $statusTone = $this->statusTone($derived['status']);
+
                             return [
                                 'id' => $room->id,
                                 'room_number' => (string) ($room->room_number ?? '-'),
@@ -205,6 +255,11 @@ class RoomRackService
 
                                 'housekeeping_status' => $hk?->status,
                                 'housekeeping_priority' => $hk?->priority,
+
+                                'dates_line' => $datesLine,
+                                'stay_duration' => $stayDuration,
+                                'housekeeping_line' => $housekeepingLine,
+                                'status_tone' => $statusTone,
 
                                 'is_vip' => $isVip,
                                 'is_overstay' => $isOverstay,
@@ -252,20 +307,30 @@ class RoomRackService
 
     public function roomTypes()
     {
-        return RoomType::query()
-            ->select(['id', 'name'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('room_rack_room_types', now()->addMinutes(10), function () {
+            return RoomType::query()
+                ->select(['id', 'name'])
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+        });
     }
 
     public function floors()
     {
-        return Floor::query()
-            ->select(['id', 'name', 'level_number'])
-            ->orderBy('level_number')
-            ->orderBy('name')
-            ->get();
+        return Cache::remember('room_rack_floors', now()->addMinutes(10), function () {
+            return Floor::query()
+                ->select(['id', 'name', 'level_number'])
+                ->orderBy('level_number')
+                ->orderBy('name')
+                ->get();
+        });
+    }
+
+    public function bustSnapshotCache(): void
+    {
+        $version = (int) Cache::get('room_rack_snapshot_version', 1);
+        Cache::forever('room_rack_snapshot_version', $version + 1);
     }
 
     private function pickOpenHousekeepingTask(Collection $tasks): ?HousekeepingTask
@@ -327,6 +392,51 @@ class RoomRackService
         }
 
         return ['status' => 'available', 'label' => 'Available', 'badge_class' => 'kt-badge-success'];
+    }
+
+    private function statusTone(string $status): array
+    {
+        return [
+            'available' => [
+                'badge_style' => 'background-color:#dcfce7;color:#166534;border-color:#bbf7d0;',
+                'card_style' => 'border-color:#bbf7d0;background-color:#f0fdf4;',
+                'bar_style' => 'background-color:#22c55e;',
+            ],
+            'occupied' => [
+                'badge_style' => 'background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;',
+                'card_style' => 'border-color:#fecaca;background-color:#fef2f2;',
+                'bar_style' => 'background-color:#ef4444;',
+            ],
+            'reserved' => [
+                'badge_style' => 'background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;',
+                'card_style' => 'border-color:#bae6fd;background-color:#f0f9ff;',
+                'bar_style' => 'background-color:#0ea5e9;',
+            ],
+            'clean' => [
+                'badge_style' => 'background-color:#d1fae5;color:#047857;border-color:#a7f3d0;',
+                'card_style' => 'border-color:#a7f3d0;background-color:#f0fdf4;',
+                'bar_style' => 'background-color:#10b981;',
+            ],
+            'dirty' => [
+                'badge_style' => 'background-color:#fef3c7;color:#92400e;border-color:#fde68a;',
+                'card_style' => 'border-color:#fde68a;background-color:#fffbeb;',
+                'bar_style' => 'background-color:#f59e0b;',
+            ],
+            'maintenance' => [
+                'badge_style' => 'background-color:#ffedd5;color:#c2410c;border-color:#fed7aa;',
+                'card_style' => 'border-color:#fed7aa;background-color:#fff7ed;',
+                'bar_style' => 'background-color:#f97316;',
+            ],
+            'out_of_order' => [
+                'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
+                'card_style' => 'border-color:#cbd5e1;background-color:#f8fafc;',
+                'bar_style' => 'background-color:#94a3b8;',
+            ],
+        ][$status] ?? [
+            'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
+            'card_style' => 'border-color:#e2e8f0;background-color:#ffffff;',
+            'bar_style' => 'background-color:#94a3b8;',
+        ];
     }
 
     private function applyStatusFilter(Builder $query, string $statusFilter, Carbon $rackDate): void

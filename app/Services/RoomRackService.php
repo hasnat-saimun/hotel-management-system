@@ -14,38 +14,67 @@ class RoomRackService
     /**
      * Build the room rack snapshot for a given date.
      *
-     * The rack status is derived from (in priority order):
-     * - room.status maintenance/out_of_service
-     * - active in-house stay (occupied)
-     * - room.status dirty
-     * - open housekeeping task for the day
-     * - overlapping reservation (reserved)
-     * - else room.status (available/clean/etc)
+     * Business priority order:
+     * - Occupied: any stay with status = in_house
+     * - Reserved: reservation check_in_date = today, and no active stay
+     * - Dirty: room.status = dirty OR open housekeeping task
+     * - Out of Order: room.status = out_of_service
+     * - Available: fallback
      */
     public function build(Carbon $date): array
     {
         $rackDate = $date->copy()->startOfDay();
+        $today = Carbon::today()->startOfDay();
 
         $rooms = Room::query()
             ->select(['rooms.id', 'rooms.room_number', 'rooms.room_type_id', 'rooms.floor_id', 'rooms.status', 'rooms.is_active'])
             ->with([
                 'roomType:id,name',
                 'floor:id,name,level_number',
+                'stays' => function ($query) {
+                    $query
+                        ->select(['stays.id', 'stays.room_id', 'stays.reservation_id', 'stays.check_in_time', 'stays.check_out_time', 'stays.status'])
+                        ->where('stays.status', 'in_house')
+                        ->with([
+                            'reservation:id,guest_id,reservation_code,check_in_date,check_out_date',
+                            'reservation.guest:id,first_name,last_name,vip,phone',
+                        ])
+                        ->orderByDesc('stays.check_in_time')
+                        ->orderByDesc('stays.id');
+                },
+                'reservations' => function ($query) use ($today) {
+                    $query
+                        ->select([
+                            'reservations.id',
+                            'reservations.guest_id',
+                            'reservations.reservation_code',
+                            'reservations.check_in_date',
+                            'reservations.check_out_date',
+                            'reservations.status',
+                        ])
+                        ->whereIn('reservations.status', ['booked', 'confirmed'])
+                        ->whereDate('reservations.check_in_date', '=', $today)
+                        ->with([
+                            'guest:id,first_name,last_name,vip,phone',
+                        ])
+                        ->orderBy('reservations.check_in_date')
+                        ->orderBy('reservations.id');
+                },
+                'housekeepingTasks' => function ($query) use ($rackDate) {
+                    $query
+                        ->select(['id', 'room_id', 'task_date', 'status', 'priority'])
+                        ->whereIn('status', ['pending', 'in_progress'])
+                        ->whereBetween('task_date', [$rackDate->copy()->startOfDay(), $rackDate->copy()->endOfDay()]);
+                },
             ])
             ->where('rooms.is_active', true)
             ->orderByRaw('CAST((SELECT level_number FROM floors WHERE floors.id = rooms.floor_id) AS INTEGER) asc')
             ->orderBy('rooms.room_number')
             ->get();
 
-        $roomIds = $rooms->pluck('id');
-
-        $activeStaysByRoomId = $this->activeStaysByRoomId($roomIds);
-        $reservationsByRoomId = $this->overlappingReservationsByRoomId($roomIds, $rackDate);
-        $housekeepingByRoomId = $this->openHousekeepingByRoomId($roomIds, $rackDate);
-
         $floors = $rooms
             ->groupBy(fn (Room $room) => (int) ($room->floor_id ?? 0))
-            ->map(function (Collection $floorRooms) use ($activeStaysByRoomId, $reservationsByRoomId, $housekeepingByRoomId, $rackDate) {
+            ->map(function (Collection $floorRooms) use ($rackDate) {
                 $first = $floorRooms->first();
                 $floor = $first?->floor;
                 $label = $floor?->name;
@@ -60,10 +89,10 @@ class RoomRackService
                     'floor_id' => (int) ($first?->floor_id ?? 0),
                     'floor_label' => $label,
                     'rooms' => $floorRooms
-                        ->map(function (Room $room) use ($activeStaysByRoomId, $reservationsByRoomId, $housekeepingByRoomId, $rackDate) {
-                            $activeStay = $activeStaysByRoomId->get($room->id);
-                            $reservation = $reservationsByRoomId->get($room->id);
-                            $hk = $housekeepingByRoomId->get($room->id);
+                        ->map(function (Room $room) use ($rackDate) {
+                            $activeStay = $room->stays->first();
+                            $reservation = $room->reservations->first();
+                            $hk = $this->pickOpenHousekeepingTask($room->housekeepingTasks);
 
                             $derived = $this->deriveStatus($room, $activeStay, $reservation, $hk);
 
@@ -134,9 +163,7 @@ class RoomRackService
             'occupied' => 0,
             'reserved' => 0,
             'dirty' => 0,
-            'housekeeping' => 0,
-            'maintenance' => 0,
-            'out_of_service' => 0,
+            'out_of_order' => 0,
             'other' => 0,
         ];
 
@@ -158,130 +185,54 @@ class RoomRackService
         ];
     }
 
-    private function activeStaysByRoomId(Collection $roomIds): Collection
+    private function pickOpenHousekeepingTask(Collection $tasks): ?HousekeepingTask
     {
-        $stays = Stay::query()
-            ->select(['stays.id', 'stays.room_id', 'stays.reservation_id', 'stays.check_in_time', 'stays.check_out_time', 'stays.status'])
-            ->with([
-                'reservation:id,guest_id,reservation_code,check_in_date,check_out_date',
-                'reservation.guest:id,first_name,last_name,vip,phone',
-            ])
-            ->whereIn('stays.room_id', $roomIds)
-            ->where('stays.status', 'in_house')
-            ->whereNull('stays.check_out_time')
-            ->orderByDesc('stays.check_in_time')
-            ->orderByDesc('stays.id')
-            ->get();
-
-        return $stays
-            ->groupBy('room_id')
-            ->map(fn (Collection $group) => $group->first());
-    }
-
-    private function overlappingReservationsByRoomId(Collection $roomIds, Carbon $rackDate): Collection
-    {
-        $rows = Reservation::query()
-            ->select([
-                'reservations.id',
-                'reservations.guest_id',
-                'reservations.reservation_code',
-                'reservations.check_in_date',
-                'reservations.check_out_date',
-                'reservations.status',
-            ])
-            ->selectRaw('reservation_rooms.room_id as room_id')
-            ->join('reservation_rooms', 'reservation_rooms.reservation_id', '=', 'reservations.id')
-            ->whereIn('reservation_rooms.room_id', $roomIds)
-            ->whereIn('reservations.status', ['booked', 'confirmed'])
-            ->whereDate('reservations.check_in_date', '<=', $rackDate)
-            ->whereDate('reservations.check_out_date', '>', $rackDate)
-            ->with([
-                'guest:id,first_name,last_name,vip,phone',
-            ])
-            ->orderBy('reservations.check_in_date')
-            ->orderBy('reservations.id');
-
-        $reservations = $rows->get();
-
-        return $reservations
-            ->groupBy('room_id')
-            ->map(fn (Collection $group) => $group->first());
-    }
-
-    private function openHousekeepingByRoomId(Collection $roomIds, Carbon $rackDate): Collection
-    {
-        $start = $rackDate->copy()->startOfDay();
-        $end = $rackDate->copy()->endOfDay();
-
-        $tasks = HousekeepingTask::query()
-            ->select(['id', 'room_id', 'task_date', 'status', 'priority'])
-            ->whereIn('room_id', $roomIds)
-            ->whereIn('status', ['pending', 'in_progress'])
-            ->whereBetween('task_date', [$start, $end])
-            ->get();
-
         $priorityRank = ['high' => 3, 'medium' => 2, 'low' => 1];
         $statusRank = ['in_progress' => 2, 'pending' => 1];
 
         return $tasks
-            ->groupBy('room_id')
-            ->map(function (Collection $group) use ($priorityRank, $statusRank) {
-                return $group
-                    ->sort(function ($a, $b) use ($priorityRank, $statusRank) {
-                        $sa = $statusRank[$a->status] ?? 0;
-                        $sb = $statusRank[$b->status] ?? 0;
-                        if ($sa !== $sb) {
-                            return $sb <=> $sa;
-                        }
+            ->sort(function ($a, $b) use ($priorityRank, $statusRank) {
+                $sa = $statusRank[$a->status] ?? 0;
+                $sb = $statusRank[$b->status] ?? 0;
+                if ($sa !== $sb) {
+                    return $sb <=> $sa;
+                }
 
-                        $pa = $priorityRank[$a->priority] ?? 0;
-                        $pb = $priorityRank[$b->priority] ?? 0;
-                        if ($pa !== $pb) {
-                            return $pb <=> $pa;
-                        }
+                $pa = $priorityRank[$a->priority] ?? 0;
+                $pb = $priorityRank[$b->priority] ?? 0;
+                if ($pa !== $pb) {
+                    return $pb <=> $pa;
+                }
 
-                        return Carbon::parse($a->task_date) <=> Carbon::parse($b->task_date);
-                    })
-                    ->first();
-            });
+                return Carbon::parse($a->task_date) <=> Carbon::parse($b->task_date);
+            })
+            ->first();
     }
 
     private function deriveStatus(Room $room, ?Stay $activeStay, ?Reservation $reservation, ?HousekeepingTask $housekeeping): array
     {
         $raw = strtolower((string) ($room->status ?? ''));
+        $isDirty = $raw === 'dirty' || $housekeeping !== null;
+        $isOutOfOrder = $raw === 'out_of_service';
 
-        if ($raw === 'out_of_service') {
-            return ['status' => 'out_of_service', 'label' => 'Out of Service', 'badge_class' => 'kt-badge-outline kt-badge-destructive'];
-        }
-
-        if ($raw === 'maintenance') {
-            return ['status' => 'maintenance', 'label' => 'Maintenance', 'badge_class' => 'kt-badge-outline kt-badge-warning'];
-        }
-
+        // Highest priority: active in-house stay.
         if ($activeStay) {
             return ['status' => 'occupied', 'label' => 'Occupied', 'badge_class' => 'kt-badge-warning'];
         }
 
-        if ($raw === 'dirty') {
-            return ['status' => 'dirty', 'label' => 'Dirty', 'badge_class' => 'kt-badge-destructive'];
-        }
-
-        if ($housekeeping) {
-            return ['status' => 'housekeeping', 'label' => $housekeeping->status === 'in_progress' ? 'HK In Progress' : 'HK Pending', 'badge_class' => 'kt-badge-outline kt-badge-warning'];
-        }
-
+        // Reserved is only today-arrival reservations and only when not occupied.
         if ($reservation) {
             return ['status' => 'reserved', 'label' => 'Reserved', 'badge_class' => 'kt-badge-outline kt-badge-info'];
         }
 
-        if ($raw === 'clean') {
-            return ['status' => 'available', 'label' => 'Clean', 'badge_class' => 'kt-badge-success'];
+        if ($isDirty) {
+            return ['status' => 'dirty', 'label' => 'Dirty', 'badge_class' => 'kt-badge-destructive'];
         }
 
-        if ($raw === 'available') {
-            return ['status' => 'available', 'label' => 'Available', 'badge_class' => 'kt-badge-success'];
+        if ($isOutOfOrder) {
+            return ['status' => 'out_of_order', 'label' => 'Out of Order', 'badge_class' => 'kt-badge-outline kt-badge-destructive'];
         }
 
-        return ['status' => $raw !== '' ? $raw : 'other', 'label' => $raw !== '' ? ucfirst(str_replace('_', ' ', $raw)) : 'Unknown', 'badge_class' => 'kt-badge-outline kt-badge-info'];
+        return ['status' => 'available', 'label' => 'Available', 'badge_class' => 'kt-badge-success'];
     }
 }

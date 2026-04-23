@@ -8,6 +8,14 @@
         $floors = $floors ?? [];
 
         $totalRooms = array_sum($counts);
+
+        $statusLegend = [
+            'available' => ['label' => 'Available', 'dot' => '#22c55e'],
+            'occupied' => ['label' => 'Occupied', 'dot' => '#ef4444'],
+            'reserved' => ['label' => 'Reserved', 'dot' => '#0ea5e9'],
+            'dirty' => ['label' => 'Dirty', 'dot' => '#f59e0b'],
+            'out_of_order' => ['label' => 'Out of Order', 'dot' => '#94a3b8'],
+        ];
     @endphp
 
     <div class="kt-card">
@@ -24,15 +32,25 @@
         </div>
 
         <div class="kt-card-content p-4">
-            <div class="flex flex-wrap items-center gap-2 mb-4">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
                 <span class="kt-badge kt-badge-outline kt-badge-info">Total: {{ $totalRooms }}</span>
-                <span class="kt-badge kt-badge-success">Available: {{ (int) ($counts['available'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-warning">Occupied: {{ (int) ($counts['occupied'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-outline kt-badge-info">Reserved: {{ (int) ($counts['reserved'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-destructive">Dirty: {{ (int) ($counts['dirty'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-outline kt-badge-warning">Housekeeping: {{ (int) ($counts['housekeeping'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-outline kt-badge-warning">Maintenance: {{ (int) ($counts['maintenance'] ?? 0) }}</span>
-                <span class="kt-badge kt-badge-outline kt-badge-destructive">Out of Service: {{ (int) ($counts['out_of_service'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#dcfce7;color:#166534;border-color:#bbf7d0;">Available: {{ (int) ($counts['available'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;">Occupied: {{ (int) ($counts['occupied'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;">Reserved: {{ (int) ($counts['reserved'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#fef3c7;color:#92400e;border-color:#fde68a;">Dirty: {{ (int) ($counts['dirty'] ?? 0) }}</span>
+                <span class="kt-badge border" style="background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;">Out of Order: {{ (int) ($counts['out_of_order'] ?? 0) }}</span>
+            </div>
+
+            <div class="mb-5 rounded-lg border border-input/70 bg-muted/20 px-3 py-2">
+                <div class="text-xs uppercase tracking-wide text-secondary-foreground mb-2">Status Legend</div>
+                <div class="flex flex-wrap items-center gap-3">
+                    @foreach($statusLegend as $legend)
+                        <div class="inline-flex items-center gap-2 text-xs text-foreground/90">
+                            <span class="inline-block h-2.5 w-2.5 rounded-full" style="background-color: {{ $legend['dot'] }};"></span>
+                            <span>{{ $legend['label'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
 
             @if(empty($floors))
@@ -54,13 +72,14 @@
                             <div class="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7">
                                 @foreach($rooms as $room)
                                     @php
+                                        $statusKey = $room['rack_status'] ?? 'available';
                                         $roomNumber = $room['room_number'] ?? '-';
                                         $roomType = $room['room_type'] ?? '-';
                                         $statusLabel = $room['rack_status_label'] ?? '-';
-                                        $badgeClass = $room['rack_badge_class'] ?? 'kt-badge-outline kt-badge-info';
 
                                         $guestName = $room['guest_name'] ?? null;
                                         $reservationCode = $room['reservation_code'] ?? null;
+                                        $checkInDate = $room['check_in_date'] ?? null;
                                         $checkOutDate = $room['check_out_date'] ?? null;
 
                                         $isVip = (bool) ($room['is_vip'] ?? false);
@@ -77,15 +96,58 @@
                                                 $datesLine = null;
                                             }
                                         }
+
+                                        $stayDuration = null;
+                                        if ($statusKey === 'occupied' && $checkInDate) {
+                                            try {
+                                                $nights = \Carbon\Carbon::parse($checkInDate)->startOfDay()->diffInDays(now()->startOfDay());
+                                                $stayDuration = $nights . ' night' . ($nights === 1 ? '' : 's');
+                                            } catch (\Throwable $e) {
+                                                $stayDuration = null;
+                                            }
+                                        }
+
+                                        $statusTone = [
+                                            'available' => [
+                                                'badge_style' => 'background-color:#dcfce7;color:#166534;border-color:#bbf7d0;',
+                                                'card_style' => 'border-color:#bbf7d0;background-color:#f0fdf4;',
+                                                'bar_style' => 'background-color:#22c55e;',
+                                            ],
+                                            'occupied' => [
+                                                'badge_style' => 'background-color:#fee2e2;color:#b91c1c;border-color:#fecaca;',
+                                                'card_style' => 'border-color:#fecaca;background-color:#fef2f2;',
+                                                'bar_style' => 'background-color:#ef4444;',
+                                            ],
+                                            'reserved' => [
+                                                'badge_style' => 'background-color:#e0f2fe;color:#0369a1;border-color:#bae6fd;',
+                                                'card_style' => 'border-color:#bae6fd;background-color:#f0f9ff;',
+                                                'bar_style' => 'background-color:#0ea5e9;',
+                                            ],
+                                            'dirty' => [
+                                                'badge_style' => 'background-color:#fef3c7;color:#92400e;border-color:#fde68a;',
+                                                'card_style' => 'border-color:#fde68a;background-color:#fffbeb;',
+                                                'bar_style' => 'background-color:#f59e0b;',
+                                            ],
+                                            'out_of_order' => [
+                                                'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
+                                                'card_style' => 'border-color:#cbd5e1;background-color:#f8fafc;',
+                                                'bar_style' => 'background-color:#94a3b8;',
+                                            ],
+                                        ][$statusKey] ?? [
+                                            'badge_style' => 'background-color:#f1f5f9;color:#334155;border-color:#cbd5e1;',
+                                            'card_style' => 'border-color:#e2e8f0;background-color:#ffffff;',
+                                            'bar_style' => 'background-color:#94a3b8;',
+                                        ];
                                     @endphp
 
-                                    <div class="rounded-md border border-input p-3 hover:bg-muted/10">
+                                    <div class="relative overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:shadow-sm" style="{{ $statusTone['card_style'] }}">
+                                        <span class="absolute left-0 top-0 h-full w-1" style="{{ $statusTone['bar_style'] }}"></span>
                                         <div class="flex items-start justify-between gap-2">
-                                            <div class="min-w-0">
+                                            <div class="min-w-0 pl-1">
                                                 <div class="text-base font-semibold text-mono truncate">{{ $roomNumber }}</div>
                                                 <div class="text-xs text-secondary-foreground truncate">{{ $roomType }}</div>
                                             </div>
-                                            <span class="kt-badge kt-badge-sm {{ $badgeClass }}">{{ $statusLabel }}</span>
+                                            <span class="kt-badge kt-badge-sm border" style="{{ $statusTone['badge_style'] }}">{{ $statusLabel }}</span>
                                         </div>
 
                                         <div class="mt-2 min-h-[1.25rem]">
@@ -111,6 +173,9 @@
                                             @endif
                                             @if($datesLine)
                                                 <div class="truncate">{{ $datesLine }}</div>
+                                            @endif
+                                            @if($stayDuration)
+                                                <div class="truncate">Stay: {{ $stayDuration }}</div>
                                             @endif
                                             @if($hkStatus)
                                                 <div class="truncate">HK: {{ str_replace('_', ' ', $hkStatus) }}{{ $hkPriority ? ' • ' . $hkPriority : '' }}</div>

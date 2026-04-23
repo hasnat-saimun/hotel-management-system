@@ -68,4 +68,9 @@ class Room extends Model
     {
         return $this->hasMany(Stay::class);
     }
+
+    public function housekeepingTasks()
+    {
+        return $this->hasMany(HousekeepingTask::class);
+    }
 }

@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\ReservationRoom;
 use App\Models\Room;
-use App\Models\RoomType;
 use App\Models\Stay;
-use App\Models\Floor;
+use App\Services\InHouseGuestsService;
 use App\Services\RoomAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,97 +16,21 @@ use Illuminate\Validation\Rule;
 
 class FrontDeskController extends Controller
 {
-    public function inHouse(Request $request)
+    public function inHouse(Request $request, InHouseGuestsService $inHouseGuests)
     {
         $today = Carbon::today();
         $now = now();
 
-        $q = trim((string) $request->query('q', ''));
-        $roomTypeId = $request->filled('room_type_id') ? (int) $request->query('room_type_id') : null;
-        $floorId = $request->filled('floor_id') ? (int) $request->query('floor_id') : null;
-        $status = (string) $request->query('status', 'all');
-        if (!in_array($status, ['all', 'overstay', 'vip'], true)) {
-            $status = 'all';
-        }
-
-        $staysQuery = Stay::query()
-            ->where('stays.status', 'in_house')
-            ->with([
-                'reservation:id,guest_id,check_out_date',
-                'reservation.guest:id,first_name,last_name,phone,vip',
-                'room:id,room_number,room_type_id,floor_id,status',
-                'room.roomType:id,name',
-                'room.floor:id,name,level_number',
-            ])
-            ->when($q !== '', function ($query) use ($q) {
-                $query->whereHas('reservation.guest', function ($guestQuery) use ($q) {
-                    $guestQuery
-                        ->where('first_name', 'like', '%' . $q . '%')
-                        ->orWhere('last_name', 'like', '%' . $q . '%')
-                        ->orWhere('phone', 'like', '%' . $q . '%');
-                });
-            })
-            ->when($roomTypeId, function ($query) use ($roomTypeId) {
-                $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('room_type_id', $roomTypeId));
-            })
-            ->when($floorId, function ($query) use ($floorId) {
-                $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_id', $floorId));
-            })
-            ->when($status === 'vip', function ($query) {
-                $query->whereHas('reservation.guest', fn ($guestQuery) => $guestQuery->where('vip', true));
-            })
-            ->when($status === 'overstay', function ($query) use ($today) {
-                $query->whereHas('reservation', fn ($reservationQuery) => $reservationQuery->whereDate('check_out_date', '<', $today));
-            })
-            ->orderByDesc('stays.check_in_time')
-            ->orderByDesc('stays.id');
-
-        $stays = $staysQuery
-            ->paginate(15)
-            ->withQueryString();
-
-        $stays->getCollection()->transform(function (Stay $stay) use ($now, $today) {
-            $checkIn = $stay->check_in_time ? Carbon::parse($stay->check_in_time) : null;
-            $nightsStayed = $checkIn
-                ? $checkIn->copy()->startOfDay()->diffInDays($now->copy()->startOfDay())
-                : 0;
-
-            $expectedCheckOut = $stay->reservation?->check_out_date
-                ? Carbon::parse($stay->reservation->check_out_date)->startOfDay()
-                : null;
-            $isOverstay = $expectedCheckOut ? $today->copy()->startOfDay()->gt($expectedCheckOut) : false;
-
-            $isVip = (bool) ($stay->reservation?->guest?->vip ?? false);
-
-            $stay->setAttribute('nights_stayed', $nightsStayed);
-            $stay->setAttribute('expected_check_out_date', $expectedCheckOut);
-            $stay->setAttribute('is_overstay', $isOverstay);
-            $stay->setAttribute('is_vip', $isVip);
-
-            return $stay;
-        });
-
-        $roomTypes = RoomType::query()
-            ->select(['id', 'name'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        $floors = Floor::query()
-            ->select(['id', 'name', 'level_number'])
-            ->orderBy('level_number')
-            ->orderBy('name')
-            ->get();
+        $filters = $inHouseGuests->filtersFromRequest($request);
+        $stays = $inHouseGuests->paginate($filters, $today, 15);
+        $stays = $inHouseGuests->attachComputedFields($stays, $today, $now);
+        $roomTypes = $inHouseGuests->roomTypes();
+        $floors = $inHouseGuests->floors();
 
         return view('admin.frontDesk.in-house', [
             'today' => $today,
             'now' => $now,
-            'filters' => [
-                'q' => $q,
-                'room_type_id' => $roomTypeId,
-                'floor_id' => $floorId,
-                'status' => $status,
-            ],
+            'filters' => $filters,
             'roomTypes' => $roomTypes,
             'floors' => $floors,
             'stays' => $stays,

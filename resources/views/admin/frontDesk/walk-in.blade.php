@@ -56,69 +56,7 @@
                     <x-admin.front-desk.room-selection-card />
                 </div>
 
-                <aside class="xl:col-span-4">
-                    <div class="xl:sticky xl:top-6">
-                        <section class="kt-card h-full">
-                            <div class="kt-card-header flex items-center justify-between gap-4">
-                                <div>
-                                    <h3 class="kt-card-title">Booking Summary</h3>
-                                    <div class="text-sm text-secondary-foreground">Review the final walk-in snapshot.</div>
-                                </div>
-                                <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">Section 4</span>
-                            </div>
-                            <div class="kt-card-content p-4 sm:p-5">
-                                <div class="space-y-4">
-                                    <div class="rounded-2xl border border-border bg-muted/30 p-4">
-                                        <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Guest</div>
-                                        <div class="mt-2 text-base font-semibold text-foreground">Guest Name</div>
-                                        <div class="mt-1 text-sm text-secondary-foreground">email@example.com</div>
-                                    </div>
-
-                                    <div class="rounded-2xl border border-border bg-muted/30 p-4">
-                                        <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Stay</div>
-                                        <dl class="mt-3 grid gap-3 text-sm">
-                                            <div class="flex items-center justify-between gap-3">
-                                                <dt class="text-secondary-foreground">Dates</dt>
-                                                <dd class="font-medium text-foreground">Arrival - Departure</dd>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-3">
-                                                <dt class="text-secondary-foreground">Occupancy</dt>
-                                                <dd class="font-medium text-foreground">1 adult • 0 children</dd>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-3">
-                                                <dt class="text-secondary-foreground">Room</dt>
-                                                <dd class="font-medium text-foreground">Selected room</dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-
-                                    <div class="rounded-2xl border border-border bg-muted/30 p-4">
-                                        <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Pricing</div>
-                                        <dl class="mt-3 grid gap-3 text-sm">
-                                            <div class="flex items-center justify-between gap-3">
-                                                <dt class="text-secondary-foreground">Room rate</dt>
-                                                <dd class="font-medium text-foreground">0.00</dd>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-3">
-                                                <dt class="text-secondary-foreground">Taxes</dt>
-                                                <dd class="font-medium text-foreground">0.00</dd>
-                                            </div>
-                                            <div class="flex items-center justify-between gap-3 border-t border-border pt-3 text-base">
-                                                <dt class="font-semibold text-foreground">Total</dt>
-                                                <dd class="font-semibold text-foreground">0.00</dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="button" class="kt-btn kt-btn-outline w-full sm:w-auto">Clear</button>
-                                        <button type="button" class="kt-btn kt-btn-primary w-full sm:w-auto">Confirm Walk-In</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </aside>
+                <x-admin.front-desk.booking-summary-sidebar />
             </div>
         </div>
     </div>

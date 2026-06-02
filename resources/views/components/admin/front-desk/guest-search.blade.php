@@ -7,8 +7,6 @@
 
 @php
     $selectedData = is_object($selectedGuest) || is_array($selectedGuest) ? (array) $selectedGuest : [];
-    $selectedName = trim((string) ($selectedData['full_name'] ?? trim(($selectedData['first_name'] ?? '') . ' ' . ($selectedData['last_name'] ?? ''))));
-    $selectedName = $selectedName !== '' ? $selectedName : null;
 
     $searchRows = [
         ['name' => 'guest_name', 'label' => 'Name', 'placeholder' => 'Search by guest name'],
@@ -38,6 +36,18 @@
         loading: {{ $loading ? 'true' : 'false' }},
         error: @js($error),
         selectedGuest: @js($selectedData),
+        quickAddOpen: false,
+        quickAddSaving: false,
+        quickAddError: null,
+        quickAddRoute: @js(route('admin.api.guests.quick-add')),
+        quickAddForm: {
+            full_name: '',
+            phone: '',
+            email: '',
+            address: '',
+            nationality: '',
+            id_number: '',
+        },
         query: {
             name: '',
             phone: '',
@@ -56,15 +66,63 @@
             this.query.email = '';
             this.open = true;
         },
+        openQuickAdd() {
+            this.quickAddError = null;
+            this.quickAddOpen = true;
+        },
         useGuest(guest) {
             this.selectedGuest = guest;
             this.open = false;
+            this.quickAddOpen = false;
+        },
+        openSelectedGuest(guest) {
+            this.useGuest(guest);
         },
         openResults() {
             this.open = true;
         },
         dismissError() {
             this.error = null;
+        },
+        async submitQuickAddGuest() {
+            this.quickAddSaving = true;
+            this.quickAddError = null;
+
+            try {
+                const response = await fetch(this.quickAddRoute, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: JSON.stringify(this.quickAddForm),
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    const message = payload?.message || 'Unable to create guest.';
+                    const validationMessage = payload?.errors ? Object.values(payload.errors).flat().join(' ') : '';
+                    throw new Error(validationMessage || message);
+                }
+
+                this.selectedGuest = payload.guest;
+                this.quickAddOpen = false;
+                this.open = false;
+                this.quickAddForm = {
+                    full_name: '',
+                    phone: '',
+                    email: '',
+                    address: '',
+                    nationality: '',
+                    id_number: '',
+                };
+            } catch (error) {
+                this.quickAddError = error.message || 'Unable to create guest.';
+            } finally {
+                this.quickAddSaving = false;
+            }
         }
     }"
     @keydown.escape.window="open = false"
@@ -77,7 +135,7 @@
 
         <div class="flex flex-wrap items-center gap-2">
             <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">Alpine.js</span>
-            <button type="button" class="kt-btn kt-btn-primary kt-btn-sm">Quick Add Guest</button>
+            <button type="button" class="kt-btn kt-btn-primary kt-btn-sm" @click="openQuickAdd()">Quick Add Guest</button>
         </div>
     </div>
 
@@ -118,6 +176,7 @@
                     <div class="mt-4 flex flex-wrap gap-2">
                         <button type="button" class="kt-btn kt-btn-outline" @click="openResults()">Search Guest</button>
                         <button type="button" class="kt-btn kt-btn-outline" @click="clearSearch()">Clear</button>
+                        <button type="button" class="kt-btn kt-btn-primary" @click="openQuickAdd()">Quick Add Guest</button>
                     </div>
 
                     <div class="mt-4 rounded-2xl border border-dashed border-border bg-muted/20 p-4 text-sm text-secondary-foreground">
@@ -189,7 +248,7 @@
                                     Start typing a name, phone number, or email address to show matching guests here.
                                 </p>
                                 <div class="mt-5">
-                                    <button type="button" class="kt-btn kt-btn-primary">Quick Add Guest</button>
+                                    <button type="button" class="kt-btn kt-btn-primary" @click="openQuickAdd()">Quick Add Guest</button>
                                 </div>
                             </div>
                         </template>
@@ -231,5 +290,7 @@
                 </div>
             </div>
         </div>
+
+        <x-admin.front-desk.quick-add-guest-modal route="{{ route('admin.api.guests.quick-add') }}" />
     </div>
 </section>

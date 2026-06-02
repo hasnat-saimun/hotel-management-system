@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 
 class RoomAvailabilityService
 {
+    private const ACTIVE_RESERVATION_STATUSES = ['booked', 'confirmed'];
+
     /**
      * Constrains a Room query to only rooms that are available for the given date range.
      *
@@ -28,11 +30,21 @@ class RoomAvailabilityService
         $roomQuery
             ->where('is_active', true)
             ->where('status', 'available')
+            ->whereDoesntHave('stays', function (Builder $stayQuery) use ($from, $to) {
+                $stayQuery
+                    ->where('stays.status', 'in_house')
+                    ->whereDate('stays.check_in_time', '<', $to)
+                    ->where(function (Builder $checkoutQuery) use ($from) {
+                        $checkoutQuery
+                            ->whereNull('stays.check_out_time')
+                            ->orWhereDate('stays.check_out_time', '>', $from);
+                    });
+            })
             ->whereDoesntHave('reservations', function ($reservationQuery) use ($from, $to) {
                 $reservationQuery
-                    ->whereIn('reservations.status', ['booked', 'confirmed'])
-                    ->where('reservations.check_in_date', '<', $to)
-                    ->where('reservations.check_out_date', '>', $from);
+                    ->whereIn('reservations.status', self::ACTIVE_RESERVATION_STATUSES)
+                    ->whereDate('reservations.check_in_date', '<', $to)
+                    ->whereDate('reservations.check_out_date', '>', $from);
             });
 
         if ($ignoreBlocks) {
@@ -51,6 +63,15 @@ class RoomAvailabilityService
         });
 
         return $roomQuery;
+    }
+
+    public function isRoomAvailableForRange(int $roomId, string $fromDate, string $toDate): bool
+    {
+        return $this->constrainToAvailableRooms(
+            Room::query()->whereKey($roomId),
+            $fromDate,
+            $toDate
+        )->exists();
     }
 
     public function roomIdsAvailableForRange(

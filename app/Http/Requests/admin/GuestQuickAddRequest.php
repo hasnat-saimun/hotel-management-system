@@ -28,7 +28,7 @@ class GuestQuickAddRequest extends FormRequest
         return [
             'full_name' => ['required', 'string', 'min:3', 'max:191'],
             'phone' => ['required', 'string', 'min:3', 'max:50'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:guests,email'],
+            'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:2000'],
             'nationality' => ['nullable', 'string', 'max:191'],
             'id_number' => ['nullable', 'string', 'max:255'],

@@ -39,6 +39,10 @@
         quickAddOpen: false,
         quickAddSaving: false,
         quickAddError: null,
+        quickAddWarningOpen: false,
+        quickAddWarningMessage: null,
+        quickAddDuplicateGuest: null,
+        quickAddDuplicateMatches: [],
         quickAddRoute: @js(route('admin.api.guests.quick-add')),
         quickAddForm: {
             full_name: '',
@@ -60,6 +64,13 @@
         hasResults() {
             return Array.isArray(this.results) && this.results.length > 0;
         },
+        resetQuickAddState() {
+            this.quickAddError = null;
+            this.quickAddWarningOpen = false;
+            this.quickAddWarningMessage = null;
+            this.quickAddDuplicateGuest = null;
+            this.quickAddDuplicateMatches = [];
+        },
         clearSearch() {
             this.query.name = '';
             this.query.phone = '';
@@ -67,13 +78,21 @@
             this.open = true;
         },
         openQuickAdd() {
-            this.quickAddError = null;
+            this.resetQuickAddState();
             this.quickAddOpen = true;
         },
         useGuest(guest) {
             this.selectedGuest = guest;
             this.open = false;
             this.quickAddOpen = false;
+            this.quickAddWarningOpen = false;
+        },
+        useDuplicateGuest() {
+            if (!this.quickAddDuplicateGuest) {
+                return;
+            }
+
+            this.useGuest(this.quickAddDuplicateGuest);
         },
         openSelectedGuest(guest) {
             this.useGuest(guest);
@@ -87,6 +106,10 @@
         async submitQuickAddGuest() {
             this.quickAddSaving = true;
             this.quickAddError = null;
+            this.quickAddWarningOpen = false;
+            this.quickAddWarningMessage = null;
+            this.quickAddDuplicateGuest = null;
+            this.quickAddDuplicateMatches = [];
 
             try {
                 const response = await fetch(this.quickAddRoute, {
@@ -100,6 +123,14 @@
                 });
 
                 const payload = await response.json();
+
+                if (response.status === 409 && payload?.duplicate_found) {
+                    this.quickAddWarningOpen = true;
+                    this.quickAddWarningMessage = payload?.message || 'A matching guest already exists.';
+                    this.quickAddDuplicateGuest = payload?.primary_guest || payload?.matches?.[0] || null;
+                    this.quickAddDuplicateMatches = Array.isArray(payload?.matches) ? payload.matches : [];
+                    return;
+                }
 
                 if (!response.ok || !payload.success) {
                     const message = payload?.message || 'Unable to create guest.';

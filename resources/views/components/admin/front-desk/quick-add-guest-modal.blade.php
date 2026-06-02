@@ -17,7 +17,7 @@
         <div class="flex items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
             <div>
                 <h3 id="quick_add_guest_modal_title" class="text-lg font-semibold text-foreground">Quick Add Guest</h3>
-                <p class="text-sm text-secondary-foreground">Create a guest and auto-select them for the walk-in flow.</p>
+                <p class="text-sm text-secondary-foreground">Create a guest, or reuse an existing record if a duplicate is found.</p>
             </div>
 
             <button type="button" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" @click="quickAddOpen = false" aria-label="Close modal">
@@ -30,6 +30,8 @@
                 <template x-if="quickAddError">
                     <div class="rounded-2xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert" aria-live="assertive" x-text="quickAddError"></div>
                 </template>
+
+                <x-admin.front-desk.ui.duplicate-guest-warning />
 
                 <div class="rounded-2xl border border-border bg-muted/20 p-4">
                     <div class="grid gap-4 lg:grid-cols-2">
@@ -68,7 +70,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-border bg-background p-4">
                     <div class="space-y-1">
                         <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Validation Strategy</div>
-                        <div class="text-sm text-secondary-foreground">Full name and phone are required. Email is optional and validated when present.</div>
+                        <div class="text-sm text-secondary-foreground">Full name and phone are required. Email is optional. Phone and email are checked for duplicates before saving.</div>
                     </div>
 
                     <div class="flex flex-wrap gap-2">

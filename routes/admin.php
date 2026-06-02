@@ -7,6 +7,7 @@ use App\Http\Controllers\admin\ReservationController;
 use App\Http\Controllers\admin\FrontDeskController;
 use App\Http\Controllers\admin\RoomBlockController;
 use App\Http\Controllers\admin\GuestController;
+use App\Http\Controllers\admin\GuestSearchController;
 use App\Http\Controllers\admin\CompanyController;
 use App\Http\Controllers\admin\TravelAgentController;
 use App\Http\Controllers\admin\LoyaltyController;
@@ -183,7 +184,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::prefix('api')->name('api.')->group(function () {
-            Route::get('guests/search', [GuestController::class, 'apiSearch'])->name('guests.search');
+            Route::get('guests/search', [GuestSearchController::class, 'search'])->name('guests.search');
             Route::post('guests', [GuestController::class, 'storeAjax'])->name('guests.store');
         });
 

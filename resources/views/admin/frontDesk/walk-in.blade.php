@@ -51,60 +51,7 @@
                 <div class="flex flex-col gap-5 xl:col-span-8">
                     <x-admin.front-desk.guest-information-card />
 
-                    <section class="kt-card">
-                        <div class="kt-card-header flex items-center justify-between gap-4">
-                            <div>
-                                <h3 class="kt-card-title">Stay Information</h3>
-                                <div class="text-sm text-secondary-foreground">Define dates, guests, and stay expectations.</div>
-                            </div>
-                            <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-success">Section 2</span>
-                        </div>
-                        <div class="kt-card-content p-4 sm:p-5">
-                            <div class="grid gap-4 lg:grid-cols-3">
-                                <div class="kt-card p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Dates</div>
-                                    <div class="mt-4 space-y-3">
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Check-in Date</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Arrival date</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Check-out Date</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Departure date</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="kt-card p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Occupancy</div>
-                                    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Adults</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">1</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Children</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">0</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="kt-card p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Preferences</div>
-                                    <div class="mt-4 space-y-3">
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Source</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Walk-In / Direct</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Notes</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Special requests or comments</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                    <x-admin.front-desk.stay-information-card :errors="$errors ?? null" />
 
                     <section class="kt-card">
                         <div class="kt-card-header flex items-center justify-between gap-4">

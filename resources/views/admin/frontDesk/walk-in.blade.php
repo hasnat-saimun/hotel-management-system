@@ -49,62 +49,7 @@
 
             <div class="grid gap-5 xl:grid-cols-12">
                 <div class="flex flex-col gap-5 xl:col-span-8">
-                    <section class="kt-card">
-                        <div class="kt-card-header flex items-center justify-between gap-4">
-                            <div>
-                                <h3 class="kt-card-title">Guest Information</h3>
-                                <div class="text-sm text-secondary-foreground">Capture identity and contact details.</div>
-                            </div>
-                            <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-info">Section 1</span>
-                        </div>
-                        <div class="kt-card-content p-4 sm:p-5">
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div class="kt-card p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Identity</div>
-                                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">First Name</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Guest first name</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Last Name</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Guest last name</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">ID Type</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Passport / National ID</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">ID Number</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Identification number</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="kt-card p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Contact</div>
-                                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                                        <div class="space-y-2 sm:col-span-2">
-                                            <div class="text-xs text-secondary-foreground">Email Address</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">guest@example.com</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Phone</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">+00 000 000 000</div>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div class="text-xs text-secondary-foreground">Nationality</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Country</div>
-                                        </div>
-                                        <div class="space-y-2 sm:col-span-2">
-                                            <div class="text-xs text-secondary-foreground">Address</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Guest address</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                    <x-admin.front-desk.guest-information-card />
 
                     <section class="kt-card">
                         <div class="kt-card-header flex items-center justify-between gap-4">

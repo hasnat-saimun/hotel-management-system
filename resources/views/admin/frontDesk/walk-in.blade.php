@@ -53,64 +53,7 @@
 
                     <x-admin.front-desk.stay-information-card :errors="$errors ?? null" />
 
-                    <section class="kt-card">
-                        <div class="kt-card-header flex items-center justify-between gap-4">
-                            <div>
-                                <h3 class="kt-card-title">Room Selection</h3>
-                                <div class="text-sm text-secondary-foreground">Choose room type, availability, and assignment.</div>
-                            </div>
-                            <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-warning">Section 3</span>
-                        </div>
-                        <div class="kt-card-content p-4 sm:p-5">
-                            <div class="grid gap-4 xl:grid-cols-12">
-                                <div class="xl:col-span-4">
-                                    <div class="kt-card p-4 h-full">
-                                        <div class="text-xs font-semibold uppercase tracking-wide text-secondary-foreground">Filters</div>
-                                        <div class="mt-4 space-y-3">
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Room type filter</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Floor filter</div>
-                                            <div class="rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Occupancy / status filter</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="xl:col-span-8">
-                                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                        <div class="kt-card p-4">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div class="text-sm font-semibold text-foreground">Standard Queen</div>
-                                                    <div class="text-xs text-secondary-foreground">Room type</div>
-                                                </div>
-                                                <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-success">Available</span>
-                                            </div>
-                                            <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Room card placeholder</div>
-                                        </div>
-                                        <div class="kt-card p-4">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div class="text-sm font-semibold text-foreground">Deluxe Twin</div>
-                                                    <div class="text-xs text-secondary-foreground">Room type</div>
-                                                </div>
-                                                <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-success">Available</span>
-                                            </div>
-                                            <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Room card placeholder</div>
-                                        </div>
-                                        <div class="kt-card p-4">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div class="text-sm font-semibold text-foreground">Family Suite</div>
-                                                    <div class="text-xs text-secondary-foreground">Room type</div>
-                                                </div>
-                                                <span class="kt-badge kt-badge-sm kt-badge-outline kt-badge-warning">Limited</span>
-                                            </div>
-                                            <div class="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-3 text-sm text-secondary-foreground">Room card placeholder</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                    <x-admin.front-desk.room-selection-card />
                 </div>
 
                 <aside class="xl:col-span-4">
